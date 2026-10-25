@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.env
+data/app.db
+data/usage/*.jsonl
+data/chroma/
+node_modules/
+frontend/dist/
