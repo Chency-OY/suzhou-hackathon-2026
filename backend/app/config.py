@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     embed_model: str = ""
     vector_store: str = "chroma"      # chroma | simple
     chroma_dir: str = "data/chroma"
+    frontend_dist: str = "frontend/dist"
 
 
 settings = Settings()
