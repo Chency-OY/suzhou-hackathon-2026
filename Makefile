@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint build-facts seed gen-personas
+.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios review
 PY ?= python3
 VENV = . .venv/bin/activate
 
@@ -25,3 +25,9 @@ seed:
 
 gen-personas:
 	$(VENV) && python scripts/gen_personas.py --target $(or $(N),40)
+
+gen-scenarios:
+	$(VENV) && python scripts/gen_scenarios.py
+
+review:
+	$(VENV) && python scripts/export_review.py
