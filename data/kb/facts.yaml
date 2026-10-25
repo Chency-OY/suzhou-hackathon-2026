@@ -1,0 +1,1299 @@
+- id: product.name.generic
+  category: company
+  statement: 玛仕度肽注射液
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.name.brand
+  category: company
+  statement: 信尔美；说明书商品名写作「信尔美」，官方表述与商标形式为「信尔美®」
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 说明书商品名写作「信尔美」，官方表述与商标形式为「信尔美®」
+- id: product.name.en
+  category: company
+  statement: Mazdutide Injection
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.name.pinyin
+  category: company
+  statement: Mashidutai Zhusheye
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.name.inn
+  category: company
+  statement: mazdutide；研发代号 IBI362
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: true
+  caution: 研发代号 IBI362
+- id: product.moa
+  category: company
+  statement: 人胰高血糖素样肽-1（GLP-1）受体和胰高血糖素（GCG）受体双重激动剂；detail：体外可激活 GLP-1 受体和 GCG 受体，增加人原代肝细胞、大鼠胰腺 β 细胞内 cAMP 含量、动物试验显示可增强葡萄糖诱导的胰岛素分泌、降低血糖、增加能量消耗、降低体重；原文：「玛仕度肽是人胰高血糖素样肽-1（GLP-1）受体和胰高血糖素（GCG）受体激动剂。玛仕度肽体外可激活GLP-1 受体和GCG 受体，增加人原代肝细胞、大鼠胰腺β 细胞内环磷酸腺苷（cAMP）含量。」
+  source: label.md#【药理毒理】药理作用
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.molecule.formula
+  category: company
+  statement: C210H322N46O67；C₂₁₀H₃₂₂N₄₆O₆₇
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.molecule.mw
+  category: company
+  statement: 4563.14 Da；Da
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.molecule.excipients
+  category: company
+  statement: 氨丁三醇、甘露醇、丙二醇（供注射用）、依地酸二钠、稀盐酸、氢氧化钠、注射用水
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.molecule.chemname
+  category: company
+  statement: 说明书【成份】项下完整化学名（长肽链系统命名）；长度逾 400 字，任何场景均不得转述或简写为自造名称；需要时整段引用 label.md
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 长度逾 400 字，任何场景均不得转述或简写为自造名称；需要时整段引用 label.md
+- id: product.appearance
+  category: company
+  statement: 澄清或几乎澄清，无色或几乎无色液体
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.mah
+  category: company
+  statement: 信达生物制药（苏州）有限公司
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.mah.addr
+  category: company
+  statement: 苏州工业园区东平街 168 号；215123
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.site
+  category: company
+  statement: 信达生物制药（苏州）有限公司，苏州工业园区东平街 168 号；本品上市许可持有人与生产企业为同一主体
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 本品上市许可持有人与生产企业为同一主体
+- id: product.approval.numbers
+  category: company
+  statement: 'spec：0.5 ml : 2 mg；number：国药准字 H20250036、spec：0.5 ml : 4 mg；number：国药准字 H20250037、spec：0.5 ml : 6 mg；number：国药准字 H20250038'
+  source: label.md#【批准文号】；NMPA 数据查询 2026-10-25
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.approval.date
+  category: company
+  statement: 2025-06-24；减重适应症说明书核准日期；NMPA 批件批准日期一致
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 减重适应症说明书核准日期；NMPA 批件批准日期一致
+- id: product.label.revisions
+  category: company
+  statement: weight_management：2025-06-24；type2_diabetes：2025-09-16；同一 PDF 内含两张独立说明书，核准日期不同，见 discrepancies D1
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 同一 PDF 内含两张独立说明书，核准日期不同，见 discrepancies D1
+- id: product.approval.other
+  category: company
+  statement: 国药准字 H20269105（2026-05-06 批准），登记于江苏诺泰澳赛诺生物制药股份有限公司名下；属补充申请/受托生产相关批件，不作为本品说明书主体引用
+  source: 上游事实库[E4_OFFICIAL]
+  source_url: ''
+  verified: false
+  caution: 属补充申请/受托生产相关批件，不作为本品说明书主体引用；上游核验状态 partial（部分核验，引用前复核）
+- id: product.approval.standard
+  category: company
+  statement: YBH14722025
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.shelf_life
+  category: company
+  statement: 24 月；月
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.storage
+  category: company
+  statement: 避光、密闭、2～8 ℃ 保存，不得冷冻；如有特殊需要，可在原包装中室温（10～30 ℃）保存不超过 30 天，且不可再返回冷藏；30 天内未使用应丢弃
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: product.packaging
+  category: company
+  statement: 1 支/盒、2 支/盒、4 支/盒；1 ml 细长型预灌封注射器组合件 + 溴化丁基橡胶活塞，组装为预充式自动注射笔
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: label.indication.weight
+  category: indication
+  statement: '减重版（核准 2025-06-24）；用于在控制饮食和增加体力活动基础上对成人患者的长期体重控制；criteria：op：BMI ≥ 28 kg/m²；meaning：肥胖、op：BMI ≥ 24 kg/m²；meaning：超重，且须伴有至少一种体重相关合并症；comorbidities_listed：高血糖、高血压、血脂异常、脂肪肝、阻塞性睡眠呼吸暂停综合征；说明书以「例如……等」列举，非穷尽清单；原文：「本品适用于在控制饮食和增加体力活动基础上对成人患者的长期体重控制，初始体重指数（BMI）为：
+
+    • BMI ≥28 kg/m²（肥胖），或
+
+    • BMI ≥24 kg/m²（超重），并伴有至少一种体重相关的合并症（例如高血糖、高血压、血脂异常、脂肪肝、阻塞性睡眠呼吸暂停综合征等）。」'
+  source: label.md#【适应症】
+  source_url: ''
+  verified: true
+  caution: ''
+- id: label.indication.t2dm
+  category: indication
+  statement: 'T2DM 版（核准 2025-09-16）；适用于成人 2 型糖尿病患者的血糖控制；monotherapy：value：单纯饮食控制和运动干预后血糖仍控制不佳的成人 2 型糖尿病患者；combination：value：在饮食控制和运动基础上，接受二甲双胍和/或磺脲类药物、接受二甲双胍和/或 SGLT2i 类药物治疗血糖仍控制不佳的成人 2 型糖尿病患者；T2DM 适应症未设 BMI 门槛；原文：「本品适用于成人2 型糖尿病患者的血糖控制：
+
+    单药治疗 单纯饮食控制和运动干预后血糖仍控制不佳的成人2 型糖尿病患者；
+
+    联合治疗 在饮食控制和运动基础上，接受二甲双胍和/或磺脲类药物、接受二甲双胍和/或钠-葡萄糖共转运蛋白2 抑制剂（SGLT2i）类药物治疗血糖仍控制不佳的成人2 型糖尿病患者。」'
+  source: label.md#【适应症】
+  source_url: ''
+  verified: true
+  caution: T2DM 适应症未设 BMI 门槛
+- id: label.indication.boundary
+  category: indication
+  statement: not_approved：population：18 岁以下儿童及青少年；basis：【儿童用药】安全性与有效性尚未确定、population：妊娠期妇女；basis：【注意事项】明确禁用于妊娠期妇女、population：终末期肾病患者；basis：无临床研究数据、population：中度、重度肝功能不全患者；basis：无临床研究数据、population：1 型糖尿病；basis：说明书适应症仅限 2 型糖尿病、population：有 MTC 个人/家族史或 MEN 2 的患者；basis：【禁忌】、population：急性胆囊疾病患者；basis：【注意事项】不推荐使用、population：重度胃肠道疾病患者；basis：【注意事项】不推荐使用
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.route
+  category: dosing
+  statement: 皮下注射，每周一次；detail：可在一天中任意时间注射，无需根据进餐时间给药、可在腹部皮下注射；不可静脉或肌肉注射、首次使用前由医护专业人员提供皮下注射技术指导，此后患者可自行注射或由护理人员注射、可改变每周给药日期，但两剂间隔须至少 5 天（> 120 小时）
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.start
+  category: dosing
+  statement: 2 mg；mg；T2DM 版明确「2 mg 的剂量目的是起始治疗而非控制血糖」
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.maintenance
+  category: dosing
+  statement: 4、6；mg；推荐维持剂量 4 mg 或 6 mg；如 6 mg 不耐受可回调至 4 mg
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 推荐维持剂量 4 mg 或 6 mg；如 6 mg 不耐受可回调至 4 mg
+- id: dose.titration
+  category: dosing
+  statement: weeks：1–4；dose_mg：2；type：滴定剂量、weeks：5–8；dose_mg：4；type：滴定剂量、weeks：≥9；dose_mg：4；type：维持剂量（或 6 mg）；每档至少 4 周后方可递增；增至 6 mg 需在当前剂量治疗至少 4 周
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 每档至少 4 周后方可递增；增至 6 mg 需在当前剂量治疗至少 4 周
+- id: dose.missed
+  category: dosing
+  statement: gap：≤2 天（距上次给药 ≤9 天）；action：尽快给药，下一剂按原计划日期、gap：2–7 天（距上次给药 9–14 天）；action：尽快给药，并重新计算每周给药日期、gap：7–21 天（距上次给药 14–28 天）；action：下调至前 1 个剂量，重新开始滴定、gap：>21 天（距上次给药 >28 天）；action：下调至起始剂量，按表 1 重新滴定
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.weight.intent
+  category: dosing
+  statement: 增至 6 mg 的触发语为「如需进一步改善体重」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: dose.t2dm.intent
+  category: dosing
+  statement: 增至 6 mg 的触发语为「如需进一步加强血糖控制」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: dose.t2dm.combo
+  category: dosing
+  statement: 在二甲双胍基础上加用本品时，可继续二甲双胍当前剂量、与磺脲类联合时应考虑减少磺脲类剂量，以降低低血糖风险
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.hepatic
+  category: dosing
+  statement: 轻度肝功能不全无需调整剂量；轻度定义：TBIL ≤ULN 且 AST >ULN，或 TBIL >1～1.5×ULN 且任意 AST；中度、重度无数据
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.renal
+  category: dosing
+  statement: 轻、中、重度肾功能不全均无需调整剂量；轻度 GFR 60–89、中度 30–59、重度 15–29 ml/min；中重度用药经验有限，应谨慎；终末期肾病无数据
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.elderly
+  category: dosing
+  statement: 65 岁及以上患者有限（减重 III 期试验中 N=3），尚无法确定安全性与有效性
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.pediatric
+  category: dosing
+  statement: 18 岁以下安全性与有效性尚未确定
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.pregnancy
+  category: dosing
+  statement: 禁用于妊娠期妇女；计划妊娠前应停用玛仕度肽至少 3 个月（因半衰期较长）；治疗期间建议有生育能力女性避孕
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.interactions
+  category: dosing
+  statement: drug：胰岛素 / 胰岛素促泌剂（如磺脲类）；effect：联用增加低血糖风险，起始本品时应考虑减量；evidence：E1_LABEL、drug：口服药物（一般）；effect：GLP-1 类延缓胃排空，可能影响伴随口服药吸收；治疗窗窄药物（如华法林）需密切监测；evidence：E1_LABEL、drug：阿托伐他汀；effect：AUCinf +22.5%，Cmax −22.8%；evidence：E1_LABEL、drug：地高辛；effect：AUCinf +12.5%，Cmax −35.2%；evidence：E1_LABEL、drug：二甲双胍；effect：AUCinf −15.6%，Cmax −43.6%；evidence：E1_LABEL、drug：华法林；effect：AUCinf +11.4%，Cmax +2.3%；evidence：E1_LABEL；预期上述变化不会产生具有临床意义的影响
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: true
+  caution: ''
+- id: dose.overdose
+  category: dosing
+  statement: 无用药过量临床数据；参照其他 GLP-1 类药物，过量可致重度恶心、呕吐、低血糖；因半衰期长，症状可能需长时间观察或治疗
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: label.contraindication
+  category: safety
+  statement: 已知对本品活性成份或任何辅料过敏者、甲状腺髓样癌（MTC）个人既往病史或家族病史、2 型多发性内分泌肿瘤综合征（MEN 2）患者；妊娠期禁用写在【注意事项】而非【禁忌】项下，见 discrepancies D13；原文：「已知对本品活性成份或本品中任何辅料过敏者。甲状腺髓样癌（MTC）个人既往病史或家族病史，或2 型多发性内分泌肿瘤综合征患者（MEN 2）（见【注意事项】）。」
+  source: label.md#【禁忌】（两版一致）
+  source_url: ''
+  verified: true
+  caution: 妊娠期禁用写在【注意事项】而非【禁忌】项下，见 discrepancies D13
+- id: label.warning.mtc
+  category: safety
+  statement: 警告：甲状腺 C 细胞肿瘤风险；啮齿类动物在临床相关暴露水平下可出现甲状腺 C 细胞肿瘤、尚不清楚是否引起人类甲状腺 C 细胞肿瘤（含 MTC），因动物与人类相关性未确定、禁用于有 MTC 既往史/家族史及 MEN 2 患者；应告知患者可能的 MTC 风险及甲状腺肿瘤症状；symptoms_to_teach：颈部肿块、吞咽困难、呼吸困难、持续性声音嘶哑；MTC 患者降钙素通常 >50 ng/L；常规筛查降钙素或超声的价值尚不明确
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: label.warning.anesthesia
+  category: safety
+  statement: 全身麻醉或深度镇静相关误吸；GLP-1 受体激动剂有麻醉/深度镇静时肺误吸报道；术前应考虑胃排空延迟导致的内容物残留风险
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.pancreatitis
+  category: safety
+  statement: 急性胰腺炎；III 期试验中玛仕度肽组 1 例（胆结石所致阻塞性、轻症，Atlanta 分级）；安慰剂组 0 例；怀疑胰腺炎应停药并治疗
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.gallbladder
+  category: safety
+  statement: 急性胆囊疾病；III 期试验胆石症 2.0% vs 安慰剂 1.0%；胆囊炎 1.0% vs 1.5%；急性胆囊疾病患者不推荐使用
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.hr
+  category: safety
+  statement: 心率增加；应常规监测心率；静息心率持续增加则停药
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.hypersensitivity
+  category: safety
+  statement: 过敏反应；III 期试验过敏反应 3.5% vs 安慰剂 1.5%，无严重过敏反应
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.aki
+  category: safety
+  statement: 急性肾损伤；III 期试验无报告；胃肠道反应可致脱水继而 AKI；起始与剂量递增时应监测肾功能
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.gi
+  category: safety
+  statement: 重度胃肠道不良反应；III 期试验重度胃肠道不良反应发生率 2.0%；重度胃肠道疾病患者不推荐使用
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.driving
+  category: safety
+  statement: 驾驶与机械操作；影响很小或可忽略；可能出现头晕（多在剂量递增期），发生时谨慎驾驶
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: label.warning.suicide
+  category: safety
+  statement: 自杀行为或意念；玛仕度肽治疗者中尚无报告；应监测抑郁/自杀意念，出现即停药；有自杀企图史者应避免使用
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.exposure.glory1
+  category: safety
+  statement: 减重适应症安全性数据来自 GLORY-1，405 例接受玛仕度肽最长 48 周（4 mg 203 例、6 mg 202 例）；baseline：mean_age：34；male_pct：49.4；mean_bmi：31.1；comorbidities_pct：dyslipidemia：60.0；fatty_liver：50.1；hyperuricemia_gout：40.5；impaired_glucose_metabolism：29.4；hypertension：22.0；weight_bearing_joint_pain：2.2；osa：0.2
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: safety.discontinuation.glory1
+  category: safety
+  statement: 因不良事件终止治疗比例：玛仕度肽组 1.0%，安慰剂组 1.0%
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: safety.ae.weight
+  category: safety
+  statement: 发生率 ≥2% 且高于安慰剂组的不良反应（GLORY-1，48 周）；columns：玛仕度肽 4 mg (N=203)、玛仕度肽 6 mg (N=202)、安慰剂 (N=205)；%
+  source: label.md#【不良反应】表 2
+  source_url: ''
+  verified: true
+  caution: ''
+- id: safety.ae.weight.nausea
+  category: safety
+  statement: 恶心：玛仕度肽 4 mg (N=203) 32.5%、玛仕度肽 6 mg (N=202) 50.5%、安慰剂 (N=205) 5.9%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.diarrhea
+  category: safety
+  statement: 腹泻：玛仕度肽 4 mg (N=203) 35.0%、玛仕度肽 6 mg (N=202) 38.6%、安慰剂 (N=205) 6.3%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.vomiting
+  category: safety
+  statement: 呕吐：玛仕度肽 4 mg (N=203) 26.1%、玛仕度肽 6 mg (N=202) 43.1%、安慰剂 (N=205) 2.9%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.bloating
+  category: safety
+  statement: 腹胀：玛仕度肽 4 mg (N=203) 6.4%、玛仕度肽 6 mg (N=202) 13.9%、安慰剂 (N=205) 2.0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.abdopain
+  category: safety
+  statement: 腹痛：玛仕度肽 4 mg (N=203) 5.9%、玛仕度肽 6 mg (N=202) 10.9%、安慰剂 (N=205) 1.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.isi
+  category: safety
+  statement: 注射部位反应：玛仕度肽 4 mg (N=203) 6.9%、玛仕度肽 6 mg (N=202) 8.4%、安慰剂 (N=205) 1.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.dizziness
+  category: safety
+  statement: 头晕：玛仕度肽 4 mg (N=203) 5.4%、玛仕度肽 6 mg (N=202) 7.9%、安慰剂 (N=205) 3.9%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.gerd
+  category: safety
+  statement: 胃食管反流病：玛仕度肽 4 mg (N=203) 4.4%、玛仕度肽 6 mg (N=202) 7.9%、安慰剂 (N=205) 1.0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.fatigue
+  category: safety
+  statement: 乏力：玛仕度肽 4 mg (N=203) 5.4%、玛仕度肽 6 mg (N=202) 5.9%、安慰剂 (N=205) 1.0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.eructation
+  category: safety
+  statement: 嗳气：玛仕度肽 4 mg (N=203) 3.4%、玛仕度肽 6 mg (N=202) 5.4%、安慰剂 (N=205) 0.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.constipation
+  category: safety
+  statement: 便秘：玛仕度肽 4 mg (N=203) 3.9%、玛仕度肽 6 mg (N=202) 3.5%、安慰剂 (N=205) 2.4%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.hiccup
+  category: safety
+  statement: 呃逆：玛仕度肽 4 mg (N=203) 4.4%、玛仕度肽 6 mg (N=202) 3.0%、安慰剂 (N=205) 0.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.ae.weight.dyspepsia
+  category: safety
+  statement: 消化不良：玛仕度肽 4 mg (N=203) 2.0%、玛仕度肽 6 mg (N=202) 3.5%、安慰剂 (N=205) 0.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.gi.glory1
+  category: safety
+  statement: any_gi：four_mg：62.6；six_mg：79.7；placebo：20.0；unit：%；severe_gi：2.0%（玛仕度肽组总体）；dc_due_to_gi：4 mg 组 2 例（1.0%）；6 mg 组 0；安慰剂组 0；pattern：多为轻度、持续时间短，集中于剂量递增阶段，维持期明显下降
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: safety.ae.t2dm
+  category: safety
+  statement: T2DM 版说明书中另有一张不良反应表（基于 DREAMS-1、DREAMS-2）；本 facts.yaml 未抽取该表逐项数值；如需 T2DM 不良反应发生率，必须回读 label.md 第 574 行起【不良反应】章节核对
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: false
+  caution: 本 facts.yaml 未抽取该表逐项数值；如需 T2DM 不良反应发生率，必须回读 label.md 第 574 行起【不良反应】章节核对；上游核验状态 partial（部分核验，引用前复核）
+- id: safety.immunogenicity
+  category: safety
+  statement: weight_management：ada_pct：43.9；nab_gcgr_pct：0.5；nab_glp1r_pct：0.5；note：滴度较低；type2_diabetes：ada_pct：8.2；nab_gcgr_pct：0.3；nab_glp1r_pct：0.4；note：滴度较低；免疫原性对药代动力学、疗效和安全性无影响
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.steady_state
+  category: dosing
+  statement: 每周 1 次给药，连续用药 4 周达稳态；暴露量随剂量成比例增加
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.tmax
+  category: dosing
+  statement: 7、28；h
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.vf
+  category: dosing
+  statement: 11.2 L；L；16.3；肥胖或超重患者
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.cl.obesity
+  category: dosing
+  statement: 0.0368 L/h；L/h；46.2
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.t12.obesity
+  category: dosing
+  statement: 10 天；天；29
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.cl.t2dm
+  category: dosing
+  statement: 0.0339 L/h；L/h；31.7；中国 2 型糖尿病患者
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.t12.t2dm
+  category: dosing
+  statement: 196.3 h；h；21.8；约合 8.2 天；本库不做换算，需要时自行计算并标注
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: 约合 8.2 天；本库不做换算，需要时自行计算并标注
+- id: pk.covariates
+  category: dosing
+  statement: 年龄（18～70 岁）、性别、体重（60.4～135.4 kg）对 PK 无临床意义影响
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: pk.metabolism
+  category: dosing
+  statement: 肽主链蛋白水解裂解、C20 脂肪酸 β-氧化与酰胺水解；主要经尿与粪排泄
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: efficacy.glory1
+  category: efficacy
+  statement: design：phase：III 期；randomization：1:1:1；blinding：双盲（ClinicalTrials.gov 登记为 triple-masked）；comparator：安慰剂；n_randomized：610；arms：maz_4mg：203；maz_6mg：202；placebo：205；duration_weeks：48；population：中国成人 18–75 岁；BMI ≥28，或 BMI 24–<28 并伴至少一种体重相关合并症；排除 HbA1c ≥6.5% 或既往 T1DM/T2DM；coprimary：第 32 周体重自基线百分比变化、第 32 周体重降幅 ≥5% 的受试者比例；estimand_publication：treatment-policy；estimand_label：mITT + 多重填补；baseline：weight_kg：87.2；bmi：31.1；source_refs：label.md#【临床试验】、trials_核验.md#1；status：verified
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.baseline.weight
+  category: efficacy
+  statement: 基线体重 (kg)：玛仕度肽 4 mg 87.8%、玛仕度肽 6 mg 87.1%、安慰剂 86.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w32.pct
+  category: efficacy
+  statement: W32 体重变化：玛仕度肽 4 mg -10.1%、玛仕度肽 6 mg -12.5%、安慰剂 0.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w32.ge5
+  category: efficacy
+  statement: W32 ≥5%：玛仕度肽 4 mg 73.9%、玛仕度肽 6 mg 82.0%、安慰剂 10.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w32.ge10
+  category: efficacy
+  statement: W32 ≥10%：玛仕度肽 4 mg 49.0%、玛仕度肽 6 mg 61.6%、安慰剂 0.6%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w32.ge15
+  category: efficacy
+  statement: W32 ≥15%：玛仕度肽 4 mg 27.2%、玛仕度肽 6 mg 43.6%、安慰剂 0.0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.pct
+  category: efficacy
+  statement: W48 体重变化：玛仕度肽 4 mg -11.0%、玛仕度肽 6 mg -14.0%、安慰剂 0.3%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.ge5
+  category: efficacy
+  statement: W48 ≥5%：玛仕度肽 4 mg 71.6%、玛仕度肽 6 mg 81.6%、安慰剂 10.8%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.ge10
+  category: efficacy
+  statement: W48 ≥10%：玛仕度肽 4 mg 53.5%、玛仕度肽 6 mg 66.7%、安慰剂 2.6%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.ge15
+  category: efficacy
+  statement: W48 ≥15%：玛仕度肽 4 mg 35.7%、玛仕度肽 6 mg 49.5%、安慰剂 2.0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.mmrm
+  category: efficacy
+  statement: w32：-11.0、-13.4、-0.2；w48：-12.0、-14.8、-0.5；说明书脚注披露的重复测量混合模型结果，与主表数值不同
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: 说明书脚注披露的重复测量混合模型结果，与主表数值不同
+- id: efficacy.glory1.nejm
+  category: efficacy
+  statement: '%；两组 vs 安慰剂均 P < 0.001；effect_size_vs_placebo：w32：-10.5、-13.0；ci：−11.8, −9.3、−14.3, −11.7'
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.nejm.w32.pct
+  category: efficacy
+  statement: W32 体重变化 (95%CI)：-10.09%、-12.55%、0.45%（95%CI −11.15 to −9.04、−13.64 to −11.45、−0.61 to 1.52）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.nejm.w32.ge5
+  category: efficacy
+  statement: W32 ≥5%：73.9%、82.0%、10.5%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.nejm.w48.pct
+  category: efficacy
+  statement: W48 体重变化 (95%CI)：-11.0%、-14.01%、0.3%（95%CI −12.27 to −9.73、−15.36 to −12.66、−0.98 to 1.58）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.nejm.w48.ge15
+  category: efficacy
+  statement: W48 ≥15%：35.7%、49.5%、2.0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.pr
+  category: efficacy
+  statement: NEJM 摘要未报告 ≥10% 达标率与腰围；以下取自申办方新闻稿，未经期刊原文核对；rows：W48 ≥10%（efficacy estimand）：55.2、67.9、2.9、W48 ≥10%（treatment-policy）：53.5、66.7、2.6、W48 ≥15%（efficacy estimand）：37.0、50.6、2.1、W48 腰围变化 cm（treatment-policy）：-9.12、-10.72、-1.41；引用时必须标注「申办方新闻稿」
+  source: 上游事实库[E5_SPONSOR]
+  source_url: ''
+  verified: false
+  caution: 引用时必须标注「申办方新闻稿」；NEJM 摘要未报告 ≥10% 达标率与腰围；以下取自申办方新闻稿，未经期刊原文核对；上游核验状态 partial（部分核验，引用前复核）
+- id: efficacy.glory1.cardiometabolic
+  category: efficacy
+  statement: 说明书表 4，第 48 周相对基线变化（mITT）
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: false
+  caution: 说明书表 4，第 48 周相对基线变化（mITT）
+- id: efficacy.glory1.w48.waist
+  category: efficacy
+  statement: 腰围 (cm)：-9.1、-10.7、-1.4
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.sbp
+  category: efficacy
+  statement: 收缩压 (mmHg)：-7.3、-9.9、-2.1
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.dbp
+  category: efficacy
+  statement: 舒张压 (mmHg)：-3.5、-5.3、-1.0
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.tg
+  category: efficacy
+  statement: 甘油三酯 (%)：-25.8、-31.5、0.7
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.tc
+  category: efficacy
+  statement: 总胆固醇 (%)：-3.0、-6.8、4.4
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.ldl
+  category: efficacy
+  statement: LDL-C (%)：-3.2、-7.1、5.0
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.ua
+  category: efficacy
+  statement: 血尿酸 (%)：-7.5、-12.9、4.3
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.alt
+  category: efficacy
+  statement: ALT (%)：-19.4、-26.9、5.8
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.ast
+  category: efficacy
+  statement: AST (%)：-6.5、-11.5、3.9
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.w48.hba1c
+  category: efficacy
+  statement: HbA1c（百分点）：-0.3、-0.3、-0.0
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory1.uric_acid
+  category: efficacy
+  statement: combined_4_6mg_change：-36.7；placebo_change：7.91；unit：μmol/L；subgroup_baseline_ge420：maz_6mg_change：-64.76；placebo_change：-21.25；reach_lt420_pct：51.9、27.3；「改善高尿酸血症」为说明书原文表述，但不得延伸为「治疗痛风」
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: false
+  caution: 「改善高尿酸血症」为说明书原文表述，但不得延伸为「治疗痛风」
+- id: efficacy.glory2
+  category: efficacy
+  statement: design：phase：III 期；randomization：2:1；blinding：双盲（登记为 quadruple-masked）；comparator：安慰剂；n_randomized：462；n_analyzed：461；arms：maz_9mg：307；placebo：154；duration_weeks：60；sites：中国 27 家医院，2023-12 至 2025-11；population：中国成人 BMI ≥30（中重度肥胖），可合并/不合并 T2DM；合并 T2DM 者 HbA1c 7.0–10.0%、FPG ≤11.1 mmol/L、稳定口服降糖药 ≥2 个月（禁 GLP-1RA 与 DPP-4i）；coprimary：第 60 周体重自基线百分比变化、第 60 周体重降幅 ≥5% 的受试者比例；baseline：female_pct：64.0；t2dm_pct：16.1；age：33.9；age_sd：8.4；weight_kg：94.0；weight_sd：13.8；bmi：34.3；bmi_sd：3.2；evidence：E2_PEER；status：verified
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory2.w60.pct
+  category: efficacy
+  statement: W60 体重变化 (95%CI)：玛仕度肽 9 mg -16.65%、安慰剂 -1.5%（95%CI −18.19 to −15.12、−3.43 to 0.43；组间差 -15.15%；P < .001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory2.w60.ge5
+  category: efficacy
+  statement: W60 ≥5%：玛仕度肽 9 mg 84.3%、安慰剂 33.1%（组间差 51.6%；P < .001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.glory2
+  category: safety
+  statement: dc_due_to_ae：maz：2.9；placebo：0；unit：%；vomiting：maz：53.1；placebo：1.3；unit：%；nausea：maz：46.9；placebo：3.2；unit：%；diarrhea：maz：39.4；placebo：6.5；unit：%
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.glory2.missing
+  category: efficacy
+  statement: ≥10% / ≥15% / ≥20% 达标率、腰围变化、收缩压、甘油三酯、non-HDL-C、LDL-C；均为登记次要终点，但 JAMA 摘要未给出数值；不得杜撰或推断
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: 均为登记次要终点，但 JAMA 摘要未给出数值；不得杜撰或推断
+- id: efficacy.dreams1
+  category: efficacy
+  statement: design：phase：III 期；randomization：1:1:1；blinding：双盲；comparator：安慰剂；n_randomized_paper：320；n_label：319；arms：maz_4mg：106；maz_6mg：106；placebo：107；duration：24 周双盲期 + 24 周延长治疗期（安慰剂组转 6 mg）；population：中国成人 T2DM，仅饮食运动控制不佳（未用口服降糖药）；HbA1c 7.5–10.5%；按 WHO 1999 诊断 ≥2 个月；近 2 个月未用口服降糖药；primary：第 24 周 HbA1c 自基线变化；baseline：hba1c_pct：8.24；bmi：28.2；dm_duration_years：1.9；weight_kg：77.7；evidence：E2_PEER；status：verified
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.label
+  category: efficacy
+  statement: 说明书表 5，mITT 多重填补，第 24 周
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: false
+  caution: 说明书表 5，mITT 多重填补，第 24 周
+- id: efficacy.dreams1.hba1c.base
+  category: efficacy
+  statement: HbA1c 基线：玛仕度肽 4 mg 8.19%、玛仕度肽 6 mg 8.21%、安慰剂 8.33%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.hba1c.change
+  category: efficacy
+  statement: HbA1c 变化 (LSMean)：玛仕度肽 4 mg -1.58%、玛仕度肽 6 mg -2.02%、安慰剂 -0.25%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.hba1c.diff
+  category: efficacy
+  statement: HbA1c 组间差异 95%CI：-1.33、-1.77（95%CI −1.57, −1.08、−2.01, −1.53；P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.hba1c.lt7
+  category: efficacy
+  statement: HbA1c <7%：玛仕度肽 4 mg 66.4%、玛仕度肽 6 mg 81.8%、安慰剂 11.7%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.hba1c.le65
+  category: efficacy
+  statement: HbA1c ≤6.5%：玛仕度肽 4 mg 54.4%、玛仕度肽 6 mg 75.2%、安慰剂 5.8%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.fpg.base
+  category: efficacy
+  statement: FPG 基线 (mmol/L)：玛仕度肽 4 mg 9.33、玛仕度肽 6 mg 10.03、安慰剂 9.74
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.fpg.change
+  category: efficacy
+  statement: FPG 变化 (mmol/L)：玛仕度肽 4 mg -2.37、玛仕度肽 6 mg -3.12、安慰剂 -0.22
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.weight.change
+  category: efficacy
+  statement: 体重变化：玛仕度肽 4 mg -5.5%、玛仕度肽 6 mg -7.34%、安慰剂 -1.15%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.weight.ge5
+  category: efficacy
+  statement: 体重降幅 ≥5%：玛仕度肽 4 mg 48.8%、玛仕度肽 6 mg 64.0%、安慰剂 6.6%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.weight.ge10
+  category: efficacy
+  statement: 体重降幅 ≥10%：玛仕度肽 4 mg 18.7%、玛仕度肽 6 mg 32.1%、安慰剂 0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.dual
+  category: efficacy
+  statement: HbA1c<7% 且体重降幅 ≥5% 双达标：玛仕度肽 4 mg 39.0%、玛仕度肽 6 mg 58.5%、安慰剂 0%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.mmrm
+  category: efficacy
+  statement: hba1c：-1.57、-2.15、-0.14；weight：-5.61、-7.81、-1.26
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams1.nature
+  category: efficacy
+  statement: hba1c_change：-1.57、-2.15、-0.14；hba1c_diff：-1.43、-2.02；weight_change：-5.61、-7.81、-1.26；p：< 0.0001；Nature 摘要数值与说明书 MMRM 敏感性分析接近；摘要未给达标率具体百分比
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: false
+  caution: Nature 摘要数值与说明书 MMRM 敏感性分析接近；摘要未给达标率具体百分比
+- id: efficacy.dreams1.other
+  category: efficacy
+  statement: seven_point_glucose_mmol：-3.7、-4.14、-1.37；waist_cm：-3.66、-4.42、-0.43；sbp_mmhg：-7.1、-6.02、-2.25；dbp_mmhg：-2.2、-2.29、0.09；tg_pct：-6.6、-19.0、14.71；alt_u_l：-6.56、-7.31、2.57；ast_u_l：-4.06、-5.29、2.22
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2
+  category: efficacy
+  statement: design：phase：III 期；randomization：1:1:1；blinding_label：玛仕度肽剂量盲态、度拉糖肽对照（开放标签）；blinding_registry：double-masked；blinding_conflict：见 discrepancies D8；comparator：度拉糖肽 1.5 mg（阳性对照）；n_randomized：731；arms：maz_4mg：242；maz_6mg：244；dula_1_5mg：245；duration_weeks：28；background：二甲双胍和/或磺脲类，或二甲双胍和/或 SGLT2i；population：中国成人 T2DM；稳定二甲双胍 ≥1500 mg/日，或联合 SGLT2i（恩格列净 10、达格列净 10、卡格列净 100、恒格列净 5 mg/日），或联合磺脲类（标签最大剂量一半）后控制不佳；≥18 岁；primary：第 28 周 HbA1c 自基线变化（非劣效 + 优效）；baseline：hba1c_pct：8.22；weight_kg：76.95；evidence：E2_PEER；status：verified
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.label
+  category: efficacy
+  statement: 说明书表 6，mITT 多重填补，第 28 周
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: false
+  caution: 说明书表 6，mITT 多重填补，第 28 周
+- id: efficacy.dreams2.hba1c.base
+  category: efficacy
+  statement: HbA1c 基线：玛仕度肽 4 mg 8.21%、玛仕度肽 6 mg 8.21%、度拉糖肽 1.5 mg 8.23%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.hba1c.change
+  category: efficacy
+  statement: HbA1c 变化 (LSMean)：玛仕度肽 4 mg -1.61%、玛仕度肽 6 mg -1.66%、度拉糖肽 1.5 mg -1.36%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.hba1c.diff
+  category: efficacy
+  statement: HbA1c 组间差异 vs 度拉糖肽：-0.24、-0.3（95%CI −0.40, −0.08、−0.46, −0.14；P 0.0032、0.0003）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.hba1c.lt7
+  category: efficacy
+  statement: HbA1c <7%：玛仕度肽 4 mg 67.7%、玛仕度肽 6 mg 70.4%、度拉糖肽 1.5 mg 61.6%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.hba1c.le65
+  category: efficacy
+  statement: HbA1c ≤6.5%：玛仕度肽 4 mg 52.0%、玛仕度肽 6 mg 59.9%、度拉糖肽 1.5 mg 41.6%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.fpg.base
+  category: efficacy
+  statement: FPG 基线 (mmol/L)：玛仕度肽 4 mg 9.35、玛仕度肽 6 mg 9.17、度拉糖肽 1.5 mg 9.19
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.fpg.change
+  category: efficacy
+  statement: FPG 变化 (mmol/L)：玛仕度肽 4 mg -2.06、玛仕度肽 6 mg -1.89、度拉糖肽 1.5 mg -1.7
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.weight.change
+  category: efficacy
+  statement: 体重变化：玛仕度肽 4 mg -6.55%、玛仕度肽 6 mg -8.53%、度拉糖肽 1.5 mg -2.77%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.weight.diff
+  category: efficacy
+  statement: 体重组间差异 vs 度拉糖肽：-3.78、-5.76（95%CI −4.66, −2.91、−6.65, −4.87；P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.weight.ge5
+  category: efficacy
+  statement: 体重降幅 ≥5%：玛仕度肽 4 mg 58.6%、玛仕度肽 6 mg 73.1%、度拉糖肽 1.5 mg 26.6%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.weight.ge10
+  category: efficacy
+  statement: 体重降幅 ≥10%：玛仕度肽 4 mg 25.7%、玛仕度肽 6 mg 33.9%、度拉糖肽 1.5 mg 3.4%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.dual
+  category: efficacy
+  statement: HbA1c<7% 且体重降幅 ≥5% 双达标：玛仕度肽 4 mg 46.9%、玛仕度肽 6 mg 59.9%、度拉糖肽 1.5 mg 118.9%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.mmrm
+  category: efficacy
+  statement: hba1c：-1.69、-1.73、-1.38；weight：-7.13、-9.24、-2.86
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams2.nature
+  category: efficacy
+  statement: hba1c_diff：-0.24、-0.3；hba1c_p：0.0032、0.0003；weight_diff：-3.78、-5.76；weight_p：<0.0001；dual_endpoint_p：<0.0001；Nature 摘要只报告治疗差异，未给绝对变化值，也未给达标率
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: false
+  caution: Nature 摘要只报告治疗差异，未给绝对变化值，也未给达标率
+- id: efficacy.dreams2.other
+  category: efficacy
+  statement: seven_point_glucose_mmol：-3.33、-3.24、-2.8；waist_cm：-5.52、-6.78、-2.84；sbp_mmhg：-4.94、-4.91、-2.06；dbp_mmhg：-1.99、-1.92、-1.09；tg_pct：-16.52、-23.92、-0.52；alt_u_l：-8.71、-9.13、-0.9；ast_u_l：-5.17、-5.54、-0.01；qtc：未提示 QTc 延长风险，与度拉糖肽基本相当
+  source: 上游事实库[E1_LABEL]
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3
+  category: efficacy
+  statement: 截至 2026-10-25 无同行评审结果论文；仅设计/基线论文 + ADA 2026 口头报告 1226-OR + 申办方新闻稿；design：phase：III 期；type：多中心、随机、开放标签、阳性对照头对头；comparator：司美格鲁肽 1 mg；n_randomized：349；n_sponsor_pr：329；sites：中国 42 家医院；duration：32 周核心期（含 8 周滴定期）+ 玛仕度肽组 24 周延长治疗期；arms：玛仕度肽 2 mg 起滴至 6 mg vs 司美格鲁肽 0.25 mg 起滴至 1 mg；population：中国成人早期 T2DM（WHO 1999 诊断 ≤5 年）合并肥胖（BMI ≥28）；HbA1c 7.5–9.5%；近 3 个月饮食运动伴/不伴稳定二甲双胍 1500–2550 mg/日；primary：第 32 周 HbA1c <7.0% 且体重较基线下降 ≥10% 的受试者比例；baseline：age：42.4；hba1c_pct：8.0；dm_duration_years：1.8；weight_kg：90.5；bmi：33.0；只能表述为「申办方公布的 DREAMS-3 结果（ADA 2026 口头报告）」，禁止写作「研究已发表」「文献显示」
+  source: 上游事实库[E5_SPONSOR]
+  source_url: ''
+  verified: false
+  caution: 只能表述为「申办方公布的 DREAMS-3 结果（ADA 2026 口头报告）」，禁止写作「研究已发表」「文献显示」；上游核验状态 partial（部分核验，引用前复核）
+- id: efficacy.dreams3.pr
+  category: efficacy
+  statement: efficacy estimand；%
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.primary
+  category: efficacy
+  statement: 主要终点：HbA1c<7.0% 且减重 ≥10%：玛仕度肽 6 mg 48.0%、司美格鲁肽 1 mg 21.0%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.dual7
+  category: efficacy
+  statement: HbA1c<7.0% 且减重 ≥5%：玛仕度肽 6 mg 74.7%、司美格鲁肽 1 mg 51.0%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.dual65_5
+  category: efficacy
+  statement: HbA1c<6.5% 且减重 ≥5%：玛仕度肽 6 mg 69.4%、司美格鲁肽 1 mg 48.7%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.dual65_10
+  category: efficacy
+  statement: HbA1c<6.5% 且减重 ≥10%：玛仕度肽 6 mg 45.7%、司美格鲁肽 1 mg 20.8%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.hba1c
+  category: efficacy
+  statement: HbA1c 自基线变化：玛仕度肽 6 mg -2.03%、司美格鲁肽 1 mg -1.84%（P <0.05）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.weight
+  category: efficacy
+  statement: 体重自基线变化：玛仕度肽 6 mg -10.3%、司美格鲁肽 1 mg -6.0%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.ge5
+  category: efficacy
+  statement: 体重降幅 ≥5%：玛仕度肽 6 mg 80.6%、司美格鲁肽 1 mg 52.8%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: efficacy.dreams3.ge10
+  category: efficacy
+  statement: 体重降幅 ≥10%：玛仕度肽 6 mg 51.2%、司美格鲁肽 1 mg 21.3%（P <0.0001）
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: safety.dreams3
+  category: safety
+  statement: nausea：30.5、12.6；diarrhea：27.0、21.8；vomiting：23.6、8.6；severe_hypoglycemia：未发生；pattern：多为轻中度、一过性，主要发生于滴定期；未发现新的安全性信号
+  source: 上游事实库[E5_SPONSOR]
+  source_url: ''
+  verified: false
+  caution: 上游核验状态 partial（部分核验，引用前复核）
+- id: competitor.surmount5
+  category: competitor
+  statement: 替尔泊肽 vs 司美格鲁肽头对头，作为同类双靶点药物的外部基准；design：phase：IIIb 期；type：随机、开放标签、阳性对照；n：751；randomization：1:1；duration_weeks：72；population：肥胖但不伴 T2DM 成人；BMI ≥30，或 BMI ≥27 伴至少一种体重相关合并症；arms：替尔泊肽 MTD（10 或 15 mg）vs 司美格鲁肽 MTD（1.7 或 2.4 mg）；primary：第 72 周体重自基线百分比变化；evidence：E2_PEER；status：verified
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: competitor.surmount5.nejm
+  category: competitor
+  statement: weight_pct：tirzepatide：-20.2；tirzepatide_ci：−21.4 to −19.1；semaglutide：-13.7；semaglutide_ci：−14.9 to −12.6；waist_cm：tirzepatide：-18.4；semaglutide：-13.0；p：< 0.001
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: competitor.surmount5.registry
+  category: competitor
+  statement: NEJM 摘要未列各阈值百分比，以下取自 ClinicalTrials.gov 已登记结果；%；rows：≥10%：87.7、66.7、≥15%：71.7、45.0、≥20%：55.0、31.1、≥25%：36.5、18.6、≥30%：23.0、8.2
+  source: 上游事实库[E3_REGISTRY]
+  source_url: ''
+  verified: false
+  caution: NEJM 摘要未列各阈值百分比，以下取自 ClinicalTrials.gov 已登记结果
+- id: competitor.surmount5.restriction
+  category: competitor
+  statement: '本品与替尔泊肽、司美格鲁肽均无头对头试验。禁止任何形式的跨试验间接比较
+
+    （含「优于」「相当于」「与……相当」），亦禁止引用 SURMOUNT-5 数字暗示本品疗效。
+
+    广告法 §16Ⅰ(三) 禁止与其他药品的功效和安全性比较。'
+  source: 上游事实库[E4_OFFICIAL]
+  source_url: ''
+  verified: false
+  caution: '本品与替尔泊肽、司美格鲁肽均无头对头试验。禁止任何形式的跨试验间接比较
+
+    （含「优于」「相当于」「与……相当」），亦禁止引用 SURMOUNT-5 数字暗示本品疗效。
+
+    广告法 §16Ⅰ(三) 禁止与其他药品的功效和安全性比较。'
+- id: guide.obesity2024
+  category: guide
+  statement: 肥胖症诊疗指南（2024年版）；国家卫生健康委办公厅；国卫办医政函〔2024〕382号；2024-10-12；2024-10-17；国家层面诊疗指南（首部由国家卫健委发布的肥胖症诊疗指南）
+  source: 上游事实库[E4_OFFICIAL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: guide.obesity2024.bmi_cutoff
+  category: guide
+  statement: BMI 诊断切点；第四章 肥胖症的定义、诊断标准、分型、分期及相关疾病；原文：「在我国成年人群中，BMI 低于 18.5 kg/m² 为低体重状态，达到 18.5 kg/m² 且低于 24 kg/m² 为正常体重，达到 24 kg/m² 且低于 28 kg/m² 为超重，达到或超过 28 kg/m² 为肥胖症。」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.obesity2024.grading
+  category: guide
+  statement: 肥胖症四级分级；同上；原文：「建议 BMI 达到 28.0 kg/m² 且低于 32.5 kg/m² 为轻度肥胖症、达到 32.5 kg/m² 且低于 37.5 kg/m² 为中度肥胖症、达到 37.5 kg/m² 且低于 50 kg/m² 为重度肥胖症、达到或超过 50 kg/m² 为极重度肥胖症。」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.obesity2024.waist
+  category: guide
+  statement: 中心性肥胖腰围切点；同上，基于体型特征的诊断标准；原文：「正常腰围定义为 <85 cm（男性）和 <80 cm（女性），腰围 ≥90 cm（男性）和 ≥85 cm（女性）即可诊断为中心性肥胖。……当 WHR ≥0.90（男性）和 ≥0.85（女性）时，也可诊断为中心性肥胖。」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.obesity2024.target
+  category: guide
+  statement: 减重目标分层；第六章 肥胖症的治疗原则；原文：「对于大多数超重和轻度肥胖症患者，可设定为在 3-6 个月之内至少将体重降低 5%-15% 并维持；对于中、重度肥胖症患者则可设定更高的减重目标……建议每 3-6 个月对减重效果和代谢指标进行评估。」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.obesity2024.modalities
+  category: guide
+  statement: 治疗手段构成；第六章；原文：「肥胖症治疗有多种手段，主要包括：行为心理干预、运动干预、临床营养治疗、药物治疗、外科手术治疗以及中医药治疗等。……一般建议所有患者均应接受营养、运动、心理指导作为全程基础管理。」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.obesity2024.compliance
+  category: guide
+  statement: 本指南发布于 2024-10-12，玛仕度肽 2025-06-24 获批，2024 版指南药物治疗章节不可能纳入玛仕度肽；禁止声称「指南推荐玛仕度肽」，禁止把其他药物的推荐等级移用至本品
+  source: 上游事实库[E4_OFFICIAL]
+  source_url: ''
+  verified: false
+  caution: 禁止声称「指南推荐玛仕度肽」，禁止把其他药物的推荐等级移用至本品
+- id: guide.obesity2024.druglist
+  category: guide
+  statement: 网络媒体报道该指南列出奥利司他、利拉鲁肽、贝那鲁肽、司美格鲁肽、替尔泊肽五种减重药物；未从指南 PDF 正文逐字核对，引用前须回原文「药物治疗」章节确认
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: 未从指南 PDF 正文逐字核对，引用前须回原文「药物治疗」章节确认；上游核验状态 unverified（未核验，引用前必须复核）
+- id: guide.weight2024
+  category: guide
+  statement: 体重管理指导原则（2024年版）；国家卫生健康委办公厅；国卫办医急函〔2024〕469号；2024-12-05；指导原则，配套「体重管理年」活动实施方案，委托国家心血管病中心牵头制定；https://www.nhc.gov.cn/wjw/ylyjs/202412/b3d40e0141834897808ce6c9dce76a60.shtml
+  source: 上游事实库[E4_OFFICIAL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: guide.weight2024.scope
+  category: guide
+  statement: 文件定位与内容框架；原文：「为进一步落实《「体重管理年」活动实施方案》，强化慢性病防治关口前移……我委委托国家心血管病中心牵头，组织相关领域专家，针对超重肥胖等体重问题的规范化管理制定了《体重管理指导原则（2024年版）》。主要内容包括体重的分类标准、体重管理相关评估、超重肥胖的干预和治疗、健康体重的管理与维持、特殊人群的体重管理、规范化体重管理流程等，供各地推广使用。」
+  source: 卫健委官方解读
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.weight2024.epidemiology
+  category: guide
+  statement: 流行病学数据；原文：「根据《中国居民营养与慢性病状况报告（2020 年）》，2018 年我国成人超重率和肥胖率分别为 34.3% 和 16.4%，与 2002 年的 22.8% 和 7.1% 相比大幅增长；6～17 岁儿童青少年超重率和肥胖率分别为 11.1% 和 7.9%，并呈逐年递增趋势。」
+  source: 指导原则正文（PDF）
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.weight2024.caveat
+  category: guide
+  statement: 正文要点引自卫健委官方解读与省级转发 PDF；逐条引用具体条款时应下载原文附件核对页码
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: 上游核验状态 partial（部分核验，引用前复核）
+- id: guide.diabetes2024
+  category: guide
+  statement: 中国糖尿病防治指南（2024版）；中华医学会糖尿病学分会（CDS）；None；属学会指南，无政府发文号；不得写作「国家卫健委发布」；《中华糖尿病杂志》2025 年第 17 卷第 1 期，第 16-139 页；2024-12-31（期刊官网发布）；correspondence_authors：朱大龙（南京大学医学院附属鼓楼医院）、郭立新（北京医院）；共 20 章，含第九章「高血糖的药物治疗」、第十章「2 型糖尿病患者的体重管理」
+  source: 上游事实库[E4_OFFICIAL]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: guide.diabetes2024.toc
+  category: guide
+  statement: 章节构成；原文：「本指南共 20 章，内容涵盖中国糖尿病的流行病学、诊断与分型、三级预防、筛查和评估、教育和管理、2 型糖尿病综合控制目标和高血糖的治疗路径、医学营养治疗、运动治疗、高血糖的药物治疗、2 型糖尿病患者的体重管理、糖尿病相关技术、急性并发症……」
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.diabetes2024.epi
+  category: guide
+  statement: '流行病学要点；第一章 要点提示；原文：「1. 我国糖尿病患病率仍在上升，由 2013 年的 10.9% 增加到 2018 至 2019 年的 12.4%。……3. 糖尿病人群中 2 型糖尿病（T2DM）占 90% 以上。
+
+    5. 糖尿病知晓率（36.7%）、治疗率（32.9%）和控制率（50.1%）提升缓慢。」'
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: guide.diabetes2024.citation
+  category: guide
+  statement: 引用出处须写《中华糖尿病杂志》2025;17(1):16-139，不得写机关文号
+  source: 上游事实库 facts_upstream.yaml
+  source_url: ''
+  verified: false
+  caution: ''
+- id: trial.glory1
+  category: efficacy
+  statement: GLORY-1；Once-Weekly Mazdutide in Chinese Adults with Obesity or Overweight；The New England Journal of Medicine；2025 Jun 12;392(22):2215-2225；2025-05-25；10.1056/NEJMoa2411528；40421736；NCT05607680；Innovent Biologics；付费墙，采用 PubMed 官方摘要
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: trial.glory2
+  category: efficacy
+  statement: 'GLORY-2；Treatment With 9-mg Mazdutide for Weight Reduction in Chinese Adults With Obesity: The GLORY-2 Randomized Clinical Trial；JAMA；2026 Aug 4;336(5):377-388；2026-06-07；10.1001/jama.2026.8142；42251595；PMC13244275（embargo，仅摘要）；NCT06164873；JAMA. 2026 Aug 4;336(5):374-376. doi:10.1001/jama.2026.10443'
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: trial.dreams1
+  category: efficacy
+  statement: DREAMS-1；Mazdutide versus placebo in Chinese adults with type 2 diabetes；Nature；2026 Apr;652(8108):174-180；2025-12-17；10.1038/s41586-025-10026-w；41407859；NCT05628311；authors：朱大龙（南京大学医学院附属鼓楼医院）、赵家军（山东第一医科大学）；与 DREAMS-2 背靠背同期发表于同一期 Nature
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: true
+  caution: 与 DREAMS-2 背靠背同期发表于同一期 Nature
+- id: trial.dreams2
+  category: efficacy
+  statement: DREAMS-2；Mazdutide versus dulaglutide in Chinese adults with type 2 diabetes；Nature；2026 Apr;652(8108):181-188；2025-12-17；10.1038/s41586-025-10031-z；41407860；NCT05606913；authors：郭立新（北京医院）、张波（中日友好医院）、杨文英（中日友好医院，通讯）
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: true
+  caution: ''
+- id: trial.dreams3
+  category: efficacy
+  statement: 'DREAMS-3；Mazdutide versus Semaglutide for the treatment of type 2 diabetes and obesity: Rationale, design and baseline data of DREAMS-3 phase 3 trial；Contemporary Clinical Trials；2026 Jan;160:108150；2025-11-17；10.1016/j.cct.2025.108150；41260459；NCT06184568；None；ADA 2026 口头报告 1226-OR（2026-06-08）+ 申办方新闻稿'
+  source: 上游事实库[E5_SPONSOR]
+  source_url: ''
+  verified: false
+  caution: 上游核验状态 partial（部分核验，引用前复核）
+- id: trial.surmount5
+  category: efficacy
+  statement: SURMOUNT-5；Tirzepatide as Compared with Semaglutide for the Treatment of Obesity；The New England Journal of Medicine；2025 Jul 3;393(1):26-36；2025-05-11；10.1056/NEJMoa2416394；40353578；NCT05822830；Eli Lilly
+  source: 上游事实库[E2_PEER]
+  source_url: ''
+  verified: true
+  caution: ''

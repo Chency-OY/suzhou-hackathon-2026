@@ -1,0 +1,1793 @@
+# =============================================================================
+# facts.yaml — 信尔美®（玛仕度肽注射液 / mazdutide）事实库
+# -----------------------------------------------------------------------------
+# 用途：作为下游抽取（Codex）的唯一事实源。所有对外表述必须先在此库命中事实，
+#       未命中的内容一律视为「无依据」，不得生成。
+# 生成日期：2026-10-25
+# 上游材料：
+#   - label.md              说明书原文（NMPA 核准，38k 字）
+#   - trials_核验.md         6 项临床试验文献核验
+#   - guidelines_核验.md     3 份指南/指导原则核验
+#   - regulations_核验.md    7 部法规/行业规范核验
+# 编写原则：
+#   1. 只收录四份上游材料中出现过的事实，不引入外部知识；
+#   2. 数字保留原文精度，不做二次换算或四舍五入；
+#   3. 每项事实带 evidence（证据等级）与 status（核验状态），并尽量附 quote 原文；
+#   4. 已知冲突不进正文，统一沉到 discrepancies，避免下游把不可比数字混用。
+# =============================================================================
+
+schema_version: "1.0"
+generated_at: "2026-10-25"
+language: "zh-CN"
+subject:
+  product: "信尔美（玛仕度肽注射液）"
+  company: "信达生物制药（苏州）有限公司"
+
+# -----------------------------------------------------------------------------
+# 字段约定（供 Codex 解析）
+# -----------------------------------------------------------------------------
+field_conventions:
+
+  id:
+    desc: "稳定事实标识；下游引用格式为双方括号包住该 id"
+    pattern: "<domain>.<subject>.<metric>[.<arm>]"
+    domains: ["product", "label", "dose", "safety", "pk", "efficacy", "trial",
+              "competitor", "guide", "reg", "rule", "claim"]
+
+  evidence:
+    desc: "证据等级，从高到低；同一事实有多个来源时取最高等级，其余进 corroborated_by"
+    codes:
+      E1_LABEL:    "NMPA 核准说明书原文（行政许可文件，最高效力）"
+      E2_PEER:     "同行评审论文 / PubMed 官方摘要"
+      E3_REGISTRY: "ClinicalTrials.gov 注册信息或已登记结果"
+      E4_OFFICIAL: "政府机关、学会官方发布（卫健委 / NMPA / 法工委 / 学会期刊）"
+      E5_SPONSOR:  "申办方新闻稿、学术会议口头报告（未经同行评审）"
+      E6_MEDIA:    "行业媒体、二手转载"
+
+  status:
+    desc: "核验状态"
+    values:
+      verified:   "已从一手来源逐字核对"
+      partial:    "部分字段已核，或来源非一手"
+      unverified: "未能核实，引用前必须复核"
+      deprecated: "已废止 / 已被新版本取代，禁止引用"
+
+  quote:
+    desc: "原文摘录，逐字复制，不改编、不断句改写；仅可能调整排版空白"
+
+# -----------------------------------------------------------------------------
+# 使用契约：Codex 抽取时必须遵守
+# -----------------------------------------------------------------------------
+usage_contract:
+  rules:
+    - id: U1
+      rule: "任何数值型表述必须带 unit 与 fact id；无 fact id 的数字禁止输出。"
+    - id: U2
+      rule: "禁止跨 trial 合并数据（如把 GLORY-1 与 GLORY-2 的减重率取平均）。"
+    - id: U3
+      rule: "禁止混用同一试验的不同口径（mITT 多重填补 / MMRM / treatment-policy），见 discrepancies D7。"
+    - id: U4
+      rule: "status 非 verified 的事实，输出时必须加限定语，并在文末列「待复核项」。"
+    - id: U5
+      rule: "涉及对外传播（面向医生以外受众）时，必须先过 claims_policy.forbidden 与 compliance_rules，任一命中即拒答。"
+    - id: U6
+      rule: "不得声称任何指南推荐玛仕度肽，见 discrepancies D11。"
+    - id: U7
+      rule: "DREAMS-3 数据只可标注为「申办方新闻稿/ADA 2026 口头报告」，不得表述为「已发表研究结果」。"
+    - id: U8
+      rule: "说明书两套适应症（减重版 / T2DM 版）不可交叉引用：适应症、禁忌、不良反应表、临床试验数据均各自独立。"
+    - id: U9
+      rule: "引用法规必须带条款号；不得引用 deprecated 清单内的任何文件。"
+    - id: U10
+      rule: "输出中的疗效表述不得超出 label.indications 与 label.efficacy 已载明的范围（广告法 §16Ⅱ、21 号令 §5）。"
+
+  output_requirements:
+    - "每个疗效数字后以双方括号附其 fact id"
+    - "每个法规条款后附 (法规简称 §条款)"
+    - "待复核项单列一节，格式：fact_id — 原因 — 建议核验途径"
+
+# =============================================================================
+# 1. 产品身份与行政许可
+# =============================================================================
+product:
+
+  identity:
+    generic_name:
+      id: product.name.generic
+      value: "玛仕度肽注射液"
+      evidence: E1_LABEL
+      status: verified
+    brand_name:
+      id: product.name.brand
+      value: "信尔美"
+      note: "说明书商品名写作「信尔美」，官方表述与商标形式为「信尔美®」"
+      evidence: E1_LABEL
+      status: verified
+    english_name:
+      id: product.name.en
+      value: "Mazdutide Injection"
+      evidence: E1_LABEL
+      status: verified
+    pinyin:
+      id: product.name.pinyin
+      value: "Mashidutai Zhusheye"
+      evidence: E1_LABEL
+      status: verified
+    inn:
+      id: product.name.inn
+      value: "mazdutide"
+      note: "研发代号 IBI362"
+      evidence: E2_PEER
+      status: verified
+
+  mechanism:
+    id: product.moa
+    value: "人胰高血糖素样肽-1（GLP-1）受体和胰高血糖素（GCG）受体双重激动剂"
+    detail:
+      - "体外可激活 GLP-1 受体和 GCG 受体，增加人原代肝细胞、大鼠胰腺 β 细胞内 cAMP 含量"
+      - "动物试验显示可增强葡萄糖诱导的胰岛素分泌、降低血糖、增加能量消耗、降低体重"
+    quote: |
+      玛仕度肽是人胰高血糖素样肽-1（GLP-1）受体和胰高血糖素（GCG）受体激动剂。玛仕度肽体外可激活GLP-1 受体和GCG 受体，增加人原代肝细胞、大鼠胰腺β 细胞内环磷酸腺苷（cAMP）含量。
+    source: "label.md#【药理毒理】药理作用"
+    evidence: E1_LABEL
+    status: verified
+
+  molecule:
+    formula:
+      id: product.molecule.formula
+      value: "C210H322N46O67"
+      display: "C₂₁₀H₃₂₂N₄₆O₆₇"
+      evidence: E1_LABEL
+      status: verified
+    molecular_weight:
+      id: product.molecule.mw
+      value: 4563.14
+      unit: "Da"
+      evidence: E1_LABEL
+      status: verified
+    excipients:
+      id: product.molecule.excipients
+      value: ["氨丁三醇", "甘露醇", "丙二醇（供注射用）", "依地酸二钠", "稀盐酸", "氢氧化钠", "注射用水"]
+      evidence: E1_LABEL
+      status: verified
+    chemical_name_note:
+      id: product.molecule.chemname
+      value: "说明书【成份】项下完整化学名（长肽链系统命名）"
+      rule: "长度逾 400 字，任何场景均不得转述或简写为自造名称；需要时整段引用 label.md"
+      evidence: E1_LABEL
+      status: verified
+
+  appearance:
+    id: product.appearance
+    value: "澄清或几乎澄清，无色或几乎无色液体"
+    evidence: E1_LABEL
+    status: verified
+
+  manufacturer:
+    mah:
+      id: product.mah
+      value: "信达生物制药（苏州）有限公司"
+      evidence: E1_LABEL
+      status: verified
+    registered_address:
+      id: product.mah.addr
+      value: "苏州工业园区东平街 168 号"
+      postcode: "215123"
+      evidence: E1_LABEL
+      status: verified
+    manufacturing_site:
+      id: product.site
+      value: "信达生物制药（苏州）有限公司，苏州工业园区东平街 168 号"
+      note: "本品上市许可持有人与生产企业为同一主体"
+      evidence: E1_LABEL
+      status: verified
+    contact:
+      tel: "0512-69566088"
+      fax: "0512-69566088-8348"
+      hotline: "4006505018"
+      web: "www.innoventbio.com"
+      evidence: E1_LABEL
+      status: verified
+
+  approval:
+    nmpa_drug_approval_numbers:
+      id: product.approval.numbers
+      value:
+        - {spec: "0.5 ml : 2 mg", number: "国药准字 H20250036"}
+        - {spec: "0.5 ml : 4 mg", number: "国药准字 H20250037"}
+        - {spec: "0.5 ml : 6 mg", number: "国药准字 H20250038"}
+      source: "label.md#【批准文号】；NMPA 数据查询 2026-10-25"
+      evidence: E1_LABEL
+      status: verified
+    initial_approval_date:
+      id: product.approval.date
+      value: "2025-06-24"
+      note: "减重适应症说明书核准日期；NMPA 批件批准日期一致"
+      evidence: E1_LABEL
+      status: verified
+    label_revision_dates:
+      id: product.label.revisions
+      value:
+        weight_management: "2025-06-24"
+        type2_diabetes: "2025-09-16"
+      warning: "同一 PDF 内含两张独立说明书，核准日期不同，见 discrepancies D1"
+      evidence: E1_LABEL
+      status: verified
+    secondary_approval_record:
+      id: product.approval.other
+      value: "国药准字 H20269105（2026-05-06 批准），登记于江苏诺泰澳赛诺生物制药股份有限公司名下"
+      interpretation: "属补充申请/受托生产相关批件，不作为本品说明书主体引用"
+      evidence: E4_OFFICIAL
+      status: partial
+    standard:
+      id: product.approval.standard
+      value: "YBH14722025"
+      evidence: E1_LABEL
+      status: verified
+    shelf_life:
+      id: product.shelf_life
+      value: 24
+      unit: "月"
+      evidence: E1_LABEL
+      status: verified
+    storage:
+      id: product.storage
+      value: "避光、密闭、2～8 ℃ 保存，不得冷冻"
+      detail: "如有特殊需要，可在原包装中室温（10～30 ℃）保存不超过 30 天，且不可再返回冷藏；30 天内未使用应丢弃"
+      evidence: E1_LABEL
+      status: verified
+    packaging:
+      id: product.packaging
+      value: ["1 支/盒", "2 支/盒", "4 支/盒"]
+      detail: "1 ml 细长型预灌封注射器组合件 + 溴化丁基橡胶活塞，组装为预充式自动注射笔"
+      evidence: E1_LABEL
+      status: verified
+
+# =============================================================================
+# 2. 适应症（两套，严格分离）
+# =============================================================================
+indications:
+
+  weight_management:
+    id: label.indication.weight
+    label_version: "减重版（核准 2025-06-24）"
+    headline: "用于在控制饮食和增加体力活动基础上对成人患者的长期体重控制"
+    criteria:
+      - {op: "BMI ≥ 28 kg/m²", meaning: "肥胖"}
+      - {op: "BMI ≥ 24 kg/m²", meaning: "超重，且须伴有至少一种体重相关合并症"}
+    comorbidities_listed:
+      - "高血糖"
+      - "高血压"
+      - "血脂异常"
+      - "脂肪肝"
+      - "阻塞性睡眠呼吸暂停综合征"
+    comorbidity_note: "说明书以「例如……等」列举，非穷尽清单"
+    quote: |
+      本品适用于在控制饮食和增加体力活动基础上对成人患者的长期体重控制，初始体重指数（BMI）为：
+      • BMI ≥28 kg/m²（肥胖），或
+      • BMI ≥24 kg/m²（超重），并伴有至少一种体重相关的合并症（例如高血糖、高血压、血脂异常、脂肪肝、阻塞性睡眠呼吸暂停综合征等）。
+    source: "label.md#【适应症】"
+    evidence: E1_LABEL
+    status: verified
+
+  type2_diabetes:
+    id: label.indication.t2dm
+    label_version: "T2DM 版（核准 2025-09-16）"
+    headline: "适用于成人 2 型糖尿病患者的血糖控制"
+    monotherapy:
+      value: "单纯饮食控制和运动干预后血糖仍控制不佳的成人 2 型糖尿病患者"
+    combination:
+      value: "在饮食控制和运动基础上，接受二甲双胍和/或磺脲类药物、接受二甲双胍和/或 SGLT2i 类药物治疗血糖仍控制不佳的成人 2 型糖尿病患者"
+    note: "T2DM 适应症未设 BMI 门槛"
+    quote: |
+      本品适用于成人2 型糖尿病患者的血糖控制：
+      单药治疗 单纯饮食控制和运动干预后血糖仍控制不佳的成人2 型糖尿病患者；
+      联合治疗 在饮食控制和运动基础上，接受二甲双胍和/或磺脲类药物、接受二甲双胍和/或钠-葡萄糖共转运蛋白2 抑制剂（SGLT2i）类药物治疗血糖仍控制不佳的成人2 型糖尿病患者。
+    source: "label.md#【适应症】"
+    evidence: E1_LABEL
+    status: verified
+
+  off_label_boundaries:
+    id: label.indication.boundary
+    not_approved:
+      - {population: "18 岁以下儿童及青少年", basis: "【儿童用药】安全性与有效性尚未确定"}
+      - {population: "妊娠期妇女", basis: "【注意事项】明确禁用于妊娠期妇女"}
+      - {population: "终末期肾病患者", basis: "无临床研究数据"}
+      - {population: "中度、重度肝功能不全患者", basis: "无临床研究数据"}
+      - {population: "1 型糖尿病", basis: "说明书适应症仅限 2 型糖尿病"}
+      - {population: "有 MTC 个人/家族史或 MEN 2 的患者", basis: "【禁忌】"}
+      - {population: "急性胆囊疾病患者", basis: "【注意事项】不推荐使用"}
+      - {population: "重度胃肠道疾病患者", basis: "【注意事项】不推荐使用"}
+    evidence: E1_LABEL
+    status: verified
+
+# =============================================================================
+# 3. 用法用量
+# =============================================================================
+dosing:
+
+  both_indications_shared:
+    route:
+      id: dose.route
+      value: "皮下注射，每周一次"
+      detail:
+        - "可在一天中任意时间注射，无需根据进餐时间给药"
+        - "可在腹部皮下注射；不可静脉或肌肉注射"
+        - "首次使用前由医护专业人员提供皮下注射技术指导，此后患者可自行注射或由护理人员注射"
+        - "可改变每周给药日期，但两剂间隔须至少 5 天（> 120 小时）"
+      evidence: E1_LABEL
+      status: verified
+
+    starting_dose:
+      id: dose.start
+      value: 2
+      unit: "mg"
+      note_t2dm: "T2DM 版明确「2 mg 的剂量目的是起始治疗而非控制血糖」"
+      evidence: E1_LABEL
+      status: verified
+
+    maintenance:
+      id: dose.maintenance
+      value: [4, 6]
+      unit: "mg"
+      note: "推荐维持剂量 4 mg 或 6 mg；如 6 mg 不耐受可回调至 4 mg"
+      evidence: E1_LABEL
+      status: verified
+
+    titration:
+      id: dose.titration
+      value:
+        - {weeks: "1–4", dose_mg: 2, type: "滴定剂量"}
+        - {weeks: "5–8", dose_mg: 4, type: "滴定剂量"}
+        - {weeks: "≥9", dose_mg: 4, type: "维持剂量（或 6 mg）"}
+      rule: "每档至少 4 周后方可递增；增至 6 mg 需在当前剂量治疗至少 4 周"
+      evidence: E1_LABEL
+      status: verified
+
+    missed_dose:
+      id: dose.missed
+      value:
+        - {gap: "≤2 天（距上次给药 ≤9 天）", action: "尽快给药，下一剂按原计划日期"}
+        - {gap: "2–7 天（距上次给药 9–14 天）", action: "尽快给药，并重新计算每周给药日期"}
+        - {gap: "7–21 天（距上次给药 14–28 天）", action: "下调至前 1 个剂量，重新开始滴定"}
+        - {gap: ">21 天（距上次给药 >28 天）", action: "下调至起始剂量，按表 1 重新滴定"}
+      evidence: E1_LABEL
+      status: verified
+
+  indication_specific:
+    weight_management_dose_intent:
+      id: dose.weight.intent
+      value: "增至 6 mg 的触发语为「如需进一步改善体重」"
+    t2dm_dose_intent:
+      id: dose.t2dm.intent
+      value: "增至 6 mg 的触发语为「如需进一步加强血糖控制」"
+    t2dm_combination_rules:
+      id: dose.t2dm.combo
+      value:
+        - "在二甲双胍基础上加用本品时，可继续二甲双胍当前剂量"
+        - "与磺脲类联合时应考虑减少磺脲类剂量，以降低低血糖风险"
+      evidence: E1_LABEL
+      status: verified
+
+  population_specific:
+    hepatic:
+      id: dose.hepatic
+      value: "轻度肝功能不全无需调整剂量"
+      detail: "轻度定义：TBIL ≤ULN 且 AST >ULN，或 TBIL >1～1.5×ULN 且任意 AST；中度、重度无数据"
+      evidence: E1_LABEL
+      status: verified
+    renal:
+      id: dose.renal
+      value: "轻、中、重度肾功能不全均无需调整剂量"
+      detail: "轻度 GFR 60–89、中度 30–59、重度 15–29 ml/min；中重度用药经验有限，应谨慎；终末期肾病无数据"
+      evidence: E1_LABEL
+      status: verified
+    elderly:
+      id: dose.elderly
+      value: "65 岁及以上患者有限（减重 III 期试验中 N=3），尚无法确定安全性与有效性"
+      evidence: E1_LABEL
+      status: verified
+    pediatric:
+      id: dose.pediatric
+      value: "18 岁以下安全性与有效性尚未确定"
+      evidence: E1_LABEL
+      status: verified
+    pregnancy:
+      id: dose.pregnancy
+      value: "禁用于妊娠期妇女"
+      detail: "计划妊娠前应停用玛仕度肽至少 3 个月（因半衰期较长）；治疗期间建议有生育能力女性避孕"
+      evidence: E1_LABEL
+      status: verified
+
+  interactions:
+    id: dose.interactions
+    value:
+      - {drug: "胰岛素 / 胰岛素促泌剂（如磺脲类）", effect: "联用增加低血糖风险，起始本品时应考虑减量", evidence: E1_LABEL}
+      - {drug: "口服药物（一般）", effect: "GLP-1 类延缓胃排空，可能影响伴随口服药吸收；治疗窗窄药物（如华法林）需密切监测", evidence: E1_LABEL}
+      - {drug: "阿托伐他汀", effect: "AUCinf +22.5%，Cmax −22.8%", evidence: E1_LABEL}
+      - {drug: "地高辛", effect: "AUCinf +12.5%，Cmax −35.2%", evidence: E1_LABEL}
+      - {drug: "二甲双胍", effect: "AUCinf −15.6%，Cmax −43.6%", evidence: E1_LABEL}
+      - {drug: "华法林", effect: "AUCinf +11.4%，Cmax +2.3%", evidence: E1_LABEL}
+    label_conclusion: "预期上述变化不会产生具有临床意义的影响"
+    status: verified
+
+  overdose:
+    id: dose.overdose
+    value: "无用药过量临床数据；参照其他 GLP-1 类药物，过量可致重度恶心、呕吐、低血糖；因半衰期长，症状可能需长时间观察或治疗"
+    evidence: E1_LABEL
+    status: verified
+
+# =============================================================================
+# 4. 禁忌与警示
+# =============================================================================
+contraindications:
+  id: label.contraindication
+  value:
+    - "已知对本品活性成份或任何辅料过敏者"
+    - "甲状腺髓样癌（MTC）个人既往病史或家族病史"
+    - "2 型多发性内分泌肿瘤综合征（MEN 2）患者"
+  quote: |
+    已知对本品活性成份或本品中任何辅料过敏者。甲状腺髓样癌（MTC）个人既往病史或家族病史，或2 型多发性内分泌肿瘤综合征患者（MEN 2）（见【注意事项】）。
+  source: "label.md#【禁忌】（两版一致）"
+  evidence: E1_LABEL
+  status: verified
+  caveat: "妊娠期禁用写在【注意事项】而非【禁忌】项下，见 discrepancies D13"
+
+boxed_warning:
+  id: label.warning.mtc
+  title: "警告：甲状腺 C 细胞肿瘤风险"
+  value:
+    - "啮齿类动物在临床相关暴露水平下可出现甲状腺 C 细胞肿瘤"
+    - "尚不清楚是否引起人类甲状腺 C 细胞肿瘤（含 MTC），因动物与人类相关性未确定"
+    - "禁用于有 MTC 既往史/家族史及 MEN 2 患者；应告知患者可能的 MTC 风险及甲状腺肿瘤症状"
+  symptoms_to_teach: ["颈部肿块", "吞咽困难", "呼吸困难", "持续性声音嘶哑"]
+  calcitonin_note: "MTC 患者降钙素通常 >50 ng/L；常规筛查降钙素或超声的价值尚不明确"
+  evidence: E1_LABEL
+  status: verified
+
+key_warnings:
+  id: label.warning.others
+  items:
+    - id: label.warning.anesthesia
+      topic: "全身麻醉或深度镇静相关误吸"
+      value: "GLP-1 受体激动剂有麻醉/深度镇静时肺误吸报道；术前应考虑胃排空延迟导致的内容物残留风险"
+    - id: label.warning.pancreatitis
+      topic: "急性胰腺炎"
+      value: "III 期试验中玛仕度肽组 1 例（胆结石所致阻塞性、轻症，Atlanta 分级）；安慰剂组 0 例；怀疑胰腺炎应停药并治疗"
+    - id: label.warning.gallbladder
+      topic: "急性胆囊疾病"
+      value: "III 期试验胆石症 2.0% vs 安慰剂 1.0%；胆囊炎 1.0% vs 1.5%；急性胆囊疾病患者不推荐使用"
+    - id: label.warning.hr
+      topic: "心率增加"
+      value: "应常规监测心率；静息心率持续增加则停药"
+    - id: label.warning.hypersensitivity
+      topic: "过敏反应"
+      value: "III 期试验过敏反应 3.5% vs 安慰剂 1.5%，无严重过敏反应"
+    - id: label.warning.aki
+      topic: "急性肾损伤"
+      value: "III 期试验无报告；胃肠道反应可致脱水继而 AKI；起始与剂量递增时应监测肾功能"
+    - id: label.warning.gi
+      topic: "重度胃肠道不良反应"
+      value: "III 期试验重度胃肠道不良反应发生率 2.0%；重度胃肠道疾病患者不推荐使用"
+    - id: label.warning.driving
+      topic: "驾驶与机械操作"
+      value: "影响很小或可忽略；可能出现头晕（多在剂量递增期），发生时谨慎驾驶"
+    - id: label.warning.suicide
+      topic: "自杀行为或意念"
+      value: "玛仕度肽治疗者中尚无报告；应监测抑郁/自杀意念，出现即停药；有自杀企图史者应避免使用"
+  evidence: E1_LABEL
+  status: verified
+
+# =============================================================================
+# 5. 安全性数据
+# =============================================================================
+safety:
+
+  exposure:
+    id: safety.exposure.glory1
+    value: "减重适应症安全性数据来自 GLORY-1，405 例接受玛仕度肽最长 48 周（4 mg 203 例、6 mg 202 例）"
+    baseline:
+      mean_age: 34
+      male_pct: 49.4
+      mean_bmi: 31.1
+      comorbidities_pct:
+        dyslipidemia: 60.0
+        fatty_liver: 50.1
+        hyperuricemia_gout: 40.5
+        impaired_glucose_metabolism: 29.4
+        hypertension: 22.0
+        weight_bearing_joint_pain: 2.2
+        osa: 0.2
+    evidence: E1_LABEL
+    status: verified
+
+  discontinuation:
+    id: safety.discontinuation.glory1
+    value: "因不良事件终止治疗比例：玛仕度肽组 1.0%，安慰剂组 1.0%"
+    evidence: E1_LABEL
+    status: verified
+
+  ae_table_weight:
+    id: safety.ae.weight
+    table_note: "发生率 ≥2% 且高于安慰剂组的不良反应（GLORY-1，48 周）"
+    columns: ["玛仕度肽 4 mg (N=203)", "玛仕度肽 6 mg (N=202)", "安慰剂 (N=205)"]
+    unit: "%"
+    rows:
+      - {ae: "恶心",        id: safety.ae.weight.nausea,     values: [32.5, 50.5, 5.9]}
+      - {ae: "腹泻",        id: safety.ae.weight.diarrhea,   values: [35.0, 38.6, 6.3]}
+      - {ae: "呕吐",        id: safety.ae.weight.vomiting,   values: [26.1, 43.1, 2.9]}
+      - {ae: "腹胀",        id: safety.ae.weight.bloating,   values: [6.4, 13.9, 2.0]}
+      - {ae: "腹痛",        id: safety.ae.weight.abdopain,   values: [5.9, 10.9, 1.5], footnote: "含腹痛、上腹痛、下腹痛、胃肠痛、腹部不适"}
+      - {ae: "注射部位反应", id: safety.ae.weight.isi,        values: [6.9, 8.4, 1.5],  footnote: "含注射部位瘀青、红斑、瘙痒、痛、皮疹、反应等"}
+      - {ae: "头晕",        id: safety.ae.weight.dizziness,  values: [5.4, 7.9, 3.9]}
+      - {ae: "胃食管反流病", id: safety.ae.weight.gerd,       values: [4.4, 7.9, 1.0]}
+      - {ae: "乏力",        id: safety.ae.weight.fatigue,    values: [5.4, 5.9, 1.0],  footnote: "含乏力、疲劳"}
+      - {ae: "嗳气",        id: safety.ae.weight.eructation, values: [3.4, 5.4, 0.5]}
+      - {ae: "便秘",        id: safety.ae.weight.constipation, values: [3.9, 3.5, 2.4]}
+      - {ae: "呃逆",        id: safety.ae.weight.hiccup,     values: [4.4, 3.0, 0.5]}
+      - {ae: "消化不良",    id: safety.ae.weight.dyspepsia,  values: [2.0, 3.5, 0.5]}
+    source: "label.md#【不良反应】表 2"
+    evidence: E1_LABEL
+    status: verified
+
+  gi_burden:
+    id: safety.gi.glory1
+    value:
+      any_gi: {four_mg: 62.6, six_mg: 79.7, placebo: 20.0, unit: "%"}
+      severe_gi: "2.0%（玛仕度肽组总体）"
+      dc_due_to_gi: "4 mg 组 2 例（1.0%）；6 mg 组 0；安慰剂组 0"
+      pattern: "多为轻度、持续时间短，集中于剂量递增阶段，维持期明显下降"
+    evidence: E1_LABEL
+    status: verified
+
+  ae_table_t2dm:
+    id: safety.ae.t2dm
+    value: "T2DM 版说明书中另有一张不良反应表（基于 DREAMS-1、DREAMS-2）"
+    rule: "本 facts.yaml 未抽取该表逐项数值；如需 T2DM 不良反应发生率，必须回读 label.md 第 574 行起【不良反应】章节核对"
+    evidence: E1_LABEL
+    status: partial
+
+  immunogenicity:
+    id: safety.immunogenicity
+    value:
+      weight_management: {ada_pct: 43.9, nab_gcgr_pct: 0.5, nab_glp1r_pct: 0.5, note: "滴度较低"}
+      type2_diabetes:   {ada_pct: 8.2,  nab_gcgr_pct: 0.3, nab_glp1r_pct: 0.4, note: "滴度较低"}
+    conclusion: "免疫原性对药代动力学、疗效和安全性无影响"
+    evidence: E1_LABEL
+    status: verified
+
+# =============================================================================
+# 6. 药代动力学
+# =============================================================================
+pk:
+  steady_state:
+    id: pk.steady_state
+    value: "每周 1 次给药，连续用药 4 周达稳态；暴露量随剂量成比例增加"
+    evidence: E1_LABEL
+    status: verified
+  tmax:
+    id: pk.tmax
+    value: [7, 28]
+    unit: "h"
+    evidence: E1_LABEL
+    status: verified
+  vd:
+    id: pk.vf
+    value: 11.2
+    unit: "L"
+    cv_pct: 16.3
+    population: "肥胖或超重患者"
+    evidence: E1_LABEL
+    status: verified
+  clearance_obesity:
+    id: pk.cl.obesity
+    value: 0.0368
+    unit: "L/h"
+    cv_pct: 46.2
+    evidence: E1_LABEL
+    status: verified
+  half_life_obesity:
+    id: pk.t12.obesity
+    value: 10
+    unit: "天"
+    cv_pct: 29
+    evidence: E1_LABEL
+    status: verified
+  clearance_t2dm:
+    id: pk.cl.t2dm
+    value: 0.0339
+    unit: "L/h"
+    cv_pct: 31.7
+    population: "中国 2 型糖尿病患者"
+    evidence: E1_LABEL
+    status: verified
+  half_life_t2dm:
+    id: pk.t12.t2dm
+    value: 196.3
+    unit: "h"
+    cv_pct: 21.8
+    note: "约合 8.2 天；本库不做换算，需要时自行计算并标注"
+    evidence: E1_LABEL
+    status: verified
+  covariates:
+    id: pk.covariates
+    value: "年龄（18～70 岁）、性别、体重（60.4～135.4 kg）对 PK 无临床意义影响"
+    evidence: E1_LABEL
+    status: verified
+  metabolism:
+    id: pk.metabolism
+    value: "肽主链蛋白水解裂解、C20 脂肪酸 β-氧化与酰胺水解；主要经尿与粪排泄"
+    evidence: E1_LABEL
+    status: verified
+
+# =============================================================================
+# 7. 疗效数据（按试验分块；同试验内不同口径并列，不合并）
+# =============================================================================
+efficacy:
+
+  glory_1:
+    id: efficacy.glory1
+    design:
+      phase: "III 期"
+      randomization: "1:1:1"
+      blinding: "双盲（ClinicalTrials.gov 登记为 triple-masked）"
+      comparator: "安慰剂"
+      n_randomized: 610
+      arms: {"maz_4mg": 203, "maz_6mg": 202, "placebo": 205}
+      duration_weeks: 48
+      population: "中国成人 18–75 岁；BMI ≥28，或 BMI 24–<28 并伴至少一种体重相关合并症；排除 HbA1c ≥6.5% 或既往 T1DM/T2DM"
+      coprimary:
+        - "第 32 周体重自基线百分比变化"
+        - "第 32 周体重降幅 ≥5% 的受试者比例"
+      estimand_publication: "treatment-policy"
+      estimand_label: "mITT + 多重填补"
+      baseline:
+        weight_kg: 87.2
+        bmi: 31.1
+      source_refs: ["label.md#【临床试验】", "trials_核验.md#1"]
+      status: verified
+
+    label_basis:
+      id: efficacy.glory1.label
+      evidence: E1_LABEL
+      unit: "%"
+      rows:
+        - {metric: "基线体重 (kg)", id: efficacy.glory1.baseline.weight, values: [87.8, 87.1, 86.5]}
+        - {metric: "W32 体重变化", id: efficacy.glory1.w32.pct, values: [-10.1, -12.5, 0.5]}
+        - {metric: "W32 ≥5%", id: efficacy.glory1.w32.ge5, values: [73.9, 82.0, 10.5]}
+        - {metric: "W32 ≥10%", id: efficacy.glory1.w32.ge10, values: [49.0, 61.6, 0.6]}
+        - {metric: "W32 ≥15%", id: efficacy.glory1.w32.ge15, values: [27.2, 43.6, 0.0]}
+        - {metric: "W48 体重变化", id: efficacy.glory1.w48.pct, values: [-11.0, -14.0, 0.3]}
+        - {metric: "W48 ≥5%", id: efficacy.glory1.w48.ge5, values: [71.6, 81.6, 10.8]}
+        - {metric: "W48 ≥10%", id: efficacy.glory1.w48.ge10, values: [53.5, 66.7, 2.6]}
+        - {metric: "W48 ≥15%", id: efficacy.glory1.w48.ge15, values: [35.7, 49.5, 2.0]}
+      column_order: ["玛仕度肽 4 mg", "玛仕度肽 6 mg", "安慰剂"]
+      sensitivity_mmrm:
+        id: efficacy.glory1.mmrm
+        value:
+          w32: [-11.0, -13.4, -0.2]
+          w48: [-12.0, -14.8, -0.5]
+        note: "说明书脚注披露的重复测量混合模型结果，与主表数值不同"
+
+    publication_basis:
+      id: efficacy.glory1.nejm
+      evidence: E2_PEER
+      unit: "%"
+      rows:
+        - {metric: "W32 体重变化 (95%CI)", id: efficacy.glory1.nejm.w32.pct,
+           values: [-10.09, -12.55, 0.45],
+           ci: ["−11.15 to −9.04", "−13.64 to −11.45", "−0.61 to 1.52"]}
+        - {metric: "W32 ≥5%", id: efficacy.glory1.nejm.w32.ge5, values: [73.9, 82.0, 10.5]}
+        - {metric: "W48 体重变化 (95%CI)", id: efficacy.glory1.nejm.w48.pct,
+           values: [-11.00, -14.01, 0.30],
+           ci: ["−12.27 to −9.73", "−15.36 to −12.66", "−0.98 to 1.58"]}
+        - {metric: "W48 ≥15%", id: efficacy.glory1.nejm.w48.ge15, values: [35.7, 49.5, 2.0]}
+      p_values: "两组 vs 安慰剂均 P < 0.001"
+      effect_size_vs_placebo: {w32: [-10.5, -13.0], ci: ["−11.8, −9.3", "−14.3, −11.7"]}
+
+    sponsor_pr_supplement:
+      id: efficacy.glory1.pr
+      evidence: E5_SPONSOR
+      status: partial
+      reason: "NEJM 摘要未报告 ≥10% 达标率与腰围；以下取自申办方新闻稿，未经期刊原文核对"
+      rows:
+        - {metric: "W48 ≥10%（efficacy estimand）", values: [55.2, 67.9, 2.9]}
+        - {metric: "W48 ≥10%（treatment-policy）", values: [53.5, 66.7, 2.6]}
+        - {metric: "W48 ≥15%（efficacy estimand）", values: [37.0, 50.6, 2.1]}
+        - {metric: "W48 腰围变化 cm（treatment-policy）", values: [-9.12, -10.72, -1.41]}
+      rule: "引用时必须标注「申办方新闻稿」"
+
+    cardiometabolic_label:
+      id: efficacy.glory1.cardiometabolic
+      evidence: E1_LABEL
+      note: "说明书表 4，第 48 周相对基线变化（mITT）"
+      rows:
+        - {metric: "腰围 (cm)", id: efficacy.glory1.w48.waist, values: [-9.1, -10.7, -1.4]}
+        - {metric: "收缩压 (mmHg)", id: efficacy.glory1.w48.sbp, values: [-7.3, -9.9, -2.1]}
+        - {metric: "舒张压 (mmHg)", id: efficacy.glory1.w48.dbp, values: [-3.5, -5.3, -1.0]}
+        - {metric: "甘油三酯 (%)", id: efficacy.glory1.w48.tg, values: [-25.8, -31.5, 0.7]}
+        - {metric: "总胆固醇 (%)", id: efficacy.glory1.w48.tc, values: [-3.0, -6.8, 4.4]}
+        - {metric: "LDL-C (%)", id: efficacy.glory1.w48.ldl, values: [-3.2, -7.1, 5.0]}
+        - {metric: "血尿酸 (%)", id: efficacy.glory1.w48.ua, values: [-7.5, -12.9, 4.3]}
+        - {metric: "ALT (%)", id: efficacy.glory1.w48.alt, values: [-19.4, -26.9, 5.8]}
+        - {metric: "AST (%)", id: efficacy.glory1.w48.ast, values: [-6.5, -11.5, 3.9]}
+        - {metric: "HbA1c（百分点）", id: efficacy.glory1.w48.hba1c, values: [-0.3, -0.3, -0.0]}
+
+    uric_acid_specific:
+      id: efficacy.glory1.uric_acid
+      evidence: E1_LABEL
+      value:
+        combined_4_6mg_change: -36.70
+        placebo_change: 7.91
+        unit: "μmol/L"
+        subgroup_baseline_ge420:
+          maz_6mg_change: -64.76
+          placebo_change: -21.25
+          reach_lt420_pct: [51.9, 27.3]
+      rule: "「改善高尿酸血症」为说明书原文表述，但不得延伸为「治疗痛风」"
+
+  glory_2:
+    id: efficacy.glory2
+    design:
+      phase: "III 期"
+      randomization: "2:1"
+      blinding: "双盲（登记为 quadruple-masked）"
+      comparator: "安慰剂"
+      n_randomized: 462
+      n_analyzed: 461
+      arms: {"maz_9mg": 307, "placebo": 154}
+      duration_weeks: 60
+      sites: "中国 27 家医院，2023-12 至 2025-11"
+      population: "中国成人 BMI ≥30（中重度肥胖），可合并/不合并 T2DM；合并 T2DM 者 HbA1c 7.0–10.0%、FPG ≤11.1 mmol/L、稳定口服降糖药 ≥2 个月（禁 GLP-1RA 与 DPP-4i）"
+      coprimary:
+        - "第 60 周体重自基线百分比变化"
+        - "第 60 周体重降幅 ≥5% 的受试者比例"
+      baseline: {female_pct: 64.0, t2dm_pct: 16.1, age: 33.9, age_sd: 8.4, weight_kg: 94.0, weight_sd: 13.8, bmi: 34.3, bmi_sd: 3.2}
+      evidence: E2_PEER
+      status: verified
+    results:
+      id: efficacy.glory2.w60
+      evidence: E2_PEER
+      unit: "%"
+      rows:
+        - {metric: "W60 体重变化 (95%CI)", id: efficacy.glory2.w60.pct,
+           values: [-16.65, -1.50], ci: ["−18.19 to −15.12", "−3.43 to 0.43"],
+           diff: -15.15, diff_ci: "−17.22 to −13.09", p: "< .001"}
+        - {metric: "W60 ≥5%", id: efficacy.glory2.w60.ge5,
+           values: [84.3, 33.1], diff: 51.6, diff_ci: "43.0 to 60.1", p: "< .001"}
+      column_order: ["玛仕度肽 9 mg", "安慰剂"]
+    safety_snapshot:
+      id: safety.glory2
+      evidence: E2_PEER
+      value:
+        dc_due_to_ae: {maz: 2.9, placebo: 0, unit: "%"}
+        vomiting: {maz: 53.1, placebo: 1.3, unit: "%"}
+        nausea: {maz: 46.9, placebo: 3.2, unit: "%"}
+        diarrhea: {maz: 39.4, placebo: 6.5, unit: "%"}
+    not_reported_in_abstract:
+      id: efficacy.glory2.missing
+      value: ["≥10% / ≥15% / ≥20% 达标率", "腰围变化", "收缩压", "甘油三酯", "non-HDL-C", "LDL-C"]
+      note: "均为登记次要终点，但 JAMA 摘要未给出数值；不得杜撰或推断"
+
+  dreams_1:
+    id: efficacy.dreams1
+    design:
+      phase: "III 期"
+      randomization: "1:1:1"
+      blinding: "双盲"
+      comparator: "安慰剂"
+      n_randomized_paper: 320
+      n_label: 319
+      arms: {"maz_4mg": 106, "maz_6mg": 106, "placebo": 107}
+      duration: "24 周双盲期 + 24 周延长治疗期（安慰剂组转 6 mg）"
+      population: "中国成人 T2DM，仅饮食运动控制不佳（未用口服降糖药）；HbA1c 7.5–10.5%；按 WHO 1999 诊断 ≥2 个月；近 2 个月未用口服降糖药"
+      primary: "第 24 周 HbA1c 自基线变化"
+      baseline: {hba1c_pct: 8.24, bmi: 28.2, dm_duration_years: 1.9, weight_kg: 77.70}
+      evidence: E2_PEER
+      status: verified
+    results_label:
+      id: efficacy.dreams1.label
+      evidence: E1_LABEL
+      note: "说明书表 5，mITT 多重填补，第 24 周"
+      rows:
+        - {metric: "HbA1c 基线", id: efficacy.dreams1.hba1c.base, values: [8.19, 8.21, 8.33], unit: "%"}
+        - {metric: "HbA1c 变化 (LSMean)", id: efficacy.dreams1.hba1c.change, values: [-1.58, -2.02, -0.25], unit: "%"}
+        - {metric: "HbA1c 组间差异 95%CI", id: efficacy.dreams1.hba1c.diff,
+           values: [-1.33, -1.77], ci: ["−1.57, −1.08", "−2.01, −1.53"], p: "<0.0001"}
+        - {metric: "HbA1c <7%", id: efficacy.dreams1.hba1c.lt7, values: [66.4, 81.8, 11.7], unit: "%", p: "<0.0001"}
+        - {metric: "HbA1c ≤6.5%", id: efficacy.dreams1.hba1c.le65, values: [54.4, 75.2, 5.8], unit: "%"}
+        - {metric: "FPG 基线 (mmol/L)", id: efficacy.dreams1.fpg.base, values: [9.33, 10.03, 9.74]}
+        - {metric: "FPG 变化 (mmol/L)", id: efficacy.dreams1.fpg.change, values: [-2.37, -3.12, -0.22]}
+        - {metric: "体重变化", id: efficacy.dreams1.weight.change, values: [-5.50, -7.34, -1.15], unit: "%"}
+        - {metric: "体重降幅 ≥5%", id: efficacy.dreams1.weight.ge5, values: [48.8, 64.0, 6.6], unit: "%"}
+        - {metric: "体重降幅 ≥10%", id: efficacy.dreams1.weight.ge10, values: [18.7, 32.1, 0], unit: "%"}
+        - {metric: "HbA1c<7% 且体重降幅 ≥5% 双达标", id: efficacy.dreams1.dual, values: [39.0, 58.5, 0], unit: "%"}
+      column_order: ["玛仕度肽 4 mg", "玛仕度肽 6 mg", "安慰剂"]
+      sensitivity_mmrm:
+        id: efficacy.dreams1.mmrm
+        value: {hba1c: [-1.57, -2.15, -0.14], weight: [-5.61, -7.81, -1.26]}
+    results_publication:
+      id: efficacy.dreams1.nature
+      evidence: E2_PEER
+      value:
+        hba1c_change: [-1.57, -2.15, -0.14]
+        hba1c_diff: [-1.43, -2.02]
+        weight_change: [-5.61, -7.81, -1.26]
+        p: "< 0.0001"
+      note: "Nature 摘要数值与说明书 MMRM 敏感性分析接近；摘要未给达标率具体百分比"
+    other_metrics_label:
+      id: efficacy.dreams1.other
+      evidence: E1_LABEL
+      value:
+        seven_point_glucose_mmol: [-3.70, -4.14, -1.37]
+        waist_cm: [-3.66, -4.42, -0.43]
+        sbp_mmhg: [-7.10, -6.02, -2.25]
+        dbp_mmhg: [-2.20, -2.29, 0.09]
+        tg_pct: [-6.60, -19.00, 14.71]
+        alt_u_l: [-6.56, -7.31, 2.57]
+        ast_u_l: [-4.06, -5.29, 2.22]
+
+  dreams_2:
+    id: efficacy.dreams2
+    design:
+      phase: "III 期"
+      randomization: "1:1:1"
+      blinding_label: "玛仕度肽剂量盲态、度拉糖肽对照（开放标签）"
+      blinding_registry: "double-masked"
+      blinding_conflict: "见 discrepancies D8"
+      comparator: "度拉糖肽 1.5 mg（阳性对照）"
+      n_randomized: 731
+      arms: {"maz_4mg": 242, "maz_6mg": 244, "dula_1_5mg": 245}
+      duration_weeks: 28
+      background: "二甲双胍和/或磺脲类，或二甲双胍和/或 SGLT2i"
+      population: "中国成人 T2DM；稳定二甲双胍 ≥1500 mg/日，或联合 SGLT2i（恩格列净 10、达格列净 10、卡格列净 100、恒格列净 5 mg/日），或联合磺脲类（标签最大剂量一半）后控制不佳；≥18 岁"
+      primary: "第 28 周 HbA1c 自基线变化（非劣效 + 优效）"
+      baseline: {hba1c_pct: 8.22, weight_kg: 76.95}
+      evidence: E2_PEER
+      status: verified
+    results_label:
+      id: efficacy.dreams2.label
+      evidence: E1_LABEL
+      note: "说明书表 6，mITT 多重填补，第 28 周"
+      rows:
+        - {metric: "HbA1c 基线", id: efficacy.dreams2.hba1c.base, values: [8.21, 8.21, 8.23], unit: "%"}
+        - {metric: "HbA1c 变化 (LSMean)", id: efficacy.dreams2.hba1c.change, values: [-1.61, -1.66, -1.36], unit: "%"}
+        - {metric: "HbA1c 组间差异 vs 度拉糖肽", id: efficacy.dreams2.hba1c.diff,
+           values: [-0.24, -0.30], ci: ["−0.40, −0.08", "−0.46, −0.14"], p: ["0.0032", "0.0003"]}
+        - {metric: "HbA1c <7%", id: efficacy.dreams2.hba1c.lt7, values: [67.7, 70.4, 61.6], unit: "%"}
+        - {metric: "HbA1c ≤6.5%", id: efficacy.dreams2.hba1c.le65, values: [52.0, 59.9, 41.6], unit: "%"}
+        - {metric: "FPG 基线 (mmol/L)", id: efficacy.dreams2.fpg.base, values: [9.35, 9.17, 9.19]}
+        - {metric: "FPG 变化 (mmol/L)", id: efficacy.dreams2.fpg.change, values: [-2.06, -1.89, -1.70]}
+        - {metric: "体重变化", id: efficacy.dreams2.weight.change, values: [-6.55, -8.53, -2.77], unit: "%"}
+        - {metric: "体重组间差异 vs 度拉糖肽", id: efficacy.dreams2.weight.diff,
+           values: [-3.78, -5.76], ci: ["−4.66, −2.91", "−6.65, −4.87"], p: "<0.0001"}
+        - {metric: "体重降幅 ≥5%", id: efficacy.dreams2.weight.ge5, values: [58.6, 73.1, 26.6], unit: "%"}
+        - {metric: "体重降幅 ≥10%", id: efficacy.dreams2.weight.ge10, values: [25.7, 33.9, 3.4], unit: "%"}
+        - {metric: "HbA1c<7% 且体重降幅 ≥5% 双达标", id: efficacy.dreams2.dual, values: [46.9, 59.9, 118.9], unit: "%", flag: "度拉糖肽组 118.9 疑为原文印刷错误，见 D2"}
+      column_order: ["玛仕度肽 4 mg", "玛仕度肽 6 mg", "度拉糖肽 1.5 mg"]
+      sensitivity_mmrm:
+        id: efficacy.dreams2.mmrm
+        value: {hba1c: [-1.69, -1.73, -1.38], weight: [-7.13, -9.24, -2.86]}
+    results_publication:
+      id: efficacy.dreams2.nature
+      evidence: E2_PEER
+      value:
+        hba1c_diff: [-0.24, -0.30]
+        hba1c_p: ["0.0032", "0.0003"]
+        weight_diff: [-3.78, -5.76]
+        weight_p: "<0.0001"
+        dual_endpoint_p: "<0.0001"
+      note: "Nature 摘要只报告治疗差异，未给绝对变化值，也未给达标率"
+    other_metrics_label:
+      id: efficacy.dreams2.other
+      evidence: E1_LABEL
+      value:
+        seven_point_glucose_mmol: [-3.33, -3.24, -2.80]
+        waist_cm: [-5.52, -6.78, -2.84]
+        sbp_mmhg: [-4.94, -4.91, -2.06]
+        dbp_mmhg: [-1.99, -1.92, -1.09]
+        tg_pct: [-16.52, -23.92, -0.52]
+        alt_u_l: [-8.71, -9.13, -0.90]
+        ast_u_l: [-5.17, -5.54, -0.01]
+        qtc: "未提示 QTc 延长风险，与度拉糖肽基本相当"
+
+  dreams_3:
+    id: efficacy.dreams3
+    evidence: E5_SPONSOR
+    status: partial
+    publication_status: "截至 2026-10-25 无同行评审结果论文；仅设计/基线论文 + ADA 2026 口头报告 1226-OR + 申办方新闻稿"
+    design:
+      phase: "III 期"
+      type: "多中心、随机、开放标签、阳性对照头对头"
+      comparator: "司美格鲁肽 1 mg"
+      n_randomized: 349
+      n_sponsor_pr: 329
+      sites: "中国 42 家医院"
+      duration: "32 周核心期（含 8 周滴定期）+ 玛仕度肽组 24 周延长治疗期"
+      arms: "玛仕度肽 2 mg 起滴至 6 mg vs 司美格鲁肽 0.25 mg 起滴至 1 mg"
+      population: "中国成人早期 T2DM（WHO 1999 诊断 ≤5 年）合并肥胖（BMI ≥28）；HbA1c 7.5–9.5%；近 3 个月饮食运动伴/不伴稳定二甲双胍 1500–2550 mg/日"
+      primary: "第 32 周 HbA1c <7.0% 且体重较基线下降 ≥10% 的受试者比例"
+      baseline: {age: 42.4, hba1c_pct: 8.0, dm_duration_years: 1.8, weight_kg: 90.5, bmi: 33.0}
+    results_pr:
+      id: efficacy.dreams3.pr
+      estimand: "efficacy estimand"
+      unit: "%"
+      rows:
+        - {metric: "主要终点：HbA1c<7.0% 且减重 ≥10%", id: efficacy.dreams3.primary, values: [48.0, 21.0], p: "<0.0001"}
+        - {metric: "HbA1c<7.0% 且减重 ≥5%", id: efficacy.dreams3.dual7, values: [74.7, 51.0], p: "<0.0001"}
+        - {metric: "HbA1c<6.5% 且减重 ≥5%", id: efficacy.dreams3.dual65_5, values: [69.4, 48.7], p: "<0.0001"}
+        - {metric: "HbA1c<6.5% 且减重 ≥10%", id: efficacy.dreams3.dual65_10, values: [45.7, 20.8], p: "<0.0001"}
+        - {metric: "HbA1c 自基线变化", id: efficacy.dreams3.hba1c, values: [-2.03, -1.84], p: "<0.05"}
+        - {metric: "体重自基线变化", id: efficacy.dreams3.weight, values: [-10.3, -6.0], p: "<0.0001"}
+        - {metric: "体重降幅 ≥5%", id: efficacy.dreams3.ge5, values: [80.6, 52.8], p: "<0.0001"}
+        - {metric: "体重降幅 ≥10%", id: efficacy.dreams3.ge10, values: [51.2, 21.3], p: "<0.0001"}
+      column_order: ["玛仕度肽 6 mg", "司美格鲁肽 1 mg"]
+    safety_pr:
+      id: safety.dreams3
+      value:
+        nausea: [30.5, 12.6]
+        diarrhea: [27.0, 21.8]
+        vomiting: [23.6, 8.6]
+        severe_hypoglycemia: "未发生"
+        pattern: "多为轻中度、一过性，主要发生于滴定期；未发现新的安全性信号"
+      evidence: E5_SPONSOR
+      status: partial
+    citation_rule: "只能表述为「申办方公布的 DREAMS-3 结果（ADA 2026 口头报告）」，禁止写作「研究已发表」「文献显示」"
+
+# =============================================================================
+# 8. 竞品对照（仅作外部参照，不作本品宣称）
+# =============================================================================
+competitor:
+  surmount_5:
+    id: competitor.surmount5
+    description: "替尔泊肽 vs 司美格鲁肽头对头，作为同类双靶点药物的外部基准"
+    design:
+      phase: "IIIb 期"
+      type: "随机、开放标签、阳性对照"
+      n: 751
+      randomization: "1:1"
+      duration_weeks: 72
+      population: "肥胖但不伴 T2DM 成人；BMI ≥30，或 BMI ≥27 伴至少一种体重相关合并症"
+      arms: "替尔泊肽 MTD（10 或 15 mg）vs 司美格鲁肽 MTD（1.7 或 2.4 mg）"
+      primary: "第 72 周体重自基线百分比变化"
+      evidence: E2_PEER
+      status: verified
+    results_nejm:
+      id: competitor.surmount5.nejm
+      value:
+        weight_pct: {tirzepatide: -20.2, tirzepatide_ci: "−21.4 to −19.1", semaglutide: -13.7, semaglutide_ci: "−14.9 to −12.6"}
+        waist_cm: {tirzepatide: -18.4, semaglutide: -13.0}
+        p: "< 0.001"
+    results_registry:
+      id: competitor.surmount5.registry
+      evidence: E3_REGISTRY
+      note: "NEJM 摘要未列各阈值百分比，以下取自 ClinicalTrials.gov 已登记结果"
+      unit: "%"
+      rows:
+        - {metric: "≥10%", values: [87.7, 66.7]}
+        - {metric: "≥15%", values: [71.7, 45.0]}
+        - {metric: "≥20%", values: [55.0, 31.1]}
+        - {metric: "≥25%", values: [36.5, 18.6]}
+        - {metric: "≥30%", values: [23.0, 8.2]}
+      column_order: ["替尔泊肽", "司美格鲁肽"]
+    usage_restriction:
+      id: competitor.surmount5.restriction
+      rule: |
+        本品与替尔泊肽、司美格鲁肽均无头对头试验。禁止任何形式的跨试验间接比较
+        （含「优于」「相当于」「与……相当」），亦禁止引用 SURMOUNT-5 数字暗示本品疗效。
+        广告法 §16Ⅰ(三) 禁止与其他药品的功效和安全性比较。
+      evidence: E4_OFFICIAL
+
+# =============================================================================
+# 9. 指南与共识（支撑「医生为什么会这么问」）
+# =============================================================================
+guidelines:
+
+  obesity_2024:
+    id: guide.obesity2024
+    title: "肥胖症诊疗指南（2024年版）"
+    issuer: "国家卫生健康委办公厅"
+    document_number: "国卫办医政函〔2024〕382号"
+    issued_date: "2024-10-12"
+    published_online: "2024-10-17"
+    nature: "国家层面诊疗指南（首部由国家卫健委发布的肥胖症诊疗指南）"
+    urls:
+      notice: "https://www.nhc.gov.cn/wjw/c100378/202410/bcf804e19e0c4246b5aea6cd338b55e1.shtml"
+      pdf: "https://www.nhc.gov.cn/cms-search/downFiles/d62bf58fae134eaf84c4fb77d6762a08.pdf"
+    evidence: E4_OFFICIAL
+    status: verified
+    quotable:
+      - id: guide.obesity2024.bmi_cutoff
+        topic: "BMI 诊断切点"
+        quote: |
+          在我国成年人群中，BMI 低于 18.5 kg/m² 为低体重状态，达到 18.5 kg/m² 且低于 24 kg/m² 为正常体重，达到 24 kg/m² 且低于 28 kg/m² 为超重，达到或超过 28 kg/m² 为肥胖症。
+        section: "第四章 肥胖症的定义、诊断标准、分型、分期及相关疾病"
+      - id: guide.obesity2024.grading
+        topic: "肥胖症四级分级"
+        quote: |
+          建议 BMI 达到 28.0 kg/m² 且低于 32.5 kg/m² 为轻度肥胖症、达到 32.5 kg/m² 且低于 37.5 kg/m² 为中度肥胖症、达到 37.5 kg/m² 且低于 50 kg/m² 为重度肥胖症、达到或超过 50 kg/m² 为极重度肥胖症。
+        section: "同上"
+      - id: guide.obesity2024.waist
+        topic: "中心性肥胖腰围切点"
+        quote: |
+          正常腰围定义为 <85 cm（男性）和 <80 cm（女性），腰围 ≥90 cm（男性）和 ≥85 cm（女性）即可诊断为中心性肥胖。……当 WHR ≥0.90（男性）和 ≥0.85（女性）时，也可诊断为中心性肥胖。
+        section: "同上，基于体型特征的诊断标准"
+      - id: guide.obesity2024.target
+        topic: "减重目标分层"
+        quote: |
+          对于大多数超重和轻度肥胖症患者，可设定为在 3-6 个月之内至少将体重降低 5%-15% 并维持；对于中、重度肥胖症患者则可设定更高的减重目标……建议每 3-6 个月对减重效果和代谢指标进行评估。
+        section: "第六章 肥胖症的治疗原则"
+      - id: guide.obesity2024.modalities
+        topic: "治疗手段构成"
+        quote: |
+          肥胖症治疗有多种手段，主要包括：行为心理干预、运动干预、临床营养治疗、药物治疗、外科手术治疗以及中医药治疗等。……一般建议所有患者均应接受营养、运动、心理指导作为全程基础管理。
+        section: "第六章"
+    compliance_note:
+      id: guide.obesity2024.compliance
+      value: "本指南发布于 2024-10-12，玛仕度肽 2025-06-24 获批，2024 版指南药物治疗章节不可能纳入玛仕度肽"
+      rule: "禁止声称「指南推荐玛仕度肽」，禁止把其他药物的推荐等级移用至本品"
+      evidence: E4_OFFICIAL
+    unverified:
+      id: guide.obesity2024.druglist
+      value: "网络媒体报道该指南列出奥利司他、利拉鲁肽、贝那鲁肽、司美格鲁肽、替尔泊肽五种减重药物"
+      status: unverified
+      reason: "未从指南 PDF 正文逐字核对，引用前须回原文「药物治疗」章节确认"
+
+  weight_management_2024:
+    id: guide.weight2024
+    title: "体重管理指导原则（2024年版）"
+    issuer: "国家卫生健康委办公厅"
+    document_number: "国卫办医急函〔2024〕469号"
+    issued_date: "2024-12-05"
+    nature: "指导原则，配套「体重管理年」活动实施方案，委托国家心血管病中心牵头制定"
+    url: "https://www.nhc.gov.cn/wjw/ylyjs/202412/b3d40e0141834897808ce6c9dce76a60.shtml"
+    evidence: E4_OFFICIAL
+    status: verified
+    quotable:
+      - id: guide.weight2024.scope
+        topic: "文件定位与内容框架"
+        quote: |
+          为进一步落实《「体重管理年」活动实施方案》，强化慢性病防治关口前移……我委委托国家心血管病中心牵头，组织相关领域专家，针对超重肥胖等体重问题的规范化管理制定了《体重管理指导原则（2024年版）》。主要内容包括体重的分类标准、体重管理相关评估、超重肥胖的干预和治疗、健康体重的管理与维持、特殊人群的体重管理、规范化体重管理流程等，供各地推广使用。
+        source: "卫健委官方解读"
+      - id: guide.weight2024.epidemiology
+        topic: "流行病学数据"
+        quote: |
+          根据《中国居民营养与慢性病状况报告（2020 年）》，2018 年我国成人超重率和肥胖率分别为 34.3% 和 16.4%，与 2002 年的 22.8% 和 7.1% 相比大幅增长；6～17 岁儿童青少年超重率和肥胖率分别为 11.1% 和 7.9%，并呈逐年递增趋势。
+        source: "指导原则正文（PDF）"
+    caveat:
+      id: guide.weight2024.caveat
+      value: "正文要点引自卫健委官方解读与省级转发 PDF；逐条引用具体条款时应下载原文附件核对页码"
+      status: partial
+
+  diabetes_2024:
+    id: guide.diabetes2024
+    title: "中国糖尿病防治指南（2024版）"
+    issuer: "中华医学会糖尿病学分会（CDS）"
+    document_number: null
+    document_number_note: "属学会指南，无政府发文号；不得写作「国家卫健委发布」"
+    publication: "《中华糖尿病杂志》2025 年第 17 卷第 1 期，第 16-139 页"
+    release_date: "2024-12-31（期刊官网发布）"
+    correspondence_authors: ["朱大龙（南京大学医学院附属鼓楼医院）", "郭立新（北京医院）"]
+    structure: "共 20 章，含第九章「高血糖的药物治疗」、第十章「2 型糖尿病患者的体重管理」"
+    evidence: E4_OFFICIAL
+    status: verified
+    quotable:
+      - id: guide.diabetes2024.toc
+        topic: "章节构成"
+        quote: |
+          本指南共 20 章，内容涵盖中国糖尿病的流行病学、诊断与分型、三级预防、筛查和评估、教育和管理、2 型糖尿病综合控制目标和高血糖的治疗路径、医学营养治疗、运动治疗、高血糖的药物治疗、2 型糖尿病患者的体重管理、糖尿病相关技术、急性并发症……
+      - id: guide.diabetes2024.epi
+        topic: "流行病学要点"
+        quote: |
+          1. 我国糖尿病患病率仍在上升，由 2013 年的 10.9% 增加到 2018 至 2019 年的 12.4%。……3. 糖尿病人群中 2 型糖尿病（T2DM）占 90% 以上。
+          5. 糖尿病知晓率（36.7%）、治疗率（32.9%）和控制率（50.1%）提升缓慢。
+        section: "第一章 要点提示"
+    citation_rule:
+      id: guide.diabetes2024.citation
+      value: "引用出处须写《中华糖尿病杂志》2025;17(1):16-139，不得写机关文号"
+
+# =============================================================================
+# 10. 法规与行业规范（条款级）
+# =============================================================================
+regulations:
+
+  advertising_law:
+    id: reg.adlaw
+    title: "中华人民共和国广告法"
+    version: "2021-04-29 修正"
+    url: "https://www.gov.cn/guoqing/2021-10/29/content_5647620.htm"
+    evidence: E4_OFFICIAL
+    status: verified
+    articles:
+      - id: reg.adlaw.15
+        no: "第十五条"
+        topic: "处方药广告渠道限制"
+        quote: |
+          麻醉药品、精神药品、医疗用毒性药品、放射性药品等特殊药品，药品类易制毒化学品，以及戒毒治疗的药品、医疗器械和治疗方法，不得作广告。
+          前款规定以外的处方药，只能在国务院卫生行政部门和国务院药品监督管理部门共同指定的医学、药学专业刊物上作广告。
+      - id: reg.adlaw.16
+        no: "第十六条"
+        topic: "药品广告禁止内容"
+        quote: |
+          医疗、药品、医疗器械广告不得含有下列内容：
+          （一）表示功效、安全性的断言或者保证；
+          （二）说明治愈率或者有效率；
+          （三）与其他药品、医疗器械的功效和安全性或者其他医疗机构比较；
+          （四）利用广告代言人作推荐、证明；
+          （五）法律、行政法规规定禁止的其他内容。
+          药品广告的内容不得与国务院药品监督管理部门批准的说明书不一致，并应当显著标明禁忌、不良反应。
+      - id: reg.adlaw.17
+        no: "第十七条"
+        topic: "非医疗广告不得涉疾病治疗功能"
+        quote: |
+          除医疗、药品、医疗器械广告外，禁止其他任何广告涉及疾病治疗功能，并不得使用医疗用语或者易使推销的商品与药品、医疗器械相混淆的用语。
+      - id: reg.adlaw.19
+        no: "第十九条"
+        topic: "禁止变相发布广告"
+        quote: |
+          广播电台、电视台、报刊音像出版单位、互联网信息服务提供者不得以介绍健康、养生知识等形式变相发布医疗、药品、医疗器械、保健食品广告。
+      - id: reg.adlaw.9
+        no: "第九条"
+        topic: "绝对化用语等通用禁止情形"
+        quote: |
+          广告不得有下列情形：……（二）使用或者变相使用国家机关、国家机关工作人员的名义或者形象；（三）使用「国家级」、「最高级」、「最佳」等用语；……
+
+  drug_administration_law:
+    id: reg.druglaw
+    title: "中华人民共和国药品管理法"
+    version: "2019-08-26 修订，2019-12-01 施行（主席令第三十一号）"
+    evidence: E4_OFFICIAL
+    status: verified
+    articles:
+      - id: reg.druglaw.88
+        no: "第八十八条"
+        topic: "禁止回扣与其他不正当利益"
+        quote: |
+          禁止药品上市许可持有人、药品生产企业、药品经营企业和医疗机构在药品购销中给予、收受回扣或者其他不正当利益。
+          禁止药品上市许可持有人、药品生产企业、药品经营企业或者代理人以任何名义给予使用其药品的医疗机构的负责人、药品采购人员、医师、药师等有关人员财物或者其他不正当利益。
+          禁止医疗机构的负责人、药品采购人员、医师、药师等有关人员以任何名义收受……财物或者其他不正当利益。
+      - id: reg.druglaw.89
+        no: "第八十九条"
+        topic: "药品广告须经审查批准"
+        quote: |
+          药品广告应当经广告主所在地省、自治区、直辖市人民政府确定的广告审查机关批准；未经批准的，不得发布。
+      - id: reg.druglaw.90
+        no: "第九十条"
+        topic: "广告内容以说明书为准；禁止借名义推荐"
+        quote: |
+          药品广告的内容应当真实、合法，以国务院药品监督管理部门核准的药品说明书为准，不得含有虚假的内容。
+          药品广告不得含有表示功效、安全性的断言或者保证；不得利用国家机关、科研单位、学术机构、行业协会或者专家、学者、医师、药师、患者等的名义或者形象作推荐、证明。
+          非药品广告不得有涉及药品的宣传。
+      - id: reg.druglaw.91
+        no: "第九十一条"
+        topic: "转致条款"
+        quote: |
+          药品价格和广告，本法未作规定的，适用《中华人民共和国价格法》、《中华人民共和国反垄断法》、《中华人民共和国反不正当竞争法》、《中华人民共和国广告法》等的规定。
+
+  anti_unfair_competition:
+    id: reg.afl
+    title: "中华人民共和国反不正当竞争法"
+    version: "2025-06-27 第二次修订，2025-10-15 施行（主席令第五十号），条文由 33 条增至 41 条"
+    urls:
+      law: "http://npc.gov.cn/c2/c30834/202506/t20250627_446247.html"
+      order: "http://www.npc.gov.cn/c2/kgfb/202506/t20250627_446260.html"
+    evidence: E4_OFFICIAL
+    status: verified
+    version_warning: "商业贿赂条款已由旧法第七条移至新法第八条；引用旧条款号即为错误，见 D9"
+    articles:
+      - id: reg.afl.8
+        no: "第八条"
+        topic: "商业贿赂"
+        quote: |
+          经营者不得采用给予财物或者其他手段贿赂下列单位或者个人，以谋取交易机会或者竞争优势：
+          （一）交易相对方的工作人员；
+          （二）受交易相对方委托办理相关事务的单位或者个人；
+          （三）利用职权或者影响力影响交易的单位或者个人。
+          前款规定的单位和个人不得收受贿赂。
+          经营者在交易活动中，可以以明示方式向交易相对方支付折扣，或者向中间人支付佣金。……应当如实入账。
+          经营者的工作人员进行贿赂的，应当认定为经营者的行为；但是，经营者有证据证明该工作人员的行为与为经营者谋取交易机会或者竞争优势无关的除外。
+      - id: reg.afl.8.penalty
+        no: "第十九条（处罚）"
+        topic: "商业贿赂罚则"
+        quote: "没收违法所得，处十万元以上三百万元以下罚款；情节严重的，吊销营业执照。"
+      - id: reg.afl.9
+        no: "第九条"
+        topic: "虚假或引人误解的商业宣传"
+        quote: |
+          经营者不得对其商品的性能、功能、质量、销售状况、用户评价、曾获荣誉等作虚假或者引人误解的商业宣传，欺骗、误导消费者和其他经营者。
+          经营者不得通过组织虚假交易、虚假评价等方式，帮助其他经营者进行虚假或者引人误解的商业宣传。
+
+  ad_review_rule_21:
+    id: reg.samr21
+    title: "药品、医疗器械、保健食品、特殊医学用途配方食品广告审查管理暂行办法"
+    issuer: "国家市场监督管理总局"
+    document_number: "国家市场监督管理总局令第 21 号"
+    published: "2019-12-24 公布"
+    effective: "2020-03-01 施行"
+    url: "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_4ca076ac0eeb4a9e9204e0cee26e359b.html"
+    evidence: E4_OFFICIAL
+    status: verified
+    articles:
+      - {id: reg.samr21.2,  no: "第二条", topic: "未经审查不得发布", quote: "未经审查不得发布药品、医疗器械、保健食品和特殊医学用途配方食品广告。"}
+      - id: reg.samr21.5
+        no: "第五条"
+        topic: "广告以说明书为准（最核心推广边界）"
+        quote: |
+          药品广告的内容应当以国务院药品监督管理部门核准的说明书为准。药品广告涉及药品名称、药品适应症或者功能主治、药理作用等内容的，不得超出说明书范围。
+          药品广告应当显著标明禁忌、不良反应，处方药广告还应当显著标明「本广告仅供医学药学专业人士阅读」……
+      - {id: reg.samr21.9,  no: "第九条", topic: "须标明广告批准文号", quote: "药品、医疗器械、保健食品和特殊医学用途配方食品广告应当显著标明广告批准文号。"}
+      - id: reg.samr21.11
+        no: "第十一条"
+        topic: "八类禁止情形"
+        quote: |
+          不得违反《中华人民共和国广告法》第九条、第十六条、第十七条、第十八条、第十九条规定，不得包含下列情形：
+          （一）使用或者变相使用国家机关、国家机关工作人员、军队单位或者军队人员的名义或者形象……
+          （二）使用科研单位、学术机构、行业协会或者专家、学者、医师、药师、临床营养师、患者等的名义或者形象作推荐、证明；
+          （三）违反科学规律，明示或者暗示可以治疗所有疾病、适应所有症状、适应所有人群……
+          （四）引起公众对所处健康状况和所患疾病产生不必要的担忧和恐惧……
+          （五）含有「安全」「安全无毒副作用」「毒副作用小」；明示或者暗示成分为「天然」，因而安全性有保证等内容；
+          （六）含有「热销、抢购、试用」「家庭必备、免费治疗、免费赠送」等诱导性内容，「评比、排序、推荐、指定、选用、获奖」等综合性评价内容，「无效退款、保险公司保险」等保证性内容……
+          （七）含有医疗机构的名称、地址、联系方式、诊疗项目、诊疗方法以及有关义诊、医疗咨询电话……
+          （八）法律、行政法规规定不得含有的其他内容。
+      - {id: reg.samr21.20, no: "第二十条", topic: "不得擅自剪辑修改", quote: "广告主、广告经营者、广告发布者应当严格按照审查通过的内容发布……不得进行剪辑、拼接、修改。已经审查通过的广告内容需要改动的，应当重新申请广告审查。"}
+      - id: reg.samr21.22
+        no: "第二十二条"
+        topic: "处方药仅限专业刊物"
+        quote: |
+          本办法第二十一条规定以外的处方药和特殊医学用途配方食品中的特定全营养配方食品广告只能在国务院卫生行政部门和国务院药品监督管理部门共同指定的医学、药学专业刊物上发布。……不得使用与处方药名称……相同的商标、企业字号在医学、药学专业刊物以外的媒介变相发布广告，也不得利用该商标、企业字号为各种活动冠名进行广告宣传。
+      - id: reg.samr21.34
+        no: "第三十四条"
+        topic: "旧规章废止"
+        quote: |
+          本办法自 2020 年 3 月 1 日起施行。……2007 年 3 月 3 日原国家工商行政管理总局、原国家食品药品监督管理局令第 27 号公布的《药品广告审查发布标准》，2007 年 3 月 13 日原国家食品药品监督管理局、原国家工商行政管理总局令第 27 号发布的《药品广告审查办法》……同时废止。
+
+  medical_ad_rule:
+    id: reg.medicalad
+    title: "医疗广告管理办法"
+    issuer: "国家工商行政管理总局、卫生部"
+    document_number: "国家工商行政管理总局、卫生部令第 26 号"
+    published: "2006-11-10 公布"
+    effective: "2007-01-01 施行"
+    evidence: E4_OFFICIAL
+    status: partial
+    status_note: "文号与条款已核对；未查到市场监管总局规章库现行有效性标记。2025–2026 年地方卫健执法仍引用第 26 号令，可推定有效，标注「现行有效」前建议再核一次"
+    articles:
+      - {id: reg.medicalad.3, no: "第三条", topic: "须取得审查证明", quote: "医疗机构发布医疗广告，应当在发布前申请医疗广告审查。未取得《医疗广告审查证明》，不得发布医疗广告。发布医疗广告的有效期为一年，并严格按照核定内容进行广告宣传。"}
+      - id: reg.medicalad.6
+        no: "第六条"
+        topic: "内容仅限八项"
+        quote: "医疗广告内容仅限于以下项目：（一）医疗机构第一名称；（二）医疗机构地址；（三）所有制形式；（四）医疗机构类别；（五）诊疗科目；（六）床位数；（七）接诊时间；（八）联系电话。"
+      - id: reg.medicalad.7
+        no: "第七条"
+        topic: "表现形式禁止"
+        quote: "医疗广告的表现形式不得含有以下情形：（一）涉及医疗技术、诊疗方法、疾病名称、药物的；（二）保证治愈或者隐含保证治愈的；（三）宣传治愈率、有效率等诊疗效果的；……"
+
+  medical_rep_rule:
+    id: reg.rep
+    title: "医药代表备案管理办法（试行）"
+    issuer: "国家药品监督管理局"
+    document_number: "国家药监局公告 2020 年第 105 号"
+    published: "2020-09-22"
+    effective: "2020-12-01 施行"
+    url: "https://www.nmpa.gov.cn/directory/web/nmpa/images/1601455275449085290.doc"
+    register_platform: "https://pharmareps.cpa.org.cn（中国药学会维护）"
+    evidence: E4_OFFICIAL
+    status: verified
+    articles:
+      - id: reg.rep.2
+        no: "第二条"
+        topic: "医药代表定义与四项任务"
+        quote: |
+          本办法所称医药代表，是指代表药品上市许可持有人在中华人民共和国境内从事药品信息传递、沟通、反馈的专业人员。
+          医药代表主要工作任务：（一）拟订医药产品推广计划和方案；（二）向医务人员传递医药产品相关信息；（三）协助医务人员合理使用本企业医药产品；（四）收集、反馈药品临床使用情况及医院需求信息。
+      - id: reg.rep.3
+        no: "第三条"
+        topic: "允许的五种学术推广形式"
+        quote: |
+          （一）在医疗机构当面与医务人员和药事人员沟通；（二）举办学术会议、讲座；（三）提供学术资料；（四）通过互联网或者电话会议沟通；（五）医疗机构同意的其他形式。
+      - id: reg.rep.13
+        no: "第十三条"
+        topic: "七类禁止行为（合规规则骨架）"
+        quote: |
+          医药代表不得有下列情形：
+          （一）未经备案开展学术推广等活动；
+          （二）未经医疗机构同意开展学术推广等活动；
+          （三）承担药品销售任务，实施收款和处理购销票据等销售行为；
+          （四）参与统计医生个人开具的药品处方数量；
+          （五）对医疗机构内设部门和个人直接提供捐赠、资助、赞助；
+          （六）误导医生使用药品，夸大或者误导疗效，隐匿药品已知的不良反应信息或者隐瞒医生反馈的不良反应信息；
+          （七）其他干预或者影响临床合理用药的行为。
+      - {id: reg.rep.14, no: "第十四条", topic: "行贿转致", quote: "药品上市许可持有人或者医药代表给予使用其药品的有关人员财物或者其他不正当利益的，依照《中华人民共和国药品管理法》《中华人民共和国反不正当竞争法》等相关法律法规进行调查处理。"}
+      - {id: reg.rep.15, no: "第十五条", topic: "医疗机构侧义务", quote: "医疗机构不得允许未经备案的人员对本医疗机构医务人员或者药事人员开展学术推广等相关活动；医疗机构可在备案平台查验核对医药代表备案信息。"}
+
+  rdpac:
+    id: reg.rdpac
+    title: "RDPAC 行业行为准则"
+    issuer: "中国外商投资企业协会药品研制和开发行业委员会（RDPAC）"
+    version: "2022 年修订版（第七版），2022-09-30 经 45 家会员公司投票批准"
+    effective: "2023-04-01"
+    nature: "行业自律规范，对会员公司有强制约束力；非会员企业常自愿参照"
+    evidence: E4_OFFICIAL
+    status: partial
+    status_note: "第一至七章条文已核对；第八至十四章仅核对目录结构与公开摘录，未逐条比对官方 PDF 全文"
+    articles:
+      - id: reg.rdpac.1
+        no: "第一条 1.1"
+        topic: "适用范围"
+        quote: |
+          RDPAC 准则的规范对象是会员公司与医疗卫生专业人士、医疗卫生组织、患者组织和患者之间的医学互动交流，以及药品的推广活动。……适用于所有会员公司的雇员，以及代表会员公司执行工作任务的分包商。
+      - id: reg.rdpac.3
+        no: "第三条"
+        topic: "未获批前不得推广 / 超说明书交流边界"
+        quote: |
+          会员公司在其药品获得中国药品主管部门颁发的上市（生产或进口）许可之前，不得从事为在中国上市使用该药品而进行的推广活动。……会员公司在药品获得上市许可前，或就药品说明书之外的信息与医疗卫生专业人士的互动交流，无论以口头或书面形式进行，均应由会员公司医学专业人员进行或在医学专业人员的监督下进行。
+      - id: reg.rdpac.4
+        no: "第四条"
+        topic: "推广信息标准（三段式）"
+        quote: |
+          4.1 药品信息的一致性：药品信息推广应与中国药品主管部门批准的药品信息相一致。
+          4.2 准确和不误导：推广信息应当清楚、易理解、准确、客观、公正、和高度完整……一般应避免使用诸如「安全」、「无副作用」之类的描述性用语，如需使用也须有充分的科学论证。
+          4.3 实证：药品推广信息应能通过对已经批准的药品说明书或科学证据的引用而得到证实。
+      - id: reg.rdpac.5
+        no: "第五条"
+        topic: "印刷材料五项必备内容"
+        quote: "（a）药品名称；（b）药物活性成份；（c）制药公司或药品代理公司的名称及地址；（d）推广材料制作的日期；（e）处方信息概要，包括已经批准的一项或多项适应症、用法用量，以及对禁忌症提示和副作用的简要说明。"
+      - id: reg.rdpac.6
+        no: "第六条"
+        topic: "电子推广材料同等要求"
+        quote: "电子版推广材料应遵守与印刷形式推广材料相同的各项要求。……（d）针对中国市场的信息应符合中国法律法规的各项规定。"
+      - id: reg.rdpac.7
+        no: "第七条"
+        topic: "与医疗卫生专业人士互动"
+        quote: |
+          7.1.3 适当的地点/住宿：医学互动交流项目举办的地点应适当……应避免选择名胜或铺张奢侈的地点（注释 13：避免 SPA、温泉、度假酒店、滑雪、高尔夫、赌博、邮轮等）。
+          7.1.4 限制附属于医学互动交流项目的招待：……用于招待的支出按当地标准应当是中等适度和合理的……招待应限于：（1）场地和住宿，（2）交通，（3）餐饮和小食。
+          7.6.1 禁止提供礼品。
+          7.3 服务费 / 7.4 讲者项目：讲者须具备相应专业资格，服务费须与真实、可验证的服务相匹配，不得与处方量挂钩。
+
+# =============================================================================
+# 11. 合规规则（法条 → 规则映射）
+# =============================================================================
+compliance_rules:
+  - id: rule.R1
+    rule: "一切对外传播内容不得超出核准说明书范围（适应症、人群、疗效、安全性口径）"
+    legal_basis: ["广告法§16Ⅱ", "药品管理法§90Ⅰ", "21号令§5", "RDPAC§4.1/§4.3"]
+    check: "逐句比对 label.indications 与 label.efficacy；出现说明书未载明的适应症/人群/数值即违规"
+  - id: rule.R2
+    rule: "处方药不得面向公众做广告或变相广告（社媒、直播、搜索、科普软文、患者故事均属）"
+    legal_basis: ["广告法§15Ⅱ", "广告法§19", "21号令§22"]
+    check: "受众是否为公众；是否出现商品名+疗效/用法指向"
+  - id: rule.R3
+    rule: "不得出现功效/安全性断言（不反弹、无副作用、最安全），不得给治愈率/有效率，不得与竞品比较功效安全性"
+    legal_basis: ["广告法§16Ⅰ(一)(二)(三)", "21号令§11(三)(五)", "RDPAC§4.2"]
+  - id: rule.R4
+    rule: "不得借专家、学会、医生、患者名义或形象作推荐证明"
+    legal_basis: ["广告法§16Ⅰ(四)", "药品管理法§90Ⅱ", "21号令§11(二)"]
+  - id: rule.R5
+    rule: "推广材料须载明五项必备内容；电子材料同等要求；广告须标批准文号"
+    legal_basis: ["RDPAC§5", "RDPAC§6", "21号令§9"]
+  - id: rule.R6
+    rule: "不得以讲课费/咨询费/赞助/捐赠等形式给予不正当利益；不得与处方量挂钩；不得统方"
+    legal_basis: ["药品管理法§88", "反不正当竞争法§8、§19", "医药代表办法§13(三)(四)(五)、§14"]
+  - id: rule.R7
+    rule: "医药代表须备案、须经医疗机构同意方可开展活动；不得承担销售任务"
+    legal_basis: ["医药代表办法§3、§13(一)(二)、§15"]
+  - id: rule.R8
+    rule: "未获批适应症/未获批人群不得推广；超说明书交流须由医学专业人员实施并留痕"
+    legal_basis: ["RDPAC§3", "广告法§16Ⅱ", "21号令§5"]
+  - id: rule.R9
+    rule: "学术会议地点与招待标准须适度，禁礼品、禁旅游性支出"
+    legal_basis: ["RDPAC§7.1.3、§7.1.4、§7.6.1"]
+  - id: rule.R10
+    rule: "不得使用「国家级」「最高级」「最佳」等绝对化用语；不得贬低竞品"
+    legal_basis: ["广告法§9(三)、§13", "21号令§11(六)"]
+
+# =============================================================================
+# 12. 表述政策（白名单 / 黑名单 / 需加限定）
+# =============================================================================
+claims_policy:
+
+  allowed:
+    id: claim.allowed
+    evidence: E1_LABEL
+    examples:
+      - claim: "本品适用于 BMI ≥28，或 BMI ≥24 且伴至少一种体重相关合并症的成人长期体重控制，需配合控制饮食与增加体力活动"
+        fact: label.indication.weight
+      - claim: "GLORY-1 中，4 mg 组第 32 周体重较基线下降 10.1%，6 mg 组下降 12.5%，安慰剂组上升 0.5%（mITT，多重填补）"
+        facts: [efficacy.glory1.w32.pct]
+      - claim: "最常见不良反应为恶心、腹泻、呕吐，多为轻中度，集中在剂量递增阶段"
+        facts: [safety.ae.weight.nausea, safety.gi.glory1]
+      - claim: "禁用于有甲状腺髓样癌个人或家族史者及 MEN 2 患者"
+        fact: label.contraindication
+      - claim: "推荐起始剂量 2 mg 每周一次，4 周后增至 4 mg，必要时可增至 6 mg"
+        facts: [dose.start, dose.titration]
+    constraint: "每条 claim 必须绑定 fact id；数值必须带单位"
+
+  forbidden:
+    id: claim.forbidden
+    evidence: E4_OFFICIAL
+    items:
+      - pattern: "减重不反弹 / 停药不反弹"
+        reason: "功效断言，无说明书依据（广告法§16Ⅰ(一)）"
+      - pattern: "无副作用 / 安全无毒副作用 / 最安全"
+        reason: "广告法§16Ⅰ(一)；21号令§11(五) 明文列举"
+      - pattern: "治愈肥胖 / 治愈糖尿病 / 根治"
+        reason: "广告法§16Ⅰ(二)；本品为长期体重控制与血糖控制，非治愈"
+      - pattern: "优于司美格鲁肽 / 优于替尔泊肽 / 效果最好"
+        reason: "无头对头试验；广告法§16Ⅰ(三) 禁止与同类药品比较功效安全性"
+      - pattern: "指南推荐玛仕度肽 / 国内外指南一线推荐"
+        reason: "2024 版肥胖指南成文于获批前，见 D11"
+      - pattern: "1 针瘦 X 斤 / X 天见效 / 快速减重"
+        reason: "效果承诺，且与说明书滴定方案矛盾"
+      - pattern: "适合所有人 / 无门槛减重 / 谁都能用"
+        reason: "21号令§11(三) 适应所有人群"
+      - pattern: "减肥针 / 网红减肥药 / 躺着瘦"
+        reason: "属以公众为对象的变相广告（广告法§15Ⅱ、§19）"
+      - pattern: "可替代饮食控制和运动"
+        reason: "说明书适应症以「在控制饮食和增加体力活动基础上」为前提"
+      - pattern: "可治疗脂肪肝 / 可治痛风 / 可降压"
+        reason: "说明书仅载代谢指标改善，未批准治疗这些疾病"
+      - pattern: "（用 DREAMS-3 数字时）研究已发表 / 文献证实"
+        reason: "无同行评审论文，见 D4"
+      - pattern: "（把减重版用于 T2DM 患者或反之）两适应症通用"
+        reason: "两版说明书适应症、禁忌、AE 表独立，见 D1"
+
+  requires_qualifier:
+    id: claim.qualified
+    items:
+      - claim_type: "GLORY-1 减重数值"
+        qualifier: "须注明口径：说明书为 mITT 多重填补；NEJM 为 treatment-policy。两者不可混用（D7）"
+      - claim_type: "DREAMS-3 全部疗效数据"
+        qualifier: "须注明「申办方公布的 ADA 2026 口头报告结果，尚未经同行评审发表」"
+      - claim_type: "GLORY-2 人群描述"
+        qualifier: "须写「BMI ≥30 的中重度肥胖成人（16.1% 合并 T2DM）」，不得写作「T2DM 合并肥胖」"
+      - claim_type: "GLORY-1 ≥10% 达标率与腰围数据"
+        qualifier: "须注明来自申办方新闻稿，未经期刊原文核对"
+      - claim_type: "DREAMS-1/2 达标率"
+        qualifier: "说明书有绝对值，Nature 摘要无；引用摘要时不得补入说明书数值"
+      - claim_type: "不良反应发生率"
+        qualifier: "须注明来自 GLORY-1 或 DREAMS-1/2，且不得跨试验比较"
+      - claim_type: "指南引用"
+        qualifier: "须带文号与发布日期；学会指南不得写成政府文件"
+
+# =============================================================================
+# 13. 冲突与存疑（下游必须读，禁止自行消解）
+# =============================================================================
+discrepancies:
+
+  - id: D1
+    severity: high
+    topic: "官方 PDF 内含两张独立说明书"
+    detail: "减重版核准 2025-06-24，T2DM 版核准 2025-09-16；适应症、禁忌、不良反应表、临床试验数据均不同"
+    handling: "引用前先确定受众/适应症，全程只用对应版本；不得跨版本拼数据"
+    source: "label.md 头部说明"
+
+  - id: D2
+    severity: high
+    topic: "T2DM 版表 6 度拉糖肽组双达标率印为 118.9%"
+    detail: "数值上不可能（应约 18.9%）；本库保留原文并加 ※ 标记"
+    handling: "引用前核对纸质原件；在核对完成前不得引用该单元格"
+    source: "label.md 表 6"
+
+  - id: D3
+    severity: high
+    topic: "GLORY-2 人群与常见描述不符"
+    detail: "实际为 BMI ≥30 的中重度肥胖中国成人（16.1% 合并 T2DM），非「T2DM 合并超重/肥胖」；后者对应 DREAMS-3"
+    handling: "任何提及 GLORY-2 的文本必须使用正确人群描述"
+
+  - id: D4
+    severity: high
+    topic: "DREAMS-3 无同行评审结果论文"
+    detail: "仅有设计论文（Contemp Clin Trials 2026;160:108150）+ ADA 2026 口头报告 1226-OR + 申办方新闻稿；截至 2026-10-25 检索无结果论文"
+    handling: "只能作为「申办方公布数据」引用，不得称「研究显示/文献表明」"
+
+  - id: D5
+    severity: medium
+    topic: "DREAMS-1 样本量 320 vs 319"
+    detail: "论文/注册随机 320 例，注册实际入组 319 例，说明书表述 319 例"
+    handling: "引用说明书口径写 319；引用论文时写 320 随机"
+
+  - id: D6
+    severity: medium
+    topic: "DREAMS-3 样本量 349 vs 329"
+    detail: "注册与设计论文为 349；申办方新闻稿为 329，推测为 efficacy estimand 人群但未明示"
+    handling: "引用时并列注明两个数字及推测，不作断言"
+
+  - id: D7
+    severity: high
+    topic: "同一试验两套统计口径"
+    detail: |
+      GLORY-1：说明书 mITT 多重填补 W32 −10.1/−12.5/+0.5、≥5% 73.9/82.0/10.5；
+      NEJM treatment-policy W32 −10.09/−12.55/+0.45、≥5% 相同。
+      DREAMS-1：说明书主表 −1.58/−2.02/−0.25，脚注 MMRM −1.57/−2.15/−0.14。
+    handling: "同一文本内只用一套口径并注明；不得把两套数字并列做「范围」表述"
+
+  - id: D8
+    severity: medium
+    topic: "DREAMS-2 盲态描述不一致"
+    detail: "说明书写作「玛仕度肽剂量盲态、度拉糖肽对照（开放标签）」；ClinicalTrials.gov 登记为 double-masked；Nature 摘要称双盲"
+    handling: "描述设计时优先用说明书表述并注明注册信息差异；不得断言为「双盲、双模拟」"
+    status: unverified
+
+  - id: D9
+    severity: high
+    topic: "反不正当竞争法条款号已变更"
+    detail: "2025-10-15 起施行的新法把商业贿赂从第七条移至第八条，罚则见第十九条"
+    handling: "一律引用新法条款号；引用网络旧文（第七条）即为错误"
+
+  - id: D10
+    severity: medium
+    topic: "《医疗广告管理办法》现行有效性未完全确认"
+    detail: "未查到市场监管总局规章库有效性标记；地方执法仍引用第 26 号令"
+    handling: "可引用条款内容；标注「现行有效」前需复核"
+
+  - id: D11
+    severity: high
+    topic: "2024 版肥胖指南不含玛仕度肽"
+    detail: "指南发布 2024-10-12，本品 2025-06-24 获批"
+    handling: "禁止「指南推荐玛仕度肽」类表述；指南只能用于支撑问诊逻辑与诊断标准"
+
+  - id: D12
+    severity: medium
+    topic: "GLORY-2 多个登记次要终点无数值"
+    detail: "≥10%/≥15%/≥20%、腰围、SBP、TG、non-HDL-C、LDL-C 均未在 JAMA 摘要报告"
+    handling: "不得推断、不得用其他试验数值替代"
+
+  - id: D13
+    severity: medium
+    topic: "妊娠禁用写在【注意事项】而非【禁忌】"
+    detail: "【禁忌】仅列过敏与 MTC/MEN 2；【注意事项】写「故本品禁用于妊娠期妇女」"
+    handling: "表述为「说明书明确禁用于妊娠期妇女」，不要写成「【禁忌】项下」"
+
+  - id: D14
+    severity: low
+    topic: "T2DM 版不良反应表未逐项抽取"
+    detail: "本库只抽了减重版 AE 表；T2DM 版表需回读 label.md 第 574 行起"
+    handling: "需要 T2DM AE 数值时必须回读原文，不得套用减重版数字"
+
+  - id: D15
+    severity: low
+    topic: "RDPAC 第八至十四章未逐条核对"
+    detail: "仅核对目录与公开摘录"
+    handling: "引用这些章节原文前须下载 2022 修订版 PDF 核对"
+
+  - id: D16
+    severity: medium
+    topic: "肥胖指南药物清单未逐字核对"
+    detail: "媒体称列出奥利司他、利拉鲁肽、贝那鲁肽、司美格鲁肽、替尔泊肽五种"
+    handling: "status=unverified，引用前回 PDF「药物治疗」章节"
+
+# =============================================================================
+# 14. 已废止 / 被取代（禁止引用）
+# =============================================================================
+deprecated:
+  - id: DEP1
+    item: "《药品广告审查办法》（2007 年 3 月 13 日，原国家食品药品监督管理局、原国家工商行政管理总局令第 27 号）"
+    status: deprecated
+    reason: "已被 21 号令 §34 明确废止，2020-03-01 失效"
+  - id: DEP2
+    item: "《药品广告审查发布标准》（2007 年 3 月 3 日，原国家工商行政管理总局、原国家食品药品监督管理局令第 27 号）"
+    status: deprecated
+    reason: "同上，2020-03-01 废止"
+  - id: DEP3
+    item: "《反不正当竞争法》2019 年修正版第七条（商业贿赂）"
+    status: deprecated
+    reason: "2025-10-15 起被 2025 年修订版取代，条款移至第八条"
+
+# =============================================================================
+# 15. 试验文献目录（Citation metadata）
+# =============================================================================
+trials_bibliography:
+
+  - id: trial.glory1
+    name: "GLORY-1"
+    title: "Once-Weekly Mazdutide in Chinese Adults with Obesity or Overweight"
+    journal: "The New England Journal of Medicine"
+    citation: "2025 Jun 12;392(22):2215-2225"
+    epub: "2025-05-25"
+    doi: "10.1056/NEJMoa2411528"
+    pmid: 40421736
+    nct: "NCT05607680"
+    sponsor: "Innovent Biologics"
+    evidence: E2_PEER
+    status: verified
+    access: "付费墙，采用 PubMed 官方摘要"
+
+  - id: trial.glory2
+    name: "GLORY-2"
+    title: "Treatment With 9-mg Mazdutide for Weight Reduction in Chinese Adults With Obesity: The GLORY-2 Randomized Clinical Trial"
+    journal: "JAMA"
+    citation: "2026 Aug 4;336(5):377-388"
+    epub: "2026-06-07"
+    doi: "10.1001/jama.2026.8142"
+    pmid: 42251595
+    pmcid: "PMC13244275（embargo，仅摘要）"
+    nct: "NCT06164873"
+    companion_comment: "JAMA. 2026 Aug 4;336(5):374-376. doi:10.1001/jama.2026.10443"
+    evidence: E2_PEER
+    status: verified
+
+  - id: trial.dreams1
+    name: "DREAMS-1"
+    title: "Mazdutide versus placebo in Chinese adults with type 2 diabetes"
+    journal: "Nature"
+    citation: "2026 Apr;652(8108):174-180"
+    epub: "2025-12-17"
+    doi: "10.1038/s41586-025-10026-w"
+    pmid: 41407859
+    nct: "NCT05628311"
+    authors: ["朱大龙（南京大学医学院附属鼓楼医院）", "赵家军（山东第一医科大学）"]
+    note: "与 DREAMS-2 背靠背同期发表于同一期 Nature"
+    evidence: E2_PEER
+    status: verified
+
+  - id: trial.dreams2
+    name: "DREAMS-2"
+    title: "Mazdutide versus dulaglutide in Chinese adults with type 2 diabetes"
+    journal: "Nature"
+    citation: "2026 Apr;652(8108):181-188"
+    epub: "2025-12-17"
+    doi: "10.1038/s41586-025-10031-z"
+    pmid: 41407860
+    nct: "NCT05606913"
+    authors: ["郭立新（北京医院）", "张波（中日友好医院）", "杨文英（中日友好医院，通讯）"]
+    evidence: E2_PEER
+    status: verified
+
+  - id: trial.dreams3
+    name: "DREAMS-3"
+    title_design: "Mazdutide versus Semaglutide for the treatment of type 2 diabetes and obesity: Rationale, design and baseline data of DREAMS-3 phase 3 trial"
+    journal: "Contemporary Clinical Trials"
+    citation: "2026 Jan;160:108150"
+    epub: "2025-11-17"
+    doi: "10.1016/j.cct.2025.108150"
+    pmid: 41260459
+    nct: "NCT06184568"
+    results_publication: null
+    results_source: "ADA 2026 口头报告 1226-OR（2026-06-08）+ 申办方新闻稿"
+    evidence: E5_SPONSOR
+    status: partial
+
+  - id: trial.surmount5
+    name: "SURMOUNT-5"
+    title: "Tirzepatide as Compared with Semaglutide for the Treatment of Obesity"
+    journal: "The New England Journal of Medicine"
+    citation: "2025 Jul 3;393(1):26-36"
+    epub: "2025-05-11"
+    doi: "10.1056/NEJMoa2416394"
+    pmid: 40353578
+    nct: "NCT05822830"
+    sponsor: "Eli Lilly"
+    evidence: E2_PEER
+    status: verified
+
+# =============================================================================
+# 16. 医生问诊映射（问题 → 依据）
+# =============================================================================
+qa_mapping:
+  - id: qa.bmi
+    question: "身高体重多少？我算一下 BMI"
+    basis: "BMI 24/28 切点与肥胖分级"
+    refs: [guide.obesity2024.bmi_cutoff, guide.obesity2024.grading, label.indication.weight]
+  - id: qa.waist
+    question: "腰围多少？"
+    basis: "中心性肥胖腰围切点（男 ≥90 / 女 ≥85 cm）"
+    refs: [guide.obesity2024.waist]
+  - id: qa.comorbidity
+    question: "有没有高血压、脂肪肝、打呼噜、血糖高？"
+    basis: "超重（BMI 24–28）需伴至少一种体重相关合并症才符合药物治疗条件"
+    refs: [label.indication.weight, guide.obesity2024.bmi_cutoff]
+  - id: qa.history
+    question: "以前减过吗？怎么减的？反弹没有？"
+    basis: "体重管理规范化流程：分类→评估→干预→维持→随访"
+    refs: [guide.weight2024.scope]
+  - id: qa.goal
+    question: "想减多少？能接受打针吗？"
+    basis: "减重目标分层 5%–15% / 3–6 个月，每 3–6 个月评估"
+    refs: [guide.obesity2024.target]
+  - id: qa.glucose
+    question: "最近查过血糖、糖化血红蛋白吗？"
+    basis: "T2DM 占糖尿病 90% 以上、知晓率仅 36.7%；糖尿病指南设体重管理专章"
+    refs: [guide.diabetes2024.epi, guide.diabetes2024.toc]
+  - id: qa.thyroid
+    question: "家里有没有人得过甲状腺髓样癌？有没有 MEN 2？"
+    basis: "说明书黑框警告与禁忌"
+    refs: [label.warning.mtc, label.contraindication]
+  - id: qa.gi
+    question: "平时胃怎么样？有没有胰腺炎、胆囊问题？"
+    basis: "说明书注意事项中胰腺炎、胆囊疾病、重度胃肠道疾病与胃肠道不良反应"
+    refs: [label.warning.pancreatitis, label.warning.gallbladder, safety.gi.glory1]
+  - id: qa.pregnancy
+    question: "近期有生育计划吗？"
+    basis: "妊娠期禁用；计划妊娠前停用至少 3 个月"
+    refs: [dose.pregnancy]
+
+# =============================================================================
+# 17. 来源索引
+# =============================================================================
+source_index:
+
+  primary_label:
+    - id: src.label_pdf
+      url: "https://img.innoventbio.com/product/W10030842001.pdf"
+      type: "说明书 PDF（官方印刷料号 W10030842001 / W10030939001）"
+      evidence: E1_LABEL
+      accessed: "2026-10-25"
+    - id: src.nmpa_search
+      url: "https://datasearch.nmpa.gov.cn/datasearch/home-index.html"
+      type: "NMPA 药品数据查询（仅批件信息，无说明书全文）"
+      evidence: E4_OFFICIAL
+      accessed: "2026-10-25"
+
+  peer_reviewed:
+    - {id: src.pubmed.glory1, url: "https://pubmed.ncbi.nlm.nih.gov/40421736/", evidence: E2_PEER}
+    - {id: src.pubmed.glory2, url: "https://pubmed.ncbi.nlm.nih.gov/42251595/", evidence: E2_PEER}
+    - {id: src.pubmed.dreams1, url: "https://pubmed.ncbi.nlm.nih.gov/41407859/", evidence: E2_PEER}
+    - {id: src.pubmed.dreams2, url: "https://pubmed.ncbi.nlm.nih.gov/41407860/", evidence: E2_PEER}
+    - {id: src.pubmed.dreams3, url: "https://pubmed.ncbi.nlm.nih.gov/41260459/", evidence: E2_PEER}
+    - {id: src.pubmed.surmount5, url: "https://pubmed.ncbi.nlm.nih.gov/40353578/", evidence: E2_PEER}
+    - {id: src.nejm.glory1, url: "https://www.nejm.org/doi/10.1056/NEJMoa2411528", note: "反爬，未直接抓取；摘要经 PubMed 获取"}
+    - {id: src.jama.glory2, url: "https://jamanetwork.com/journals/jama/article-abstract/2850143"}
+    - {id: src.nature.dreams1, url: "https://www.nature.com/articles/s41586-025-10026-w"}
+    - {id: src.nature.dreams2, url: "https://www.nature.com/articles/s41586-025-10031-z"}
+    - {id: src.nejm.surmount5, url: "https://www.nejm.org/doi/10.1056/NEJMoa2416394"}
+
+  registry:
+    - {id: src.ct.glory1, url: "https://clinicaltrials.gov/study/NCT05607680", evidence: E3_REGISTRY}
+    - {id: src.ct.glory2, url: "https://clinicaltrials.gov/study/NCT06164873", evidence: E3_REGISTRY}
+    - {id: src.ct.dreams1, url: "https://clinicaltrials.gov/study/NCT05628311", evidence: E3_REGISTRY}
+    - {id: src.ct.dreams2, url: "https://clinicaltrials.gov/study/NCT05606913", evidence: E3_REGISTRY}
+    - {id: src.ct.dreams3, url: "https://clinicaltrials.gov/study/NCT06184568", evidence: E3_REGISTRY}
+    - {id: src.ct.surmount5, url: "https://clinicaltrials.gov/study/NCT05822830", evidence: E3_REGISTRY, note: "含已登记结果"}
+
+  sponsor_and_media:
+    - {id: src.pr.dreams3, url: "https://en.innoventbio.com/InvestorsAndMedia/PressReleaseDetail?key=604", evidence: E5_SPONSOR}
+    - {id: src.pr.dreams3.repost, url: "https://bydrug.pharmcube.com/news/detail/6ca6a7a53849e83a72fa118903f98d05", evidence: E6_MEDIA}
+    - {id: src.pr.glory1, url: "https://www.biospace.com/press-releases/phase-3-clinical-study-of-mazdutide-in-chinese-adults-with-overweight-or-obesity-glory-1-published-in-the-new-england-journal-of-medicine-nejm", evidence: E5_SPONSOR}
+    - {id: src.media.ada2026, url: "https://www.idiabetes.com.cn/index/article/detail?id=16560", evidence: E6_MEDIA}
+
+  official_docs:
+    - {id: src.nhc.obesity, url: "https://www.nhc.gov.cn/wjw/c100378/202410/bcf804e19e0c4246b5aea6cd338b55e1.shtml", evidence: E4_OFFICIAL}
+    - {id: src.nhc.obesity.pdf, url: "https://www.nhc.gov.cn/cms-search/downFiles/d62bf58fae134eaf84c4fb77d6762a08.pdf", evidence: E4_OFFICIAL}
+    - {id: src.nhc.weight, url: "https://www.nhc.gov.cn/wjw/ylyjs/202412/b3d40e0141834897808ce6c9dce76a60.shtml", evidence: E4_OFFICIAL}
+    - {id: src.gov.adlaw, url: "https://www.gov.cn/guoqing/2021-10/29/content_5647620.htm", evidence: E4_OFFICIAL}
+    - {id: src.npc.afl, url: "http://npc.gov.cn/c2/c30834/202506/t20250627_446247.html", evidence: E4_OFFICIAL}
+    - {id: src.samr.21, url: "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_4ca076ac0eeb4a9e9204e0cee26e359b.html", evidence: E4_OFFICIAL}
+    - {id: src.nmpa.rep, url: "https://www.nmpa.gov.cn/directory/web/nmpa/images/1601455275449085290.doc", evidence: E4_OFFICIAL}
+
+# =============================================================================
+# 18. 抽取提示
+# =============================================================================
+extraction_hints:
+
+  rounding:
+    rule: "保留原文精度，不四舍五入；说明书与论文精度不同，不得统一（如 −10.1 与 −10.09）"
+    exceptions: "仅在换算单位（如 h → 天）时标注「换算值」"
+
+  units:
+    weight_change: "%（相对基线百分比变化）"
+    weight_loss_threshold: "%（达到该降幅的受试者比例）"
+    hba1c: "%（绝对值，非相对变化）"
+    hba1c_change: "百分点或 %（沿用原文）"
+    waist: "cm"
+    bp: "mmHg"
+    uric_acid: "μmol/L"
+
+  ambiguity_traps:
+    - "「体重下降 X%」与「X% 的受试者体重下降 ≥Y%」是两类指标，不可互换"
+    - "「HbA1c 降低 2.03%」是绝对值下降，不是相对降幅"
+    - "说明书「与安慰剂相比的差异」是组间差，不是试验组自身变化"
+    - "GLORY-1 与 GLORY-2 剂量不同（4/6 mg vs 9 mg），不可直接比高低"
+    - "DREAMS-2 对照组是度拉糖肽，不是司美格鲁肽"
+
+  citation_format:
+    efficacy: "数值 + 双方括号 fact id + 来源简称与年份"
+    regulation: "（法规简称 §条款）"
+    guideline: "（文件全称 文号）"
+
+  hard_stops:
+    - "输出中出现 DREAMS-3 数据但未标注「未经同行评审」→ 停止"
+    - "输出中出现任何药品间疗效对比 → 停止"
+    - "输出中出现「指南推荐玛仕度肽」→ 停止"
+    - "输出中引用 D2 的 118.9% → 停止"
+    - "输出面向公众且含商品名 + 疗效 → 停止"

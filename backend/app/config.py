@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     usage_dir: str = "data/usage"
     db_url: str = "sqlite:///./data/app.db"
     prompts_dir: str = "prompts"
+    embed_provider: str = "hash"      # hash | openai_compat
+    embed_base_url: str = ""
+    embed_api_key: str = ""
+    embed_model: str = ""
+    vector_store: str = "chroma"      # chroma | simple
+    chroma_dir: str = "data/chroma"
 
 
 settings = Settings()

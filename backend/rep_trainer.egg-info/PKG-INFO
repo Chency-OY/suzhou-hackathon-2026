@@ -12,3 +12,5 @@ Requires-Dist: pyyaml>=6.0
 Provides-Extra: dev
 Requires-Dist: pytest>=8; extra == "dev"
 Requires-Dist: ruff>=0.4; extra == "dev"
+Provides-Extra: rag
+Requires-Dist: chromadb>=0.5; extra == "rag"

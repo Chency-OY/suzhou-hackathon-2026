@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.4"]
+rag = ["chromadb>=0.5"]
 
 [tool.setuptools.packages.find]
 where = ["backend"]

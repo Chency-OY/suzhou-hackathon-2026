@@ -1,10 +1,10 @@
-.PHONY: setup dev test lint seed gen-personas
+.PHONY: setup dev test lint build-facts seed gen-personas
 PY ?= python3
 VENV = . .venv/bin/activate
 
 setup:
 	$(PY) -m venv .venv
-	$(VENV) && pip install -U pip && pip install -e ".[dev]"
+	$(VENV) && pip install -U pip && pip install -e ".[dev,rag]"
 	@if [ -f frontend/package.json ]; then cd frontend && pnpm install; fi
 
 dev:
@@ -17,8 +17,11 @@ test:
 lint:
 	$(VENV) && ruff check backend
 
+build-facts:
+	$(VENV) && python scripts/build_facts.py
+
 seed:
-	@echo "seed: 将在 T4 实现"
+	$(VENV) && python scripts/seed.py
 
 gen-personas:
 	@echo "gen-personas: 将在 T5 实现 (N=$(N))"

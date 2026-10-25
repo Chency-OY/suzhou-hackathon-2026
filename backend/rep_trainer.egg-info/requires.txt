@@ -9,3 +9,6 @@ pyyaml>=6.0
 [dev]
 pytest>=8
 ruff>=0.4
+
+[rag]
+chromadb>=0.5
