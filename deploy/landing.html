@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f9fc">
+  <title>医学沟通训练台 · 演示首页</title>
+  <style>
+    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #12304b; background: #f5f9fc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    .wrap { width: min(1080px, calc(100% - 40px)); margin: auto; }
+    header { background: #fff; border-bottom: 1px solid #deebf2; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
+    .brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .brand img { width: 145px; max-width: 38vw; height: auto; }
+    .brand span { border-left: 1px solid #cfdde8; padding-left: 16px; font-size: 15px; font-weight: 700; white-space: nowrap; }
+    .eyebrow { color: #006aa8; font-size: 13px; font-weight: 700; letter-spacing: .08em; }
+    main { padding: clamp(48px, 8vw, 96px) 0 64px; }
+    h1 { margin: 14px 0 18px; max-width: 720px; font-size: clamp(32px, 5vw, 54px); line-height: 1.18; letter-spacing: -.04em; }
+    .lead { max-width: 640px; color: #50677b; font-size: 17px; line-height: 1.85; }
+    .action { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin: 32px 0 48px; }
+    .button { display: inline-block; padding: 14px 24px; border-radius: 10px; background: #006baa; color: white; font-weight: 700; text-decoration: none; box-shadow: 0 8px 18px #006baa26; }
+    .button:focus-visible { outline: 3px solid #00a6d8; outline-offset: 3px; }
+    .hint { color: #62798b; font-size: 13px; line-height: 1.7; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { padding: 24px; border: 1px solid #dbe9f1; border-radius: 14px; background: white; }
+    .num { color: #0077ba; font-size: 12px; font-weight: 700; }
+    h2 { margin: 12px 0 8px; font-size: 18px; }
+    .card p { margin: 0; color: #5d7081; font-size: 14px; line-height: 1.8; }
+    footer { padding: 20px 0 32px; color: #62798b; font-size: 12px; line-height: 1.7; }
+    @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } .brand span { font-size: 12px; padding-left: 10px; } .brand { gap: 10px; } .card { padding: 18px; } }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><div class="brand"><img src="/rep-trainer/innovent-logo.png" alt="信达生物制药"><span>医学沟通训练台</span></div></div></header>
+  <main class="wrap">
+    <div class="eyebrow">REP TRAINER · PREVIEW</div>
+    <h1>练好每一次有依据的医学沟通</h1>
+    <p class="lead">在虚构医生情境中练习提问、倾听和回答。重点不是背熟话术，而是把证据讲准确、把风险讲完整、遇到不确定的问题知道何时停下核实。</p>
+    <div class="action"><a class="button" href="/rep-trainer/home">进入训练 →</a><span class="hint">使用演示账户登录；如微信内未显示登录窗口，请在系统浏览器打开。</span></div>
+    <div class="grid">
+      <div class="card"><div class="num">01 · EVIDENCE</div><h2>准确传递证据</h2><p>辨认资料来源、适用人群和研究局限，避免夸大结论。</p></div>
+      <div class="card"><div class="num">02 · SAFETY</div><h2>完整说明风险</h2><p>面对医生追问，不遗漏已知风险，也不猜测未知信息。</p></div>
+      <div class="card"><div class="num">03 · BOUNDARY</div><h2>守住沟通边界</h2><p>对超出批准资料的问题及时转交核实，留下可复盘的练习记录。</p></div>
+    </div>
+  </main>
+  <footer class="wrap">独立培训演示原型，非信达生物官方系统。页面使用公开品牌素材用于演示；模拟回复不可作为医学或合规依据。</footer>
+</body>
+</html>

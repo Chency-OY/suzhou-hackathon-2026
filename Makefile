@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios review web-build deploy healthcheck
+.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios review prescreen apply-review web-build deploy healthcheck
 PY ?= python3
 VENV = . .venv/bin/activate
 
@@ -31,6 +31,12 @@ gen-scenarios:
 
 review:
 	$(VENV) && python scripts/export_review.py
+
+prescreen:
+	$(VENV) && python scripts/prescreen_scenarios.py
+
+apply-review:
+	$(VENV) && python scripts/apply_review.py && python scripts/seed.py
 
 web-build:
 	cd frontend && pnpm install && pnpm build

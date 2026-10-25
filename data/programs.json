@@ -1,0 +1,14 @@
+[
+  {
+    "id": "general",
+    "title": "通用医学沟通",
+    "description": "练习开场、需求探寻、回应异议、证据表达与合规边界；不绑定具体药品。",
+    "scope": "general"
+  },
+  {
+    "id": "xinermei",
+    "title": "信尔美产品资料",
+    "description": "围绕公开说明书设计的产品情境；仅供内部演练，不代替最新获批资料。",
+    "scope": "product"
+  }
+]

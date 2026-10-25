@@ -14,7 +14,7 @@ def client(tmp_path):
     personas = build_demo_personas()
     for p in personas:
         repo.save(p)
-    repo.save(make_scenario(id="scn_001", persona_id=personas[0].id, type="first_visit"))
+    repo.save(make_scenario(id="scn_001", persona_id=personas[0].id, type="first_visit", program_id="general"))
     repo.save(make_scenario(id="scn_002", persona_id=personas[2].id, type="competitor_compare"))
     repo.save(make_scenario(id="scn_003", persona_id=personas[6].id, type="off_label_bait"))
     app.dependency_overrides[get_repo] = lambda: repo
@@ -28,6 +28,8 @@ def test_list_and_filters(client):
     assert [s["id"] for s in c.get("/api/scenarios", params={"dept": "hepatology"}).json()] == ["scn_003"]
     assert [s["id"] for s in c.get("/api/scenarios", params={"difficulty": "hard"}).json()] == ["scn_002"]
     assert [s["id"] for s in c.get("/api/scenarios", params={"type": "first_visit"}).json()] == ["scn_001"]
+    assert [s["id"] for s in c.get("/api/scenarios", params={"program": "general"}).json()] == ["scn_001"]
+    assert {p["id"] for p in c.get("/api/programs").json()} == {"general", "xinermei"}
 
 
 def test_detail_has_public_persona_only(client):

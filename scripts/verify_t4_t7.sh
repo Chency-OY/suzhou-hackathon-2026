@@ -24,11 +24,14 @@ def n(p):
 personas, scenarios = n("data/personas/personas.jsonl"), n("data/scenarios/scenarios.jsonl")
 print(f"personas={personas} scenarios={scenarios}")
 import os
-if os.environ.get("STRICT") == "1":
-    assert personas >= 30, "画像不足 30"
-    assert scenarios >= 36, "场景不足 36"
-else:
-    if personas < 30 or scenarios < 36:
-        print("提示：数据量未达 30/36（STRICT=1 时会失败；离线 demo 数据属正常）")
+rows = [json.loads(x) for x in pathlib.Path("data/scenarios/scenarios.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+curated = rows and all(x.get("source") == "curated" for x in rows)
+if curated:
+    assert len({x.get("id") for x in rows}) == scenarios, "精选场景 ID 重复"
+    assert personas >= 10 and scenarios >= 16, "精选课程数据不足"
+    print("精选课程内容：不少于 10 个画像、16 个场景；数量目标让位于人工内容质量")
+elif os.environ.get("STRICT") == "1":
+    assert personas >= 30, "生成画像不足 30"
+    assert scenarios >= 36, "生成场景不足 36"
 PY
 echo "T4-T7 VERIFIED"

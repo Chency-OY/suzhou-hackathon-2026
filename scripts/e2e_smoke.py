@@ -13,6 +13,7 @@ PUBLIC_KEYS = {"department", "title", "hospital_tier", "style_hint", "difficulty
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8000")
+    ap.add_argument("--with-session", action="store_true")
     args = ap.parse_args()
     c = httpx.Client(base_url=args.base, timeout=30)
     fails: list[str] = []
@@ -28,10 +29,10 @@ def main() -> int:
     r = c.get("/")
     html = r.text
     check("index.html", r.status_code == 200 and 'id="root"' in html)
-    assets = re.findall(r'(?:src|href)="(/assets/[^"]+)"', html)
+    assets = re.findall(r'(?:src|href)="(/(?:rep-trainer/)?assets/[^"]+)"', html)
     check("引用了构建资源", len(assets) > 0)
     for a in assets:
-        check(f"asset {a}", c.get(a).status_code == 200)
+        check(f"asset {a}", c.get(a.removeprefix("/rep-trainer")).status_code == 200)
 
     r = c.get("/api/scenarios")
     items = r.json() if r.status_code == 200 else []
@@ -58,6 +59,21 @@ def main() -> int:
     check("SPA 回退", 'id="root"' in c.get("/scenarios/scn_001").text)
     r404 = c.get("/api/not-exist")
     check("未知 API 返回 404 且非 HTML", r404.status_code == 404 and "<html" not in r404.text.lower())
+
+    if args.with_session and items:
+        created = c.post("/api/sessions", json={"scenario_id": items[0]["id"], "rep_id": "rep_smoke"})
+        check("创建演练", created.status_code == 200)
+        if created.status_code == 200:
+            sid = created.json()["session_id"]
+            turn = c.post(f"/api/sessions/{sid}/turns", json={"text": "您怎么看相关资料的适用人群？"})
+            check("提交一轮对话", turn.status_code == 200 and bool(turn.json().get("doctor_reply")))
+            replay = c.get(f"/api/sessions/{sid}")
+            check("会话回放", replay.status_code == 200 and len(replay.json().get("turns", [])) == 3)
+            if replay.status_code == 200:
+                check("会话无隐藏画像泄露", all(x not in replay.text for x in
+                      ('"hidden_objection":', '"traps":', '"meta":', '"bait":')))
+            finish = c.post(f"/api/sessions/{sid}/finish")
+            check("结束演练", finish.status_code == 200 and finish.json().get("ended") is True)
 
     print(f"\n失败 {len(fails)} 项" if fails else "\n全部通过")
     return 1 if fails else 0

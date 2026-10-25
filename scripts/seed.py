@@ -32,7 +32,20 @@ def main() -> int:
     n_label = kb.index_label(label) if label.exists() else 0
     repo = Repo()
     n_p = import_jsonl(repo, Path("data/personas/personas.jsonl"), DoctorPersona)
-    n_s = import_jsonl(repo, Path("data/scenarios/scenarios.jsonl"), Scenario)
+    from app.scenarios.review import load_review, rejected_ids
+
+    rejected = rejected_ids(load_review())
+    n_s = 0
+    scenarios_path = Path("data/scenarios/scenarios.jsonl")
+    if scenarios_path.exists():
+        for line in scenarios_path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                scenario = Scenario.model_validate_json(line)
+                if scenario.id in rejected:
+                    repo.delete(Scenario, scenario.id)
+                else:
+                    repo.save(scenario)
+                    n_s += 1
     verified = sum(f.verified for f in facts)
     print(f"知识库：facts={n_facts}（已核验 {verified}），说明书分块={n_label}"
           + ("" if label.exists() else "（未找到 data/sources/label.md）"))

@@ -135,6 +135,7 @@ class DoctorPersona(BaseModel):
 ```python
 class Scenario(BaseModel):
     id: str
+    program_id: str                  # 培训课程：general 或产品资料包 ID；默认 xinermei 兼容旧数据
     type: Literal["first_visit","post_conference","safety_concern","competitor_compare",
                   "time_pressure","revisit_after_rejection","off_label_bait"]
     persona_id: str
@@ -142,7 +143,7 @@ class Scenario(BaseModel):
     context_brief: str             # 给代表看的背景（不含 hidden_objection）
     opening_line: str              # 医生第一句话
     success_criteria: list[str]    # 供评分参考
-    source: Literal["generated","playbook"] = "generated"
+    source: Literal["generated","playbook","curated"] = "generated"
 ```
 
 ### 5.3 Session / Turn
@@ -208,7 +209,8 @@ class PlaybookCard(BaseModel):
 
 | 方法 | 路径 | 请求 | 响应 |
 |---|---|---|---|
-| GET | `/scenarios?dept=&difficulty=&type=` | – | `Scenario[]`（不含 hidden_objection） |
+| GET | `/scenarios?program=&dept=&difficulty=&type=` | – | `Scenario[]`（不含 hidden_objection） |
+| GET | `/programs` | – | 可选培训课程（通用沟通/已核实产品资料包） |
 | GET | `/scenarios/{id}` | – | `Scenario` + `persona_public`（脱敏后的画像：职称、医院级别、风格提示） |
 | POST | `/sessions` | `{scenario_id, rep_id}` | `{session_id, opening_line, doctor_state}` |
 | POST | `/sessions/{id}/turns` | `{text}` | `{doctor_reply, doctor_state, signals, ended, end_reason}` |

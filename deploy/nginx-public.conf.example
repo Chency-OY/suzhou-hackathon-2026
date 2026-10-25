@@ -1,0 +1,41 @@
+# Add these locations inside the existing chenxi-ouyang.online HTTPS server block.
+# Replace /path/to/checkout, /path/to/password-file and APP_PORT before use.
+# Keep the real password hash outside Git.
+location = /rep-trainer {
+    return 301 /rep-trainer/;
+}
+
+# Public preview homepage; application and API remain password-protected.
+location = /rep-trainer/ {
+    alias /path/to/checkout/deploy/;
+    index landing.html;
+    add_header Cache-Control "no-store" always;
+    add_header X-Content-Type-Options "nosniff" always;
+}
+
+location = /rep-trainer/landing.html {
+    alias /path/to/checkout/deploy/landing.html;
+    default_type text/html;
+    add_header Cache-Control "no-store" always;
+    add_header X-Content-Type-Options "nosniff" always;
+}
+
+location = /rep-trainer/innovent-logo.png {
+    alias /path/to/checkout/frontend/public/innovent-logo.png;
+    default_type image/png;
+    add_header Cache-Control "public, max-age=86400" always;
+}
+
+location ^~ /rep-trainer/ {
+    auth_basic "Rep Trainer Demo";
+    auth_basic_user_file /path/to/password-file;
+    proxy_pass http://127.0.0.1:APP_PORT/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 100s;
+    client_max_body_size 1m;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Cache-Control "no-store" always;
+}
