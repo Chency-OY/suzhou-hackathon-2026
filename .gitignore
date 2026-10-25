@@ -9,3 +9,4 @@ data/usage/*.jsonl
 data/chroma/
 node_modules/
 frontend/dist/
+*.egg-info/

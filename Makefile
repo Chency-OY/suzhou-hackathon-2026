@@ -24,4 +24,4 @@ seed:
 	$(VENV) && python scripts/seed.py
 
 gen-personas:
-	@echo "gen-personas: 将在 T5 实现 (N=$(N))"
+	$(VENV) && python scripts/gen_personas.py --target $(or $(N),40)
