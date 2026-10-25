@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios review
+.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios review web-build deploy healthcheck
 PY ?= python3
 VENV = . .venv/bin/activate
 
@@ -12,7 +12,7 @@ dev:
 
 test:
 	$(VENV) && pytest -q
-	@if [ -f frontend/package.json ]; then cd frontend && pnpm exec tsc --noEmit; fi
+	@if [ -f frontend/package.json ]; then cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run; fi
 
 lint:
 	$(VENV) && ruff check backend
@@ -31,3 +31,12 @@ gen-scenarios:
 
 review:
 	$(VENV) && python scripts/export_review.py
+
+web-build:
+	cd frontend && pnpm install && pnpm build
+
+deploy:
+	bash scripts/push_to_server.sh
+
+healthcheck:
+	bash scripts/healthcheck.sh

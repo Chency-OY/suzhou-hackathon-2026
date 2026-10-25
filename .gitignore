@@ -10,3 +10,6 @@ data/chroma/
 node_modules/
 frontend/dist/
 *.egg-info/
+run/
+logs/
+.env.server
