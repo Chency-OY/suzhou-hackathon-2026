@@ -5,7 +5,7 @@ location = /rep-trainer {
     return 301 /rep-trainer/;
 }
 
-# Public preview homepage; application and API remain password-protected.
+# Public preview homepage and static training interface; API stays password-protected.
 location = /rep-trainer/ {
     alias /path/to/checkout/deploy/;
     index landing.html;
@@ -26,9 +26,21 @@ location = /rep-trainer/innovent-logo.png {
     add_header Cache-Control "public, max-age=86400" always;
 }
 
-location ^~ /rep-trainer/ {
+location ^~ /rep-trainer/api/ {
     auth_basic "Rep Trainer Demo";
     auth_basic_user_file /path/to/password-file;
+    proxy_pass http://127.0.0.1:APP_PORT/api/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 100s;
+    client_max_body_size 1m;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Cache-Control "no-store" always;
+}
+
+location ^~ /rep-trainer/ {
     proxy_pass http://127.0.0.1:APP_PORT/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;

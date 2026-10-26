@@ -1,6 +1,7 @@
 import type {
   CreateSessionOut, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionView, TrainingProgram, TurnOut,
 } from "./types";
+import { authorizationHeader } from "./auth";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
   const q = new URLSearchParams();
@@ -27,11 +28,11 @@ async function parse<T>(r: Response): Promise<T> {
 
 export const apiUrl = (path: string, base = import.meta.env.BASE_URL) => `${base}api${path}`;
 
-const get = <T>(path: string) => fetch(apiUrl(path)).then((r) => parse<T>(r));
+const get = <T>(path: string) => fetch(apiUrl(path), { headers: authorizationHeader() }).then((r) => parse<T>(r));
 const post = <T>(path: string, body?: unknown) =>
   fetch(apiUrl(path), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authorizationHeader() },
     body: body === undefined ? undefined : JSON.stringify(body),
   }).then((r) => parse<T>(r));
 

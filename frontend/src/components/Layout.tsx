@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { clearAuthorization } from "../auth";
 
 export default function Layout() {
   return (
@@ -30,7 +31,7 @@ export default function Layout() {
       <div className="game-main">
         <header className="game-topbar">
           <span>医学沟通模拟训练 / COMMAND CENTER</span>
-          <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[#72d9bd]" />DEMO BUILD 01</span>
+          <span className="flex items-center gap-3"><span className="hidden items-center gap-2 sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-[#72d9bd]" />DEMO BUILD 01</span><button type="button" className="game-link" onClick={() => { clearAuthorization(); window.location.assign(`${import.meta.env.BASE_URL}home`); }}>退出登录</button></span>
         </header>
         <div className="game-notice">独立培训演示原型，非信达生物官方系统。请以获批资料和正式审核意见为准。</div>
         <main className="game-content"><Outlet /></main>

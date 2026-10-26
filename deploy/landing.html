@@ -49,7 +49,8 @@
     .section-head h2 { margin: 0; font-size: 21px; }
     .section-head span { color: #85a5b7; font-size: 11px; }
     .courses { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .course { display: flex; align-items: center; gap: 16px; min-height: 104px; padding: 20px; border: 1px solid #315468; border-radius: 9px; background: #102638; }
+    .course { display: flex; align-items: center; gap: 16px; min-height: 104px; padding: 20px; border: 1px solid #315468; border-radius: 9px; background: #102638; color: #edf7fb; transition: border-color .18s, background .18s; }
+    .course:hover { border-color: #79d7ed; background: #17394d; }
     .course b { color: #78d6ed; font-size: 25px; }
     .course strong { display: block; margin-bottom: 6px; font-size: 15px; }
     .course p { margin: 0; color: #9cb9c8; font-size: 12px; line-height: 1.6; }
@@ -67,7 +68,7 @@
         <div class="kicker">TRAINING SYSTEM / 医学沟通模拟训练</div>
         <h1>每一次拜访，<br><span class="accent">都是一次判断。</span></h1>
         <p class="lead">在虚构医生情境中练习真实会遇到的问题。把证据说准确，把风险讲完整，面对不确定性知道何时停下核实。</p>
-        <div class="action"><a class="button" href="/rep-trainer/home">进入训练 <span aria-hidden="true">→</span></a><span class="hint">进入后使用演示账户登录。微信内若未出现登录窗口，请在系统浏览器打开。</span></div>
+        <div class="action"><a class="button" href="/rep-trainer/home">进入训练 <span aria-hidden="true">→</span></a><span class="hint">进入后在页面内输入演示账户；微信内也可以使用。</span></div>
       </section>
       <section class="terminal" aria-label="训练流程预览">
         <div class="terminal-head"><span>MISSION PREVIEW</span><span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
@@ -75,7 +76,7 @@
       </section>
     </div>
     <div class="section-head"><h2>可选训练课程</h2><span>先练沟通判断，再练具体产品资料</span></div>
-    <div class="courses"><div class="course"><b>01</b><div><strong>通用医学沟通</strong><p>需求探寻、证据表达、回应异议与合规边界。</p></div></div><div class="course"><b>02</b><div><strong>信尔美产品资料</strong><p>基于公开说明书设计的合成情境，仅供演示。</p></div></div></div>
+    <div class="courses"><a class="course" href="/rep-trainer/home?program=general"><b>01</b><div><strong>通用医学沟通 ↗</strong><p>需求探寻、证据表达、回应异议与合规边界。</p></div></a><a class="course" href="/rep-trainer/home?program=xinermei"><b>02</b><div><strong>信尔美产品资料 ↗</strong><p>基于公开说明书设计的合成情境，仅供演示。</p></div></a></div>
   </main>
   <footer><div class="wrap">独立培训演示原型，非信达生物官方系统。页面使用公开品牌素材；模拟回复不可作为医学或合规依据。</div></footer>
 </body>

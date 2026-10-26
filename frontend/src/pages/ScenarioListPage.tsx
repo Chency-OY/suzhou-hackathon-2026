@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { DifficultyBadge, Tag } from "../components/Badge";
 import { useAsync } from "../hooks";
@@ -28,7 +28,8 @@ function FilterSelect({ label, value, options, onChange }: {
 
 export default function ScenarioListPage() {
   const nav = useNavigate();
-  const [filters, setFilters] = useState<ScenarioFilters>({ program: "general" });
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState<ScenarioFilters>({ program: searchParams.get("program") === "xinermei" ? "xinermei" : "general" });
   const [startingId, setStartingId] = useState<string | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
   const programs = useAsync(() => api.listPrograms(), []);
