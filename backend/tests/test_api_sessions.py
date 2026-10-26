@@ -25,7 +25,9 @@ def ctx(tmp_path):
     engine = SessionEngine(mock, kb=None, rules=StateRules())
     app.dependency_overrides[get_repo] = lambda: repo
     app.dependency_overrides[get_engine] = lambda: engine
-    yield TestClient(app), DEMO[1]
+    client = TestClient(app)
+    assert client.post("/api/auth/register", json={"username": "repone", "password": "correct-horse-123"}).status_code == 200
+    yield client, DEMO[1]
     app.dependency_overrides.clear()
 
 
@@ -35,6 +37,7 @@ def test_full_flow(ctx):
     assert r.status_code == 200
     sid = r.json()["session_id"]
     assert r.json()["opening_line"] == "我只有几分钟，你说吧。"
+    assert len(c.get("/api/sessions").json()) == 1
 
     t = c.post(f"/api/sessions/{sid}/turns", json={"text": "  张主任您好  "})
     assert t.status_code == 200 and t.json()["doctor_reply"] == "嗯，继续说。" and t.json()["ended"] is False
@@ -66,3 +69,16 @@ def test_no_secrets_in_any_response(ctx):
     for t in texts:
         for secret in (persona.hidden_objection, '"hidden_objection":', '"traps":', '"meta":', '"bait":'):
             assert secret not in t
+
+
+def test_other_account_cannot_read_or_change_session(ctx):
+    c, _ = ctx
+    sid = c.post("/api/sessions", json={"scenario_id": "scn_001", "rep_id": "forged"}).json()["session_id"]
+    assert c.get(f"/api/sessions/{sid}").json()["rep_id"].startswith("usr_")
+    other = TestClient(app)
+    assert other.get("/api/sessions").status_code == 401
+    assert other.post("/api/auth/register", json={"username": "reptwo", "password": "correct-horse-456"}).status_code == 200
+    assert other.get("/api/sessions").json() == []
+    assert other.get(f"/api/sessions/{sid}").status_code == 404
+    assert other.post(f"/api/sessions/{sid}/turns", json={"text": "你好"}).status_code == 404
+    assert other.post(f"/api/sessions/{sid}/finish").status_code == 404

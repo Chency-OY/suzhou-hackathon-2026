@@ -4,7 +4,6 @@ import { api } from "../api";
 import { DifficultyBadge, Tag } from "../components/Badge";
 import { useAsync } from "../hooks";
 import { DEPT_LABEL, DIFFICULTY_LABEL, TYPE_LABEL } from "../labels";
-import { getRepId, rememberSession } from "../lib/rep";
 import {
   DEPARTMENTS, DIFFICULTIES, SCENARIO_TYPES,
   type Department, type Difficulty, type ScenarioFilters, type ScenarioType,
@@ -43,8 +42,7 @@ export default function ScenarioListPage() {
     setStartingId(id);
     setStartError(null);
     try {
-      const out = await api.createSession(id, getRepId());
-      rememberSession(out.session_id);
+      const out = await api.createSession(id);
       nav(`/session/${out.session_id}`);
     } catch (e) {
       setStartError(e instanceof Error ? e.message : String(e));

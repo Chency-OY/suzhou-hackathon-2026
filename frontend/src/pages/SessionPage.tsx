@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { END_REASON_LABEL, SIGNAL_LABEL, SIGNAL_POLARITY } from "../labels";
-import { getRepId, readHints, rememberSession, writeHints } from "../lib/rep";
+import { readHints, writeHints } from "../lib/rep";
 import type { ScenarioDetail, SessionView, TurnView } from "../types";
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -78,7 +78,7 @@ export default function SessionPage() {
 
   async function again() {
     if (!session) return;
-    try { const out = await api.createSession(session.scenario_id, getRepId()); rememberSession(out.session_id); nav(`/session/${out.session_id}`); }
+    try { const out = await api.createSession(session.scenario_id); nav(`/session/${out.session_id}`); }
     catch (e) { setError(msg(e)); }
   }
 

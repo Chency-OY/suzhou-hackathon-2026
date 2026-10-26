@@ -84,6 +84,15 @@ export interface SessionView {
   turns: TurnView[];
 }
 
+export interface SessionSummary {
+  id: string;
+  scenario_id: string;
+  started_at: string;
+  ended_at: string | null;
+  end_reason: EndReason | null;
+  rep_turns: number;
+}
+
 export interface CreateSessionOut { session_id: string; opening_line: string; doctor_state: DoctorState }
 export interface TurnOut {
   doctor_reply: string; doctor_state: DoctorState; signals: Signal[]; ended: boolean;

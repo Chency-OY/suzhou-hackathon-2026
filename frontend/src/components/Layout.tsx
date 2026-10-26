@@ -1,7 +1,12 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { clearAuthorization } from "../auth";
+import { currentAccount, logoutAccount } from "../auth";
 
 export default function Layout() {
+  const [username, setUsername] = useState("");
+  const [logoutError, setLogoutError] = useState("");
+  useEffect(() => { void currentAccount().then((account) => setUsername(account?.username ?? "")).catch(() => {}); }, []);
+
   return (
     <div className="game-shell">
       <aside className="game-sidebar">
@@ -31,8 +36,9 @@ export default function Layout() {
       <div className="game-main">
         <header className="game-topbar">
           <span>医学沟通模拟训练 / COMMAND CENTER</span>
-          <span className="flex items-center gap-3"><span className="hidden items-center gap-2 sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-[#72d9bd]" />DEMO BUILD 01</span><button type="button" className="game-link" onClick={() => { clearAuthorization(); window.location.assign(`${import.meta.env.BASE_URL}home`); }}>退出登录</button></span>
+          <span className="flex items-center gap-3"><span className="hidden items-center gap-2 sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-[#72d9bd]" />DEMO BUILD 01</span><span className="max-w-24 truncate text-[#c9e9f2]" title={username}>{username}</span><button type="button" className="game-link" onClick={() => { void logoutAccount().then(() => window.location.assign(`${import.meta.env.BASE_URL}home?auth=login`)).catch(() => setLogoutError("退出失败，请重试")); }}>退出登录</button></span>
         </header>
+        {logoutError && <div className="game-alert mx-5 mt-3" role="alert">{logoutError}</div>}
         <div className="game-notice">独立培训演示原型，非信达生物官方系统。请以获批资料和正式审核意见为准。</div>
         <main className="game-content"><Outlet /></main>
       </div>

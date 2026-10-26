@@ -4,7 +4,6 @@ import { api } from "../api";
 import { DifficultyBadge, Tag } from "../components/Badge";
 import { useAsync } from "../hooks";
 import { DEPT_LABEL, TYPE_LABEL } from "../labels";
-import { getRepId, rememberSession } from "../lib/rep";
 
 const SESSION_ENABLED = import.meta.env.VITE_ENABLE_SESSION === "1";
 
@@ -20,8 +19,7 @@ export default function ScenarioDetailPage() {
     setStarting(true);
     setStartErr(null);
     try {
-      const out = await api.createSession(data.id, getRepId());
-      rememberSession(out.session_id);
+      const out = await api.createSession(data.id);
       nav(`/session/${out.session_id}`);
     } catch (e) {
       setStartErr(e instanceof Error ? e.message : String(e));

@@ -1,25 +1,30 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { authorizationHeader, clearAuthorization, encodeBasic, saveAuthorization, verifyAuthorization } from "./auth";
+import { currentAccount, loginAccount, logoutAccount, registerAccount } from "./auth";
 
-afterEach(() => { clearAuthorization(); vi.unstubAllGlobals(); });
+afterEach(() => { vi.unstubAllGlobals(); });
 
-describe("browser login for protected API", () => {
-  it("sends the entered credentials only in the API Authorization header", async () => {
-    const request = vi.fn(async () => ({ ok: true }));
+describe("individual account API", () => {
+  it("registers with a same-origin cookie and reads that account", async () => {
+    const account = { id: "usr_1", username: "pilot" };
+    const request = vi.fn(async () => ({ ok: true, json: async () => account }));
     vi.stubGlobal("fetch", request);
-    const token = encodeBasic("demo", "example-password");
-    expect(await verifyAuthorization(token)).toBe(true);
-    expect(request).toHaveBeenCalledWith("/api/health", {
-      headers: { Authorization: token }, cache: "no-store",
+    expect(await registerAccount("pilot", "example-password")).toEqual(account);
+    expect(request).toHaveBeenCalledWith("/api/auth/register", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "pilot", password: "example-password" }),
     });
-    saveAuthorization(token);
-    expect(authorizationHeader()).toEqual({ Authorization: token });
-    clearAuthorization();
-    expect(authorizationHeader()).toEqual({});
+    expect(await currentAccount()).toEqual(account);
+    expect(request).toHaveBeenCalledWith("/api/auth/me", { credentials: "same-origin", cache: "no-store" });
+    await logoutAccount();
+    expect(request).toHaveBeenCalledWith("/api/auth/logout", { method: "POST", credentials: "same-origin" });
   });
 
-  it("rejects invalid credentials", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
-    expect(await verifyAuthorization(encodeBasic("demo", "wrong"))).toBe(false);
+  it("shows invalid login and treats 401 from me as signed out", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => url.endsWith("/me")
+      ? { status: 401 }
+      : { ok: false, status: 401, json: async () => ({ detail: { error: { message: "账号或密码不正确" } } }) }));
+    expect(await currentAccount()).toBeNull();
+    await expect(loginAccount("pilot", "wrong-password")).rejects.toThrow("账号或密码不正确");
   });
 });

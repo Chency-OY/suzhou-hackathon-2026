@@ -225,6 +225,21 @@ class PlaybookCard(BaseModel):
 
 错误统一 `{error:{code,message}}`。`/turns` 可选 SSE 流式，MVP 先非流式。
 
+### 6.1 独立账号与练习归属（公网演示扩展）
+
+注册只使用账号名和密码，不采集邮箱、手机号或真实姓名。密码使用带独立随机盐的 PBKDF2-SHA256 哈希保存；会话使用随机令牌，数据库只保存令牌哈希。浏览器通过 Secure、HttpOnly、SameSite=Lax Cookie 保持登录；公网训练 API 仍需经过 Nginx 身份校验，后端再次校验账号。旧的共用 BasicAuth 凭据不能单独读取、创建或修改练习。
+
+| 方法 | 路径 | 请求 | 响应 |
+|---|---|---|---|
+| POST | `/auth/register` | `{username,password}` | `{id,username}` + 登录 Cookie；重复账号为 409 |
+| POST | `/auth/login` | `{username,password}` | `{id,username}` + 登录 Cookie；凭据错误为 401 |
+| POST | `/auth/logout` | – | `{ok:true}`，撤销当前令牌并清 Cookie |
+| GET | `/auth/me` | – | 当前账号 `{id,username}`，未登录为 401 |
+| GET | `/auth/check` | – | Nginx 内部鉴权：登录为 204，否则 401 |
+| GET | `/sessions` | – | 当前账号的练习列表，按开始时间倒序，最多 100 条 |
+
+`POST /sessions` 只接受 `scenario_id`，`rep_id` 由登录账号确定；`GET/POST /sessions/{id}` 只能访问同一账号的练习。旧演示会话保留在数据库，但不自动归属新账号，也不跨账号展示。
+
 ## 7. 核心逻辑规格
 
 ### 7.1 医生状态机（`sessions/engine.py`）

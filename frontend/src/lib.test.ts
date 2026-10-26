@@ -23,7 +23,6 @@ describe("labels", () => {
 });
 
 import { END_REASON_LABEL, SIGNAL_LABEL, SIGNAL_POLARITY } from "./labels";
-import { getRepId } from "./lib/rep";
 import { END_REASONS, SIGNALS } from "./types";
 
 describe("session labels", () => {
@@ -33,10 +32,5 @@ describe("session labels", () => {
       expect(["good", "bad"]).toContain(SIGNAL_POLARITY[s]);
     }
     for (const r of END_REASONS) expect(END_REASON_LABEL[r]).toBeTruthy();
-  });
-  it("getRepId 在无 localStorage 的环境也能返回稳定值", () => {
-    const a = getRepId();
-    expect(a).toMatch(/^rep_/);
-    expect(getRepId()).toBe(a);
   });
 });

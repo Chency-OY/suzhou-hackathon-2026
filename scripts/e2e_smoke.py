@@ -1,6 +1,7 @@
 """对已部署地址做端到端冒烟：python scripts/e2e_smoke.py --base http://<ip>:8000"""
 import argparse
 import re
+import secrets
 import sys
 
 import httpx
@@ -61,7 +62,12 @@ def main() -> int:
     check("未知 API 返回 404 且非 HTML", r404.status_code == 404 and "<html" not in r404.text.lower())
 
     if args.with_session and items:
-        created = c.post("/api/sessions", json={"scenario_id": items[0]["id"], "rep_id": "rep_smoke"})
+        registered = c.post("/api/auth/register", json={"username": "smoke_" + secrets.token_hex(4),
+                                                         "password": secrets.token_urlsafe(16)})
+        check("注册独立账号", registered.status_code == 200)
+        if registered.status_code != 200:
+            return 1
+        created = c.post("/api/sessions", json={"scenario_id": items[0]["id"]})
         check("创建演练", created.status_code == 200)
         if created.status_code == 200:
             sid = created.json()["session_id"]
