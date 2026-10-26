@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -47,13 +47,21 @@ class DoctorPersona(BaseModel):
 
 class Scenario(BaseModel):
     id: str
+    program_id: str = "xinermei"
     type: ScenarioType
     persona_id: str
     rep_goal: str
     context_brief: str
     opening_line: str
     success_criteria: list[str] = Field(default_factory=list)
-    source: Literal["generated", "playbook"] = "generated"
+    source: Literal["generated", "playbook", "curated"] = "generated"
+
+
+class TrainingProgram(BaseModel):
+    id: str
+    title: str
+    description: str
+    scope: Literal["general", "product"]
 
 
 class DoctorState(BaseModel):
@@ -76,6 +84,7 @@ class Turn(BaseModel):
     text: str
     signals: list[Signal] = Field(default_factory=list)
     state_after: DoctorState | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class Session(BaseModel):

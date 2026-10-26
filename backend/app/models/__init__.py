@@ -1,5 +1,15 @@
 from .constants import DIMENSION_LABELS, DIMENSION_WEIGHTS, DIMENSIONS, SIGNALS
-from .domain import DoctorPersona, DoctorState, Finding, PlaybookCard, Report, Scenario, Session, Turn
+from .domain import (
+                     DoctorPersona,
+                     DoctorState,
+                     Finding,
+                     PlaybookCard,
+                     Report,
+                     Scenario,
+                     Session,
+                     TrainingProgram,
+                     Turn,
+)
 
 __all__ = [
                      "DIMENSIONS",
@@ -13,5 +23,6 @@ __all__ = [
                      "Report",
                      "Scenario",
                      "Session",
+                     "TrainingProgram",
                      "Turn",
 ]

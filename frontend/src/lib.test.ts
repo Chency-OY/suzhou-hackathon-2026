@@ -21,3 +21,16 @@ describe("labels", () => {
     for (const t of SCENARIO_TYPES) expect(TYPE_LABEL[t]).toBeTruthy();
   });
 });
+
+import { END_REASON_LABEL, SIGNAL_LABEL, SIGNAL_POLARITY } from "./labels";
+import { END_REASONS, SIGNALS } from "./types";
+
+describe("session labels", () => {
+  it("每个信号与结束原因都有标签", () => {
+    for (const s of SIGNALS) {
+      expect(SIGNAL_LABEL[s]).toBeTruthy();
+      expect(["good", "bad"]).toContain(SIGNAL_POLARITY[s]);
+    }
+    for (const r of END_REASONS) expect(END_REASON_LABEL[r]).toBeTruthy();
+  });
+});

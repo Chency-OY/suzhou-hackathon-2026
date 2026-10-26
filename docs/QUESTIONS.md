@@ -14,7 +14,10 @@
 | 2026-10-25 | T6 | 任务书未提供场景生成的离线路径（gen_scenarios 遇 mock 直接退出），无密钥时无法产出数据供 T7/前端联调 | 新增 app/scenarios/demo_seed.py 与 gen_scenarios.py --demo：用 MockLLM callable 从渲染后 prompt 解析科室/风格/类型，返回能通过 check_draft 的固定草稿（与 personas --demo 对应）；真实生成待密钥 |
 | 2026-10-25 | T7 | ruff 默认规则 B008 与 FastAPI `Depends()` 参数默认值惯用法冲突 | pyproject 增加 `[tool.ruff.lint.flake8-bugbear] extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]`（ruff 官方推荐配置） |
 | 2026-10-25 | T8 | pnpm 12 默认拦截依赖构建脚本（提示 approve-builds） | vite/tsc/vitest/build 实测全部正常，未做额外授权；如后续构建异常再 `pnpm approve-builds` |
-| 2026-10-25 | T9 | serverctl 的密钥存于加密存储，push_to_server.sh 的原生 ssh/rsync 无法直接复用 | 生成部署专用密钥 ~/.ssh/rep_trainer_sutai（ed25519），公钥经 serverctl exec 加入 sutai 的 authorized_keys，并写 ~/.ssh/config 的 Host sutai 条目；serverctl 不受影响 |
+| 2026-10-25 | T9 | 部署工具的连接方式与原有脚本不一致 | 连接凭据和主机信息仅在运维侧管理；仓库保留通用部署步骤 |
 | 2026-10-25 | T9 | 服务器无 python3.12-venv 包且无 sudo（python3 -m venv 失败） | get-pip --user --break-system-packages 装 pip，再装用户级 virtualenv；deploy.sh 内置回退：venv 失败自动用 virtualenv |
 | 2026-10-25 | T9 | 服务器直连 pypi 慢 | 部署命令注入 PIP_INDEX_URL=清华镜像（不写入脚本默认值，避免绑定镜像源） |
 | 2026-10-25 | T9 | 参考实现把 mount_frontend 加在 health 路由注册前，SPA 兜底路由吞掉 /api/health（404） | 调整 main.py：health 路由先注册、mount_frontend 最后调用（与任务书 4.3/4.4 注释要求一致） |
+| 2026-10-25 | 课程扩展 | 用户希望不局限单一药品，但仓库仅有信尔美核对过的资料 | 增设不调用产品知识库的通用课程；新产品课程只有完成资料审核后才能启用对应知识库 |
+| 2026-10-25 | 公网模型 | 原内网 GPU 不可从公网服务器访问，且此服务器没有可复用的项目模型密钥 | 先用明确标注的离线演示；不把规则回复冒充真实 AI |
+| 2026-10-26 | 独立账号 | 用户要求独立登录、注册入口，原 SPEC 未定义注册资料与账号范围 | 仅用用户名和密码注册，不收集邮箱/手机号；每个账号只能访问自己的练习；旧共用演示记录不自动迁移 |
