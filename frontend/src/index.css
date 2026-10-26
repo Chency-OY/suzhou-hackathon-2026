@@ -54,6 +54,18 @@ button { cursor: pointer; }
 .game-alert { padding: 12px 15px; border: 1px solid #86525b; border-radius: 6px; background: #432932; color: #f3bdc2; font-size: 12px; line-height: 1.7; }
 .game-chat { display: flex; flex-direction: column; height: min(760px, calc(100dvh - 180px)); min-height: 480px; overflow: hidden; }
 .game-chat-log { flex: 1; overflow-y: auto; background: radial-gradient(circle at 50% 30%, #1a3b50 0, transparent 65%), #0e2232; }
+.game-chat.guided { height: auto; min-height: 0; }
+.game-chat.guided .game-chat-log { flex: none; max-height: min(360px, 40dvh); min-height: 180px; }
+.game-guided-panel { padding: 16px 20px; border-top: 1px solid #2b4d61; background: #102638; }
+.game-choice { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid #3c6478; border-radius: 6px; background: #18384d; color: #e5f2f7; text-align: left; font-size: 13px; line-height: 1.6; }
+.game-choice:hover { border-color: #83d9ec; background: #224a60; }
+.game-choice:disabled { cursor: wait; opacity: .6; }
+.game-choice-letter { display: grid; flex: 0 0 23px; height: 23px; place-items: center; border: 1px solid #6db4cb; border-radius: 4px; color: #a9e8f5; font-size: 11px; font-weight: 800; }
+.game-guided-feedback { padding: 13px 20px; border-top: 1px solid #3d6476; background: #193d50; color: #d8ebf2; font-size: 12px; line-height: 1.7; }
+.game-guided-feedback strong { display: block; margin-bottom: 3px; font-size: 13px; }
+.game-guided-feedback.strong { background: #173e37; color: #a9e8d2; }
+.game-guided-feedback.partial { background: #42351e; color: #f3d9a0; }
+.game-guided-feedback.risk { background: #492a32; color: #f2b8c1; }
 .game-bubble { padding: 11px 14px; border: 1px solid #416174; border-radius: 3px 11px 11px 11px; background: #1d3c50; color: #e9f3f8; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
 .game-bubble.rep { border-color: #4c8495; border-radius: 11px 3px 11px 11px; background: #265c70; }
 .game-meter { height: 6px; overflow: hidden; border-radius: 5px; background: #315166; }

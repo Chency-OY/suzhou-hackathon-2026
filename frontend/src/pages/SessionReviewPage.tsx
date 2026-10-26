@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
+import { guidedStep, QUALITY_LABEL } from "../guided";
 import { useAsync } from "../hooks";
 import { END_REASON_LABEL, SIGNAL_LABEL, SIGNAL_POLARITY, TYPE_LABEL } from "../labels";
 import type { Signal, TurnView } from "../types";
@@ -21,6 +22,13 @@ export default function SessionReviewPage() {
 
   const { session, scenario } = data;
   const repTurns = session.turns.filter((turn) => turn.speaker === "rep");
+  let repIndex = 0;
+  const annotatedTurns = session.turns.map((turn) => {
+    const choices = turn.speaker === "rep" ? guidedStep(scenario, repIndex++)?.choices : undefined;
+    const option = choices?.find((item) => item.text === turn.text);
+    const recommended = option?.quality !== "strong" ? choices?.find((item) => item.quality === "strong") : undefined;
+    return { turn, option, recommended };
+  });
   const foundPositive = positive.filter((signal) => count(repTurns, signal) > 0);
   const foundNegative = negative.filter((signal) => count(repTurns, signal) > 0);
   const suggestions = [
@@ -41,7 +49,7 @@ export default function SessionReviewPage() {
 
     {suggestions.length > 0 && <section className="game-panel mt-4 p-5"><div className="flex items-center justify-between"><h2 className="text-sm font-bold">下一次可以尝试</h2><span className="game-kicker !text-[9px]">NEXT MISSION</span></div><ul className="mt-4 space-y-2">{suggestions.map((tip, index) => <li key={tip} className="flex gap-3 text-xs leading-6 text-[#c6d9e3]"><span className="text-[#80d8eb]">0{index + 1}</span><span>{tip}</span></li>)}</ul></section>}
 
-    <section className="game-panel mt-4 p-5 sm:p-7"><div className="flex items-center justify-between"><h2 className="text-sm font-bold">逐句回看</h2><span className="game-kicker !text-[9px]">TRANSCRIPT</span></div><div className="mt-5 space-y-1">{session.turns.map((turn) => <div key={turn.idx} className={`game-transcript ${turn.speaker === "rep" ? "rep" : ""}`}><div className="text-[10px] font-bold tracking-wide text-[#9bb7c5]">{turn.speaker === "rep" ? "你 · 医药代表" : "模拟医生"} / 第 {turn.idx + 1} 句</div><p className="mt-1 whitespace-pre-wrap text-sm leading-7 text-[#d5e4eb]">{turn.text}</p>{turn.signals.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{turn.signals.map((signal) => <span key={signal} className={`game-tag ${SIGNAL_POLARITY[signal] === "good" ? "game-easy" : "game-hard"}`}>{SIGNAL_LABEL[signal]}</span>)}</div>}</div>)}</div></section>
+    <section className="game-panel mt-4 p-5 sm:p-7"><div className="flex items-center justify-between"><h2 className="text-sm font-bold">逐句回看</h2><span className="game-kicker !text-[9px]">TRANSCRIPT</span></div><div className="mt-5 space-y-1">{annotatedTurns.map(({ turn, option, recommended }) => <div key={turn.idx} className={`game-transcript ${turn.speaker === "rep" ? "rep" : ""}`}><div className="text-[10px] font-bold tracking-wide text-[#9bb7c5]">{turn.speaker === "rep" ? "你 · 医药代表" : "模拟医生"} / 第 {turn.idx + 1} 句</div><p className="mt-1 whitespace-pre-wrap text-sm leading-7 text-[#d5e4eb]">{turn.text}</p>{option && <div className={`game-guided-feedback ${option.quality} mt-3 rounded-md !border`}><strong>引导教学 · {QUALITY_LABEL[option.quality]}</strong><p>{option.feedback}</p>{recommended && <p className="mt-2"><b>可以这样说：</b>{recommended.text}</p>}</div>}{turn.signals.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{turn.signals.map((signal) => <span key={signal} className={`game-tag ${SIGNAL_POLARITY[signal] === "good" ? "game-easy" : "game-hard"}`}>{SIGNAL_LABEL[signal]}</span>)}</div>}</div>)}</div></section>
     <div className="mt-5 flex flex-wrap gap-2">{!session.ended_at && <Link to={`/session/${session.id}`} className="game-btn">继续演练</Link>}<Link to={`/scenarios/${session.scenario_id}`} className="game-btn game-btn-outline">查看任务简报</Link><Link to="/home" className="game-btn game-btn-outline">选择其他任务</Link></div>
   </div>;
 }
