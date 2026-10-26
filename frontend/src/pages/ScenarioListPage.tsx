@@ -1,111 +1,123 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { DifficultyBadge, Tag } from "../components/Badge";
 import { useAsync } from "../hooks";
 import { DEPT_LABEL, DIFFICULTY_LABEL, TYPE_LABEL } from "../labels";
+import { getRepId, rememberSession } from "../lib/rep";
 import {
   DEPARTMENTS, DIFFICULTIES, SCENARIO_TYPES,
   type Department, type Difficulty, type ScenarioFilters, type ScenarioType,
 } from "../types";
 
+const SESSION_ENABLED = import.meta.env.VITE_ENABLE_SESSION === "1";
+
 function FilterSelect({ label, value, options, onChange }: {
   label: string; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm text-slate-600">
-      <span className="shrink-0">{label}</span>
-      <select
-        className="rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
+    <label className="min-w-[136px] flex-1 text-[11px] font-bold text-[#92b1c3]">
+      <span className="mb-1.5 block">{label}</span>
+      <select className="game-field" value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">全部</option>
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
     </label>
   );
 }
 
 export default function ScenarioListPage() {
+  const nav = useNavigate();
   const [filters, setFilters] = useState<ScenarioFilters>({ program: "general" });
+  const [startingId, setStartingId] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
   const programs = useAsync(() => api.listPrograms(), []);
   const { data, error, loading } = useAsync(
     () => api.listScenarios(filters),
     [filters.program, filters.dept, filters.difficulty, filters.type],
   );
 
+  async function start(id: string) {
+    if (!SESSION_ENABLED || startingId) return;
+    setStartingId(id);
+    setStartError(null);
+    try {
+      const out = await api.createSession(id, getRepId());
+      rememberSession(out.session_id);
+      nav(`/session/${out.session_id}`);
+    } catch (e) {
+      setStartError(e instanceof Error ? e.message : String(e));
+      setStartingId(null);
+    }
+  }
+
   return (
     <div>
-      <div className="mb-8 border-b border-slate-200 pb-7">
-        <p className="mb-2 text-xs font-semibold tracking-[0.18em] text-teal-700">REP TRAINER · TRAINING STUDIO</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">从一次真实的对话开始练习</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-          选择情境，与虚构医生交流，结束后回看自己的表达。先练会提问、倾听和守住证据边界，再练具体产品资料。
-        </p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-sky-100 bg-sky-50 p-4"><strong className="text-sm text-sky-900">证据准确</strong><p className="mt-1 text-xs leading-5 text-slate-600">说清资料来源、适用人群和研究局限。</p></div>
-          <div className="rounded-lg border border-sky-100 bg-sky-50 p-4"><strong className="text-sm text-sky-900">风险完整</strong><p className="mt-1 text-xs leading-5 text-slate-600">不回避安全性问题和不确定性。</p></div>
-          <div className="rounded-lg border border-sky-100 bg-sky-50 p-4"><strong className="text-sm text-sky-900">守住边界</strong><p className="mt-1 text-xs leading-5 text-slate-600">遇到超出批准资料的问题，及时停止推断并转交核实。</p></div>
-        </div>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
+        <section className="game-hero px-6 py-8 sm:px-9 sm:py-10">
+          <p className="game-kicker">MISSION CONTROL / 任务大厅</p>
+          <h1 className="game-title mt-3">选择你的下一次拜访</h1>
+          <p className="game-muted mt-4 max-w-[590px] text-sm leading-7">进入虚构医生情境，练习提问、回应和证据表达。完成对话后，回看每一句话如何影响了沟通。</p>
+          <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-[#a1d9e9]">
+            <span>01 选择任务</span><span>02 模拟对话</span><span>03 逐句复盘</span>
+          </div>
+        </section>
+        <section className="game-panel p-5 sm:p-6" aria-label="训练核心能力">
+          <div className="flex items-center justify-between border-b border-[#2e4e61] pb-4"><h2 className="text-sm font-bold">核心能力</h2><span className="game-kicker !text-[9px]">OBJECTIVES</span></div>
+          <ol className="mt-2 space-y-1">
+            {[
+              ["01", "准确传递证据", "说清适用人群和资料局限"],
+              ["02", "完整表达风险", "不回避不确定性"],
+              ["03", "守住沟通边界", "超出资料时停止推断"],
+            ].map(([n, title, detail]) => <li key={n} className="flex gap-3 py-2.5"><span className="grid h-7 w-7 shrink-0 place-items-center rounded border border-[#46738a] text-[10px] font-bold text-[#83dff0]">{n}</span><div><strong className="block text-xs text-[#e3f3f8]">{title}</strong><span className="text-[11px] text-[#8daabb]">{detail}</span></div></li>)}
+          </ol>
+        </section>
       </div>
 
-      <div className="mb-7 grid gap-3 sm:grid-cols-2" aria-label="选择训练课程">
-        {programs.data?.map((program) => {
-          const selected = filters.program === program.id;
-          return (
-            <button
-              type="button"
-              key={program.id}
-              aria-pressed={selected}
-              onClick={() => setFilters((f) => ({ ...f, program: program.id }))}
-              className={`rounded-xl border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-700 ${
-                selected ? "border-teal-700 bg-teal-50 shadow-sm" : "border-slate-200 bg-white hover:border-slate-400"
-              }`}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="font-semibold text-slate-900">{program.title}</h2>
-                <span className={`text-xs font-medium ${selected ? "text-teal-800" : "text-slate-400"}`}>
-                  {selected ? "正在查看" : "选择课程"}
-                </span>
-              </div>
-              <p className="text-sm leading-6 text-slate-600">{program.description}</p>
+      <section className="mt-8">
+        <div className="mb-3 flex items-end justify-between gap-3"><div><p className="game-kicker">TRAINING PROGRAMS</p><h2 className="mt-1.5 text-lg font-bold">选择训练课程</h2></div><span className="text-xs text-[#8eacbc]">当前为离线演示</span></div>
+        <div className="grid gap-3 md:grid-cols-2" aria-label="选择训练课程">
+          {programs.data?.map((program, index) => (
+            <button type="button" key={program.id} aria-pressed={filters.program === program.id}
+              onClick={() => setFilters((current) => ({ ...current, program: program.id }))}
+              className={`flex min-h-[90px] items-center gap-4 rounded-lg border p-4 text-left transition-colors ${filters.program === program.id ? "border-[#79d7ed] bg-[#194358] shadow-[inset_3px_0_#79d7ed]" : "border-[#2e5065] bg-[#102638] hover:border-[#5a9cb5] hover:bg-[#153348]"}`}>
+              <span className="text-2xl font-bold text-[#7bd7ed]">0{index + 1}</span>
+              <span className="min-w-0 flex-1"><strong className="block text-sm text-[#f1f9fc]">{program.title}</strong><small className="mt-1 block text-[11px] leading-5 text-[#9bb6c5]">{program.description}</small></span>
+              <span aria-hidden="true" className="text-lg text-[#77d5eb]">↗</span>
             </button>
-          );
-        })}
-        {programs.error && <p className="text-sm text-rose-700">课程加载失败：{programs.error}</p>}
-      </div>
+          ))}
+          {programs.error && <div className="game-alert">课程加载失败：{programs.error}</div>}
+        </div>
+      </section>
 
-      <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-slate-200 pb-5">
-        <FilterSelect label="科室" value={filters.dept ?? ""}
-          options={DEPARTMENTS.map((d) => ({ value: d, label: DEPT_LABEL[d] }))}
-          onChange={(v) => setFilters((f) => ({ ...f, dept: (v || undefined) as Department | undefined }))} />
-        <FilterSelect label="难度" value={filters.difficulty ?? ""}
-          options={DIFFICULTIES.map((d) => ({ value: d, label: DIFFICULTY_LABEL[d] }))}
-          onChange={(v) => setFilters((f) => ({ ...f, difficulty: (v || undefined) as Difficulty | undefined }))} />
-        <FilterSelect label="情境" value={filters.type ?? ""}
-          options={SCENARIO_TYPES.map((t) => ({ value: t, label: TYPE_LABEL[t] }))}
-          onChange={(v) => setFilters((f) => ({ ...f, type: (v || undefined) as ScenarioType | undefined }))} />
-        <span className="text-sm text-slate-500 sm:ml-auto">{data ? `${data.length} 个可练情境` : ""}</span>
-      </div>
-
-      {loading && <div className="py-12 text-center text-sm text-slate-500">正在加载情境…</div>}
-      {error && <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">加载失败：{error}</div>}
-      {data?.length === 0 && <div className="py-12 text-center text-sm text-slate-500">没有符合条件的情境，请调整筛选。</div>}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {data?.map((s) => (
-          <Link key={s.id} to={`/scenarios/${s.id}`}
-            className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-teal-600 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-700">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <Tag>{TYPE_LABEL[s.type]}</Tag><Tag>{DEPT_LABEL[s.department]}</Tag><DifficultyBadge value={s.difficulty} />
-            </div>
-            <h3 className="text-base font-semibold leading-6 text-slate-900">{s.rep_goal}</h3>
-            <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">{s.context_brief}</p>
-            <span className="mt-4 text-sm font-medium text-teal-700 group-hover:underline">查看情境并开始练习 →</span>
-          </Link>
-        ))}
-      </div>
+      <section className="mt-8">
+        <div className="mb-3 flex items-end justify-between gap-3"><div><p className="game-kicker">MISSION ARCHIVE</p><h2 className="mt-1.5 text-lg font-bold">可选情境</h2></div><span className="text-xs text-[#8eacbc]">{data ? `${data.length} 个任务` : ""}</span></div>
+        <div className="game-panel flex flex-wrap items-end gap-3 p-4">
+          <FilterSelect label="科室" value={filters.dept ?? ""} options={DEPARTMENTS.map((v) => ({ value: v, label: DEPT_LABEL[v] }))} onChange={(v) => setFilters((current) => ({ ...current, dept: (v || undefined) as Department | undefined }))} />
+          <FilterSelect label="难度" value={filters.difficulty ?? ""} options={DIFFICULTIES.map((v) => ({ value: v, label: DIFFICULTY_LABEL[v] }))} onChange={(v) => setFilters((current) => ({ ...current, difficulty: (v || undefined) as Difficulty | undefined }))} />
+          <FilterSelect label="情境" value={filters.type ?? ""} options={SCENARIO_TYPES.map((v) => ({ value: v, label: TYPE_LABEL[v] }))} onChange={(v) => setFilters((current) => ({ ...current, type: (v || undefined) as ScenarioType | undefined }))} />
+        </div>
+        {startError && <div className="game-alert mt-3">进入任务失败：{startError}</div>}
+        {loading && <div className="game-panel mt-3 p-10 text-center text-sm text-[#9eb8c7]">正在载入任务…</div>}
+        {error && <div className="game-alert mt-3">加载失败：{error}</div>}
+        {data?.length === 0 && <div className="game-panel mt-3 p-10 text-center text-sm text-[#9eb8c7]">没有符合条件的任务，请调整筛选。</div>}
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          {data?.map((scenario, index) => (
+            <article key={scenario.id} className="game-card flex min-h-[220px] flex-col p-5">
+              <div className="flex items-center justify-between gap-3"><span className="game-kicker !text-[10px]">MISSION {String(index + 1).padStart(2, "0")}</span><DifficultyBadge value={scenario.difficulty} /></div>
+              <h3 className="mt-3 text-[15px] font-bold leading-6 text-[#edf8fc]">{scenario.rep_goal}</h3>
+              <p className="game-muted mt-1.5 line-clamp-2 text-xs leading-6">{scenario.context_brief}</p>
+              <div className="mt-3 flex flex-wrap gap-1.5"><Tag>{DEPT_LABEL[scenario.department]}</Tag><Tag>{TYPE_LABEL[scenario.type]}</Tag></div>
+              <div className="mt-auto flex items-center gap-4 pt-4">
+                <button type="button" className="game-btn" disabled={!SESSION_ENABLED || !!startingId} onClick={() => void start(scenario.id)}>
+                  {startingId === scenario.id ? "正在进入…" : "开始任务"}<span aria-hidden="true">→</span>
+                </button>
+                <Link className="game-link" to={`/scenarios/${scenario.id}`}>查看任务简报</Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

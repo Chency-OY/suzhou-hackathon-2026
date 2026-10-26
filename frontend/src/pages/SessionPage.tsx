@@ -7,33 +7,16 @@ import type { ScenarioDetail, SessionView, TurnView } from "../types";
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-function Bar({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div className="mb-3">
-      <div className="mb-1 flex justify-between text-xs text-slate-500">
-        <span>{label}</span>
-        <span>{value}</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-        <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
+function Meter({ label, value, color }: { label: string; value: number; color: string }) {
+  return <div className="mt-4"><div className="mb-2 flex justify-between text-[11px] text-[#b3cbd7]"><span>{label}</span><strong>{value}</strong></div><div className="game-meter"><div style={{ width: `${value}%`, background: color }} /></div></div>;
 }
 
 function Bubble({ turn }: { turn: TurnView }) {
   const rep = turn.speaker === "rep";
-  return (
-    <div className={`mb-3 flex ${rep ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-          rep ? "bg-slate-900 text-white" : "border border-slate-200 bg-white"
-        }`}
-      >
-        {turn.text}
-      </div>
-    </div>
-  );
+  return <div className={`mb-5 flex gap-3 ${rep ? "flex-row-reverse" : ""}`}>
+    <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-md border text-xs font-bold ${rep ? "border-[#5b96a8] bg-[#28657a] text-[#e6f8fc]" : "border-[#497287] bg-[#1b4055] text-[#d8edf5]"}`}>{rep ? "我" : "医"}</div>
+    <div className="max-w-[82%] sm:max-w-[74%]"><div className={`mb-1.5 text-[10px] font-bold tracking-wider text-[#95b3c3] ${rep ? "text-right" : ""}`}>{rep ? "你 · 医药代表" : "模拟医生"}</div><div className={`game-bubble ${rep ? "rep" : ""}`}>{turn.text}</div></div>
+  </div>;
 }
 
 export default function SessionPage() {
@@ -60,19 +43,14 @@ export default function SessionPage() {
         if (!off) setError(msg(e));
       }
     })();
-    return () => {
-      off = true;
-    };
+    return () => { off = true; };
   }, [id]);
 
   const turns = session?.turns ?? [];
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [turns.length, sending]);
-
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [turns.length, sending]);
   const ended = !!session?.ended_at;
-  const state = [...turns].reverse().find((t) => t.state_after)?.state_after ?? null;
-  const lastRep = [...turns].reverse().find((t) => t.speaker === "rep");
+  const state = [...turns].reverse().find((turn) => turn.state_after)?.state_after ?? null;
+  const lastRep = [...turns].reverse().find((turn) => turn.speaker === "rep");
 
   async function send() {
     const text = input.trim();
@@ -81,10 +59,7 @@ export default function SessionPage() {
     setSending(true);
     setError(null);
     setInput("");
-    setSession({
-      ...before,
-      turns: [...before.turns, { idx: before.turns.length, speaker: "rep", text, signals: [], state_after: null }],
-    });
+    setSession({ ...before, turns: [...before.turns, { idx: before.turns.length, speaker: "rep", text, signals: [], state_after: null }] });
     try {
       await api.sendTurn(before.id, text);
       setSession(await api.getSession(before.id));
@@ -92,148 +67,36 @@ export default function SessionPage() {
       setError(msg(e));
       setInput(text);
       setSession(before);
-    } finally {
-      setSending(false);
-    }
+    } finally { setSending(false); }
   }
 
   async function finish() {
     if (!session || ended) return;
-    try {
-      await api.finishSession(session.id);
-      setSession(await api.getSession(session.id));
-    } catch (e) {
-      setError(msg(e));
-    }
+    try { await api.finishSession(session.id); setSession(await api.getSession(session.id)); }
+    catch (e) { setError(msg(e)); }
   }
 
   async function again() {
     if (!session) return;
-    try {
-      const out = await api.createSession(session.scenario_id, getRepId());
-      rememberSession(out.session_id);
-      nav(`/session/${out.session_id}`);
-    } catch (e) {
-      setError(msg(e));
-    }
+    try { const out = await api.createSession(session.scenario_id, getRepId()); rememberSession(out.session_id); nav(`/session/${out.session_id}`); }
+    catch (e) { setError(msg(e)); }
   }
 
-  if (!session && !error) return <div className="py-12 text-center text-slate-500">加载中…</div>;
-  if (!session) {
-    return (
-      <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-        {error}　<Link className="underline" to="/home">返回场景列表</Link>
-      </div>
-    );
-  }
+  if (!session && !error) return <div className="game-panel p-10 text-center text-sm text-[#9bb7c6]">正在进入对话关卡…</div>;
+  if (!session) return <div className="game-alert">{error}　<Link className="game-link" to="/home">返回任务大厅</Link></div>;
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-      <section className="flex h-[calc(100vh-9rem)] flex-col rounded-xl border border-slate-200 bg-slate-50">
-        {scenario && (
-          <details className="border-b border-slate-200 bg-white px-4 py-2 text-sm">
-            <summary className="cursor-pointer font-medium">本次拜访目标：{scenario.rep_goal}</summary>
-            <p className="mt-2 text-slate-600">{scenario.context_brief}</p>
-            <ul className="mt-2 list-inside list-disc text-slate-600">
-              {scenario.success_criteria.map((c) => (<li key={c}>{c}</li>))}
-            </ul>
-          </details>
-        )}
-
-        <div className="flex-1 overflow-y-auto p-4">
-          {turns.map((t) => (<Bubble key={t.idx} turn={t} />))}
-          {sending && <div className="mb-3 text-sm text-slate-400">医生正在回应…</div>}
-          <div ref={bottomRef} />
-        </div>
-
-        {error && <div className="mx-4 mb-2 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>}
-
-        {ended ? (
-          <div className="border-t border-slate-200 bg-white p-4">
-            <div className="mb-3 text-sm font-medium">
-              演练结束：{session.end_reason ? END_REASON_LABEL[session.end_reason] : "已结束"}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={again} className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white">
-                再练一次
-              </button>
-              <Link to="/home" className="rounded-md border border-slate-300 px-4 py-2 text-sm">返回场景列表</Link>
-              <Link to={`/review/${session.id}`} className="rounded-md border border-slate-300 px-4 py-2 text-sm">查看本次复盘</Link>
-            </div>
-          </div>
-        ) : (
-          <div className="border-t border-slate-200 bg-white p-3">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  void send();
-                }
-              }}
-              rows={3}
-              maxLength={2000}
-              disabled={sending}
-              placeholder="输入你的话，Enter 发送，Shift+Enter 换行"
-              className="w-full resize-none rounded-md border border-slate-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100"
-            />
-            <div className="mt-2 flex items-center justify-between">
-              <button type="button" onClick={finish} className="text-sm text-slate-500 hover:underline">结束演练</button>
-              <button
-                type="button"
-                onClick={() => void send()}
-                disabled={sending || !input.trim()}
-                className="rounded-md bg-slate-900 px-4 py-1.5 text-sm text-white disabled:bg-slate-300"
-              >
-                发送
-              </button>
-            </div>
-          </div>
-        )}
+  return <div>
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="game-kicker">DIALOGUE SIMULATION / 对话关卡</p><h1 className="mt-1.5 text-xl font-bold text-[#f0f8fc]">{scenario?.rep_goal ?? "正在加载任务目标"}</h1></div><span className="game-tag">{ended ? "本次演练已结束" : "对话进行中"}</span></div>
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <section className="game-panel game-chat">
+        <div className="border-b border-[#2b4d61] px-5 py-3"><strong className="text-sm">模拟拜访现场</strong><div className="mt-1 text-[11px] text-[#8daabb]">用自然语言回应医生；你的每句话都会进入复盘。</div></div>
+        {scenario && <details className="border-b border-[#2b4d61] bg-[#173347] px-5 py-3"><summary className="cursor-pointer text-xs font-semibold text-[#b9dfea]">查看任务目标与背景</summary><p className="mt-3 text-xs leading-6 text-[#bdd2dc]">{scenario.context_brief}</p><ul className="mt-2 list-inside list-disc text-xs leading-6 text-[#bdd2dc]">{scenario.success_criteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
+        <div className="game-chat-log p-4 sm:p-6" aria-live="polite">{turns.map((turn) => <Bubble key={turn.idx} turn={turn} />)}{sending && <div className="text-xs text-[#9fbccb]">模拟医生正在回应…</div>}<div ref={bottomRef} /></div>
+        {error && <div className="game-alert mx-4 mb-2">{error}</div>}
+        {ended ? <div className="border-t border-[#2b4d61] bg-[#102638] p-4"><div className="mb-3 text-xs font-semibold text-[#d9eaf1]">演练结束：{session.end_reason ? END_REASON_LABEL[session.end_reason] : "已结束"}</div><div className="flex flex-wrap gap-2"><Link className="game-btn" to={`/review/${session.id}`}>查看复盘 →</Link><button className="game-btn game-btn-outline" type="button" onClick={() => void again()}>再练一次</button><Link className="game-btn game-btn-outline" to="/home">返回任务大厅</Link></div></div> : <div className="border-t border-[#2b4d61] bg-[#102638] p-3 sm:p-4"><label className="sr-only" htmlFor="rep-message">输入你的回应</label><textarea id="rep-message" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }} rows={3} maxLength={2000} disabled={sending} placeholder="输入你想对医生说的话…" className="game-field min-h-[76px] resize-y text-sm leading-6" /><div className="mt-2 flex items-center justify-between gap-3"><button className="border-0 bg-transparent text-xs text-[#a6c2d0] hover:text-white" type="button" onClick={() => void finish()}>结束演练</button><div className="flex items-center gap-3"><span className="hidden text-[10px] text-[#80a0b2] sm:block">Enter 发送 · Shift+Enter 换行</span><button className="game-btn" type="button" onClick={() => void send()} disabled={sending || !input.trim()}>发送回应 →</button></div></div></div>}
       </section>
 
-      <aside className="rounded-xl border border-slate-200 bg-white p-4">
-        <label className="mb-4 flex items-center justify-between text-sm">
-          <span className="font-medium">模拟训练提示</span>
-          <input
-            type="checkbox"
-            checked={hints}
-            onChange={(e) => {
-              setHints(e.target.checked);
-              writeHints(e.target.checked);
-            }}
-          />
-        </label>
-        {hints ? (
-          <>
-            {state && (
-              <>
-                <Bar label="模拟信任" value={state.trust} color="bg-emerald-500" />
-                <Bar label="模拟耐心" value={state.patience} color="bg-amber-500" />
-                <Bar label="模拟兴趣" value={state.engagement} color="bg-sky-500" />
-              </>
-            )}
-            <div className="mt-4 text-xs text-slate-500">上一句的表现</div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {(lastRep?.signals.length ?? 0) === 0 && <span className="text-xs text-slate-400">暂无明显信号</span>}
-              {lastRep?.signals.map((s) => (
-                <span
-                  key={s}
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    SIGNAL_POLARITY[s] === "good" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-                  }`}
-                >
-                  {SIGNAL_LABEL[s]}
-                </span>
-              ))}
-            </div>
-            <p className="mt-4 text-xs leading-5 text-slate-400">仅识别明确的沟通词句，数值是演示状态，不代表真实医生判断。</p>
-          </>
-        ) : (
-          <p className="text-xs text-slate-400">演示状态与提示已隐藏。</p>
-        )}
-      </aside>
+      <aside className="game-panel h-fit p-5"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-bold">训练状态</h2><span className="game-kicker !text-[9px]">STATUS</span></div><p className="game-muted mt-2 text-xs leading-6">以下数值仅是规则模拟的状态，供练习时参考。</p><label className="mt-5 flex cursor-pointer items-center justify-between border-y border-[#2d4e61] py-3 text-xs text-[#c6dbe5]"><span>显示实时提示</span><input className="h-4 w-4 accent-[#79d9ed]" type="checkbox" checked={hints} onChange={(e) => { setHints(e.target.checked); writeHints(e.target.checked); }} /></label>{hints ? <>{state && <div className="pb-2"><Meter label="模拟信任" value={state.trust} color="#78d8bc" /><Meter label="模拟耐心" value={state.patience} color="#e8c27f" /><Meter label="模拟兴趣" value={state.engagement} color="#78d7ed" /></div>}<div className="mt-4 border-t border-[#2d4e61] pt-4 text-[11px] font-bold text-[#c6dbe5]">上一句识别结果</div><div className="mt-2 flex flex-wrap gap-1.5">{(lastRep?.signals.length ?? 0) === 0 && <span className="text-xs text-[#8ba9ba]">暂无明确提示</span>}{lastRep?.signals.map((signal) => <span key={signal} className={`game-tag ${SIGNAL_POLARITY[signal] === "good" ? "game-easy" : "game-hard"}`}>{SIGNAL_LABEL[signal]}</span>)}</div></> : <p className="mt-4 text-xs text-[#8ba9ba]">实时提示已隐藏。</p>}<p className="mt-6 text-[11px] leading-5 text-[#819eaf]">规则只能识别部分明确表达；不能据此判断真实医生态度或合规结果。</p></aside>
     </div>
-  );
+  </div>;
 }

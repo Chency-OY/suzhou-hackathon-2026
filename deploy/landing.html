@@ -3,48 +3,80 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f9fc">
-  <title>医学沟通训练台 · 演示首页</title>
+  <meta name="theme-color" content="#081521">
+  <title>医学沟通训练台 · 任务入口</title>
   <style>
-    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #12304b; background: #f5f9fc; }
+    :root { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #edf7fb; background: #081521; }
     * { box-sizing: border-box; }
-    body { margin: 0; }
-    .wrap { width: min(1080px, calc(100% - 40px)); margin: auto; }
-    header { background: #fff; border-bottom: 1px solid #deebf2; }
-    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
-    .brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
-    .brand img { width: 145px; max-width: 38vw; height: auto; }
-    .brand span { border-left: 1px solid #cfdde8; padding-left: 16px; font-size: 15px; font-weight: 700; white-space: nowrap; }
-    .eyebrow { color: #006aa8; font-size: 13px; font-weight: 700; letter-spacing: .08em; }
-    main { padding: clamp(48px, 8vw, 96px) 0 64px; }
-    h1 { margin: 14px 0 18px; max-width: 720px; font-size: clamp(32px, 5vw, 54px); line-height: 1.18; letter-spacing: -.04em; }
-    .lead { max-width: 640px; color: #50677b; font-size: 17px; line-height: 1.85; }
-    .action { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin: 32px 0 48px; }
-    .button { display: inline-block; padding: 14px 24px; border-radius: 10px; background: #006baa; color: white; font-weight: 700; text-decoration: none; box-shadow: 0 8px 18px #006baa26; }
-    .button:focus-visible { outline: 3px solid #00a6d8; outline-offset: 3px; }
-    .hint { color: #62798b; font-size: 13px; line-height: 1.7; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .card { padding: 24px; border: 1px solid #dbe9f1; border-radius: 14px; background: white; }
-    .num { color: #0077ba; font-size: 12px; font-weight: 700; }
-    h2 { margin: 12px 0 8px; font-size: 18px; }
-    .card p { margin: 0; color: #5d7081; font-size: 14px; line-height: 1.8; }
-    footer { padding: 20px 0 32px; color: #62798b; font-size: 12px; line-height: 1.7; }
-    @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } .brand span { font-size: 12px; padding-left: 10px; } .brand { gap: 10px; } .card { padding: 18px; } }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse 65% 55% at 76% 23%, #163c50 0, transparent 70%), #081521; }
+    a { text-decoration: none; }
+    a:focus-visible { outline: 2px solid #85e1f1; outline-offset: 4px; }
+    .wrap { width: min(1190px, calc(100% - 44px)); margin: auto; }
+    header { border-bottom: 1px solid #274456; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 82px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-logo { display: grid; place-items: center; width: 112px; height: 52px; border-radius: 7px; background: #f7fbfd; }
+    .brand-logo img { width: 98px; height: auto; }
+    .brand-copy strong { display: block; font-size: 15px; }
+    .brand-copy small { display: block; margin-top: 3px; color: #89aabe; font-size: 10px; letter-spacing: .17em; }
+    .build { display: flex; align-items: center; gap: 8px; color: #a1c0cf; font-size: 11px; font-weight: 700; letter-spacing: .08em; white-space: nowrap; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #71d9bd; box-shadow: 0 0 0 4px #71d9bd20; }
+    main { padding: 72px 0 56px; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) 408px; align-items: center; gap: clamp(28px, 5vw, 75px); }
+    .kicker { color: #79d8ed; font-size: 11px; font-weight: 800; letter-spacing: .2em; }
+    h1 { max-width: 690px; margin: 20px 0 22px; font-size: clamp(38px, 5.5vw, 67px); line-height: 1.17; letter-spacing: -.05em; }
+    .accent { color: #83d9ed; }
+    .lead { max-width: 600px; margin: 0; color: #adc5d1; font-size: 16px; line-height: 1.95; }
+    .action { display: flex; align-items: center; flex-wrap: wrap; gap: 17px; margin-top: 35px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 52px; padding: 0 24px; border: 1px solid #80d9ed; border-radius: 7px; background: #80d9ed; color: #082334; font-size: 15px; font-weight: 800; transition: transform .18s, background .18s; }
+    .button:hover { transform: translateY(-2px); background: #a2eaf7; }
+    .hint { max-width: 260px; color: #8eacbc; font-size: 11px; line-height: 1.7; }
+    .terminal { overflow: hidden; border: 1px solid #4a8197; border-radius: 12px; background: #102a3b; box-shadow: 0 24px 65px #0006; }
+    .terminal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #31586e; color: #9ac3d2; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+    .terminal-dots { display: flex; gap: 5px; }
+    .terminal-dots i { width: 6px; height: 6px; border: 1px solid #5d91a7; border-radius: 50%; }
+    .terminal-body { position: relative; padding: 24px; }
+    .terminal-body:after { position: absolute; right: -70px; top: 50px; width: 210px; height: 210px; border: 1px solid #77d5e521; border-radius: 50%; box-shadow: 0 0 0 33px #77d5e50b, 0 0 0 65px #77d5e507; content: ""; pointer-events: none; }
+    .terminal-body > * { position: relative; z-index: 1; }
+    .terminal-no { color: #70d4eb; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+    .terminal h2 { margin: 12px 0 9px; font-size: 24px; line-height: 1.3; }
+    .terminal p { margin: 0; color: #a8c4d1; font-size: 12px; line-height: 1.8; }
+    .steps { margin: 22px 0 0; padding: 0; border-top: 1px solid #31566a; list-style: none; }
+    .steps li { display: flex; gap: 13px; align-items: center; padding: 15px 0; border-bottom: 1px solid #31566a; color: #d7e8ef; font-size: 13px; }
+    .steps b { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid #54869b; border-radius: 5px; color: #90e0ef; font-size: 10px; }
+    .terminal-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; color: #81acbe; font-size: 10px; font-weight: 700; letter-spacing: .07em; }
+    .section-head { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; margin: 73px 0 17px; }
+    .section-head h2 { margin: 0; font-size: 21px; }
+    .section-head span { color: #85a5b7; font-size: 11px; }
+    .courses { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .course { display: flex; align-items: center; gap: 16px; min-height: 104px; padding: 20px; border: 1px solid #315468; border-radius: 9px; background: #102638; }
+    .course b { color: #78d6ed; font-size: 25px; }
+    .course strong { display: block; margin-bottom: 6px; font-size: 15px; }
+    .course p { margin: 0; color: #9cb9c8; font-size: 12px; line-height: 1.6; }
+    footer { padding: 23px 0 35px; border-top: 1px solid #274456; color: #829fb1; font-size: 11px; line-height: 1.8; }
+    @media (max-width: 850px) { main { padding-top: 45px; } .hero { grid-template-columns: 1fr; } .terminal { max-width: 540px; } .section-head { margin-top: 48px; } }
+    @media (max-width: 600px) { .wrap { width: min(100% - 30px, 1190px); } header .wrap { min-height: 71px; } .brand-logo { width: 73px; height: 41px; } .brand-logo img { width: 65px; } .brand-copy strong { font-size: 12px; } .brand-copy small { font-size: 8px; } .build { display: none; } h1 { font-size: 39px; } .lead { font-size: 14px; } .courses { grid-template-columns: 1fr; } .section-head { align-items: start; flex-direction: column; } .action { align-items: start; flex-direction: column; } .hint { max-width: none; } }
+    @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
   </style>
 </head>
 <body>
-  <header><div class="wrap"><div class="brand"><img src="/rep-trainer/innovent-logo.png" alt="信达生物制药"><span>医学沟通训练台</span></div></div></header>
+  <header><div class="wrap"><div class="brand"><div class="brand-logo"><img src="/rep-trainer/innovent-logo.png" alt="信达生物制药"></div><div class="brand-copy"><strong>医学沟通训练台</strong><small>FIELD SIMULATOR</small></div></div><div class="build"><span class="dot"></span>PREVIEW BUILD 01</div></div></header>
   <main class="wrap">
-    <div class="eyebrow">REP TRAINER · PREVIEW</div>
-    <h1>练好每一次有依据的医学沟通</h1>
-    <p class="lead">在虚构医生情境中练习提问、倾听和回答。重点不是背熟话术，而是把证据讲准确、把风险讲完整、遇到不确定的问题知道何时停下核实。</p>
-    <div class="action"><a class="button" href="/rep-trainer/home">进入训练 →</a><span class="hint">使用演示账户登录；如微信内未显示登录窗口，请在系统浏览器打开。</span></div>
-    <div class="grid">
-      <div class="card"><div class="num">01 · EVIDENCE</div><h2>准确传递证据</h2><p>辨认资料来源、适用人群和研究局限，避免夸大结论。</p></div>
-      <div class="card"><div class="num">02 · SAFETY</div><h2>完整说明风险</h2><p>面对医生追问，不遗漏已知风险，也不猜测未知信息。</p></div>
-      <div class="card"><div class="num">03 · BOUNDARY</div><h2>守住沟通边界</h2><p>对超出批准资料的问题及时转交核实，留下可复盘的练习记录。</p></div>
+    <div class="hero">
+      <section>
+        <div class="kicker">TRAINING SYSTEM / 医学沟通模拟训练</div>
+        <h1>每一次拜访，<br><span class="accent">都是一次判断。</span></h1>
+        <p class="lead">在虚构医生情境中练习真实会遇到的问题。把证据说准确，把风险讲完整，面对不确定性知道何时停下核实。</p>
+        <div class="action"><a class="button" href="/rep-trainer/home">进入训练 <span aria-hidden="true">→</span></a><span class="hint">进入后使用演示账户登录。微信内若未出现登录窗口，请在系统浏览器打开。</span></div>
+      </section>
+      <section class="terminal" aria-label="训练流程预览">
+        <div class="terminal-head"><span>MISSION PREVIEW</span><span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+        <div class="terminal-body"><span class="terminal-no">TRAINING LOOP / 01</span><h2>从任务到复盘</h2><p>每一次练习都有具体目标和可回看的对话。</p><ol class="steps"><li><b>01</b>选择科室与拜访情境</li><li><b>02</b>与模拟医生展开对话</li><li><b>03</b>逐句检查沟通与表达</li></ol><div class="terminal-foot"><span>16 个合成情境</span><span>离线规则模拟</span></div></div>
+      </section>
     </div>
+    <div class="section-head"><h2>可选训练课程</h2><span>先练沟通判断，再练具体产品资料</span></div>
+    <div class="courses"><div class="course"><b>01</b><div><strong>通用医学沟通</strong><p>需求探寻、证据表达、回应异议与合规边界。</p></div></div><div class="course"><b>02</b><div><strong>信尔美产品资料</strong><p>基于公开说明书设计的合成情境，仅供演示。</p></div></div></div>
   </main>
-  <footer class="wrap">独立培训演示原型，非信达生物官方系统。页面使用公开品牌素材用于演示；模拟回复不可作为医学或合规依据。</footer>
+  <footer><div class="wrap">独立培训演示原型，非信达生物官方系统。页面使用公开品牌素材；模拟回复不可作为医学或合规依据。</div></footer>
 </body>
 </html>

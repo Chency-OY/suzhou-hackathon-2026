@@ -29,57 +29,33 @@ export default function ScenarioDetailPage() {
     }
   }
 
-  if (loading) return <div className="py-12 text-center text-slate-500">加载中…</div>;
-  if (error || !data) {
-    return (
-      <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-        {error ?? "场景不存在"}　<Link className="underline" to="/home">返回列表</Link>
-      </div>
-    );
-  }
+  if (loading) return <div className="game-panel p-10 text-center text-sm text-[#9bb7c6]">正在载入任务简报…</div>;
+  if (error || !data) return <div className="game-alert">{error ?? "任务不存在"}　<Link className="game-link" to="/home">返回任务大厅</Link></div>;
   const p = data.persona_public;
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Link to="/home" className="text-sm text-slate-500 hover:underline">← 返回场景列表</Link>
-      <div className="mt-3 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Tag>{data.program_id === "general" ? "通用沟通" : "信尔美资料"}</Tag>
-          <Tag>{DEPT_LABEL[data.department]}</Tag>
-          <Tag>{TYPE_LABEL[data.type]}</Tag>
-          <DifficultyBadge value={data.difficulty} />
+    <div>
+      <Link to="/home" className="game-link">← 返回任务大厅</Link>
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <div><p className="game-kicker">MISSION BRIEF / 任务简报</p><h1 className="game-title mt-2 max-w-3xl">{data.rep_goal}</h1></div>
+        <DifficultyBadge value={data.difficulty} />
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2"><Tag>{data.program_id === "general" ? "通用沟通" : "信尔美资料"}</Tag><Tag>{DEPT_LABEL[data.department]}</Tag><Tag>{TYPE_LABEL[data.type]}</Tag></div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_290px]">
+        <div className="game-panel p-6 sm:p-8">
+          <section><h2 className="game-kicker">SITUATION / 拜访背景</h2><p className="mt-3 text-sm leading-8 text-[#d0e1e9]">{data.context_brief}</p></section>
+          <section className="mt-8 border-t border-[#2b4b5e] pt-7"><h2 className="game-kicker">OBJECTIVES / 本次练习要点</h2><ol className="mt-4 space-y-4">{data.success_criteria.map((criterion, index) => <li key={criterion} className="flex gap-4 text-sm leading-7 text-[#c5d8e2]"><span className="grid h-7 w-7 shrink-0 place-items-center rounded border border-[#4d7e91] text-[10px] font-bold text-[#83dcec]">{String(index + 1).padStart(2, "0")}</span><span>{criterion}</span></li>)}</ol></section>
         </div>
-        <h1 className="mb-4 text-lg font-semibold">{data.rep_goal}</h1>
-
-        <section className="mb-4">
-          <h2 className="mb-1 text-sm font-medium text-slate-500">拜访背景</h2>
-          <p className="text-sm leading-relaxed">{data.context_brief}</p>
-        </section>
-
-        <section className="mb-4">
-          <h2 className="mb-1 text-sm font-medium text-slate-500">你将面对的医生</h2>
-          <p className="text-sm">{p.title}｜{p.hospital_tier}｜{p.style_hint}</p>
-        </section>
-
-        <section className="mb-6">
-          <h2 className="mb-1 text-sm font-medium text-slate-500">本次练习要点</h2>
-          <ul className="list-inside list-disc text-sm leading-relaxed">
-            {data.success_criteria.map((c) => (<li key={c}>{c}</li>))}
-          </ul>
-        </section>
-
-        <p className="mb-5 text-xs leading-5 text-slate-500">情境和医生均为合成；请勿输入真实患者或医生个人信息。</p>
-
-        {startErr && <div className="mb-3 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">{startErr}</div>}
-        <button
-          type="button"
-          onClick={() => void start()}
-          disabled={!SESSION_ENABLED || starting}
-          title={SESSION_ENABLED ? "" : "演练功能即将开放"}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-        >
-          {!SESSION_ENABLED ? "开始演练（即将开放）" : starting ? "正在进入…" : "开始演练"}
-        </button>
+        <aside className="game-panel h-fit p-5 sm:p-6">
+          <h2 className="text-sm font-bold">模拟医生资料</h2>
+          <div className="mt-4 space-y-0 text-xs"><div className="flex justify-between gap-3 border-b border-[#2b4b5e] py-3"><span className="text-[#91adbc]">职称</span><strong className="text-right font-semibold text-[#e8f5fa]">{p.title}</strong></div><div className="flex justify-between gap-3 border-b border-[#2b4b5e] py-3"><span className="text-[#91adbc]">医院层级</span><strong className="text-right font-semibold text-[#e8f5fa]">{p.hospital_tier}</strong></div><div className="flex justify-between gap-3 py-3"><span className="shrink-0 text-[#91adbc]">交流风格</span><strong className="text-right font-semibold leading-5 text-[#e8f5fa]">{p.style_hint}</strong></div></div>
+          {startErr && <div className="game-alert mt-4">{startErr}</div>}
+          <button type="button" onClick={() => void start()} disabled={!SESSION_ENABLED || starting} className="game-btn mt-5 w-full" title={SESSION_ENABLED ? "" : "演练功能即将开放"}>
+            {!SESSION_ENABLED ? "暂未开放" : starting ? "正在进入…" : "开始任务"}<span aria-hidden="true">→</span>
+          </button>
+          <p className="mt-4 text-[11px] leading-5 text-[#8eacbc]">医生和情境均为合成。请勿输入真实患者或医生的个人信息。</p>
+        </aside>
       </div>
     </div>
   );
