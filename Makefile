@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios gen-scenarios-v2 review web-build deploy healthcheck apply-review
+.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios gen-scenarios-v2 review web-build deploy healthcheck apply-review sim
 PY ?= python3
 VENV = . .venv/bin/activate
 
@@ -46,3 +46,6 @@ healthcheck:
 
 apply-review:
 	$(VENV) && python scripts/apply_review.py && python scripts/seed.py
+
+sim:
+	$(VENV) && python scripts/sim_session.py
