@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -17,7 +17,9 @@ Concern = Literal["efficacy", "safety_gi", "price_access", "long_term_evidence",
                   "patient_adherence", "competitor_comparison", "cv_benefit"]
 Trap = Literal["off_label_bait", "competitor_bash_bait", "exaggeration_bait", "none"]
 ScenarioType = Literal["first_visit", "post_conference", "safety_concern", "competitor_compare",
-                       "time_pressure", "revisit_after_rejection", "off_label_bait"]
+                       "time_pressure", "revisit_after_rejection", "off_label_bait",
+                       "second_visit", "third_visit", "hard_refusal", "soft_refusal",
+                       "turnover", "empty_handed", "compliance_bait", "followup_visit"]
 Signal = Literal[
     "relevant_to_concern", "asked_open_question", "cited_evidence", "empathy_shown",
     "addressed_objection", "vague_or_generic", "pushy", "exaggeration",
@@ -54,6 +56,16 @@ class Scenario(BaseModel):
     opening_line: str
     success_criteria: list[str] = Field(default_factory=list)
     source: Literal["generated", "playbook"] = "generated"
+    skeleton_id: str | None = None
+    setting: dict[str, Any] = Field(default_factory=dict)
+    pre_info: str = ""
+    turn_plan: list[str] = Field(default_factory=list)          # 内部：不得对外返回
+    gold_moves: list[str] = Field(default_factory=list)         # 内部：不得对外返回
+    compliance_checks: list[str] = Field(default_factory=list)  # 内部：不得对外返回
+    baits: list[str] = Field(default_factory=list)              # 内部：不得对外返回
+    events: list[str] = Field(default_factory=list)             # 内部：不得对外返回
+    hard_gate: bool = False
+    post_task: str | None = None
 
 
 class DoctorState(BaseModel):

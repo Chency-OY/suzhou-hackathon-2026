@@ -26,7 +26,24 @@ class PersonaPublic(BaseModel):
     difficulty: str
 
 
-class ScenarioItem(Scenario):
+PUBLIC_FIELDS = {"id", "type", "persona_id", "rep_goal", "context_brief", "opening_line", "success_criteria",
+                 "source", "skeleton_id", "setting", "pre_info", "hard_gate", "post_task"}
+
+
+class ScenarioItem(BaseModel):
+    id: str
+    type: str
+    persona_id: str
+    rep_goal: str
+    context_brief: str
+    opening_line: str
+    success_criteria: list[str]
+    source: str
+    skeleton_id: str | None = None
+    setting: dict = {}
+    pre_info: str = ""
+    hard_gate: bool = False
+    post_task: str | None = None
     department: str
     difficulty: str
 
@@ -41,7 +58,7 @@ def _public(p: DoctorPersona) -> PersonaPublic:
 
 
 def _item(s: Scenario, p: DoctorPersona) -> ScenarioItem:
-    return ScenarioItem(**s.model_dump(), department=p.department, difficulty=p.difficulty)
+    return ScenarioItem(**s.model_dump(include=PUBLIC_FIELDS), department=p.department, difficulty=p.difficulty)
 
 
 @router.get("/scenarios", response_model=list[ScenarioItem])

@@ -40,3 +40,11 @@ def test_report_drops_hallucinated_quotes():
                  findings=[good, bad, oob])
     new, dropped = rep.drop_invalid_findings(sess.turns)
     assert dropped == 2 and len(new.findings) == 1 and new.findings[0].quote == good.quote
+
+
+def test_old_scenario_rows_still_load():
+    from app.models import Scenario
+    old = ('{"id":"scn_001","type":"first_visit","persona_id":"p","rep_goal":"g","context_brief":"b",'
+           '"opening_line":"o","success_criteria":["x"],"source":"generated"}')
+    s = Scenario.model_validate_json(old)
+    assert s.baits == [] and s.skeleton_id is None and s.hard_gate is False
