@@ -16,3 +16,4 @@
 | 2026-10-25 | T8 | 完成 | 前端骨架：场景列表/详情+筛选，构建 172KB(gzip 56.6KB)，vitest 2 通过 |
 | 2026-10-25 | T9 | 完成 | 部署 sutai 单进程（uvicorn 托管 API+SPA）；virtualenv 回退、部署密钥打通 ssh/rsync；healthcheck 全绿；@reboot cron 已装；访问 http://10.20.213.110:8000 |
 | 2026-10-25 | T10 | 完成 | e2e_smoke 60/60 PASS（含 7 项敏感字段零泄露）；ollama_probe 7/10·1.8s（失败均为泄露拦截，重试兜底 95%）；待人工点通 MANUAL_CLICKTHROUGH |
+| 2026-10-28 | Z0 | 完成 | 环境与基线 |
