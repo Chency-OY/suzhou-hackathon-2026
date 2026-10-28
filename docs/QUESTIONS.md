@@ -18,3 +18,4 @@
 | 2026-10-25 | T9 | 服务器无 python3.12-venv 包且无 sudo（python3 -m venv 失败） | get-pip --user --break-system-packages 装 pip，再装用户级 virtualenv；deploy.sh 内置回退：venv 失败自动用 virtualenv |
 | 2026-10-25 | T9 | 服务器直连 pypi 慢 | 部署命令注入 PIP_INDEX_URL=清华镜像（不写入脚本默认值，避免绑定镜像源） |
 | 2026-10-25 | T9 | 参考实现把 mount_frontend 加在 health 路由注册前，SPA 兜底路由吞掉 /api/health（404） | 调整 main.py：health 路由先注册、mount_frontend 最后调用（与任务书 4.3/4.4 注释要求一致） |
+| 2026-10-28 | A3 | 任务卡 skeleton_gen.py 的 sorted(...)[0] 取最优画像写法触发 ruff FURB192（建议改 min） | 保持卡内代码原样，加最小 `# noqa: FURB192`（sorted 稳定排序与 min 等价，不改行为）；顺带移除卡内未使用的 import json、修正测试文件 import 排序（I001 自动修复） |
