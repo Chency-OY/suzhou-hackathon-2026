@@ -33,6 +33,11 @@ def main() -> int:
     repo = Repo()
     n_p = import_jsonl(repo, Path("data/personas/personas.jsonl"), DoctorPersona)
     n_s = import_jsonl(repo, Path("data/scenarios/scenarios.jsonl"), Scenario)
+    keep = {s.id for s in (Scenario.model_validate_json(x) for x in Path("data/scenarios/scenarios.jsonl")
+                           .read_text(encoding="utf-8").splitlines() if x.strip())}
+    for old in repo.list(Scenario):
+        if old.id not in keep:
+            repo.delete(Scenario, old.id)
     verified = sum(f.verified for f in facts)
     print(f"知识库：facts={n_facts}（已核验 {verified}），说明书分块={n_label}"
           + ("" if label.exists() else "（未找到 data/sources/label.md）"))

@@ -1,28 +1,64 @@
 # 场景生成报告
 
 - personas: 40
-- scenarios: 38
-- rejected: 2
+- scenarios: 36
 - budget_exceeded: False
+
+## via
+
+- fallback: 3
+- llm: 33
 
 ## matrix
 
-- cardiology/competitor_compare: 2
-- cardiology/first_visit: 2
-- cardiology/post_conference: 2
-- cardiology/safety_concern: 2
-- cardiology/time_pressure: 2
-- endocrinology/competitor_compare: 4
-- endocrinology/first_visit: 4
-- endocrinology/post_conference: 3
-- endocrinology/revisit_after_rejection: 3
-- endocrinology/safety_concern: 2
-- endocrinology/time_pressure: 3
-- hepatology/first_visit: 2
-- hepatology/off_label_bait: 5
-- hepatology/post_conference: 1
-- hepatology/safety_concern: 1
+- cardiology/S01: 1
+- cardiology/S02: 1
+- cardiology/S03: 1
+- cardiology/S04: 1
+- cardiology/S05: 1
+- cardiology/S06: 1
+- cardiology/S07: 1
+- cardiology/S08: 1
+- cardiology/S09: 1
+- cardiology/S10: 1
+- cardiology/S11: 1
+- cardiology/S12: 1
+- cardiology/S14: 1
+- endocrinology/S01: 1
+- endocrinology/S02: 1
+- endocrinology/S03: 1
+- endocrinology/S04: 1
+- endocrinology/S05: 1
+- endocrinology/S06: 1
+- endocrinology/S07: 1
+- endocrinology/S08: 1
+- endocrinology/S09: 1
+- endocrinology/S10: 1
+- endocrinology/S11: 1
+- endocrinology/S12: 1
+- endocrinology/S13: 1
+- endocrinology/S14: 1
+- hepatology/S01: 1
+- hepatology/S02: 1
+- hepatology/S03: 1
+- hepatology/S04: 1
+- hepatology/S05: 1
+- hepatology/S07: 1
+- hepatology/S08: 1
+- hepatology/S12: 1
+- hepatology/S13: 1
 
-## reject_reasons
+## types
 
-- 泄露了医生的隐藏异议: 2
+- competitor_compare: 2
+- compliance_bait: 3
+- empty_handed: 2
+- first_visit: 3
+- followup_visit: 2
+- hard_refusal: 8
+- off_label_bait: 2
+- safety_concern: 3
+- second_visit: 3
+- soft_refusal: 3
+- third_visit: 3
+- turnover: 2
