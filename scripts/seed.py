@@ -32,7 +32,20 @@ def main() -> int:
     n_label = kb.index_label(label) if label.exists() else 0
     repo = Repo()
     n_p = import_jsonl(repo, Path("data/personas/personas.jsonl"), DoctorPersona)
-    n_s = import_jsonl(repo, Path("data/scenarios/scenarios.jsonl"), Scenario)
+    from app.scenarios.review import load_review, rejected_ids
+    rej = rejected_ids(load_review())
+    n_s = 0
+    sp = Path("data/scenarios/scenarios.jsonl")
+    if sp.exists():
+        for line in sp.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                sc = Scenario.model_validate_json(line)
+                if sc.id in rej:
+                    repo.delete(Scenario, sc.id)
+                else:
+                    repo.save(sc)
+                    n_s += 1
+    print(f"已排除被剔除场景：{len(rej)} 个")
     keep = {s.id for s in (Scenario.model_validate_json(x) for x in Path("data/scenarios/scenarios.jsonl")
                            .read_text(encoding="utf-8").splitlines() if x.strip())}
     for old in repo.list(Scenario):
