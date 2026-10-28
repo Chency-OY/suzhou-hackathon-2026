@@ -1,4 +1,6 @@
-import type { ScenarioDetail, ScenarioFilters, ScenarioItem } from "./types";
+import type {
+  CreateSessionOut, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionView, TurnOut,
+} from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
   const q = new URLSearchParams();
@@ -9,8 +11,7 @@ export function buildQuery(params: Record<string, string | undefined>): string {
   return s ? `?${s}` : "";
 }
 
-async function get<T>(path: string): Promise<T> {
-  const r = await fetch(`/api${path}`);
+async function parse<T>(r: Response): Promise<T> {
   if (!r.ok) {
     let msg = `请求失败（${r.status}）`;
     try {
@@ -24,8 +25,23 @@ async function get<T>(path: string): Promise<T> {
   return (await r.json()) as T;
 }
 
+const get = <T>(path: string) => fetch(`/api${path}`).then((r) => parse<T>(r));
+const post = <T>(path: string, body?: unknown) =>
+  fetch(`/api${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  }).then((r) => parse<T>(r));
+
 export const api = {
   listScenarios: (f: ScenarioFilters) =>
     get<ScenarioItem[]>(`/scenarios${buildQuery({ dept: f.dept, difficulty: f.difficulty, type: f.type })}`),
   getScenario: (id: string) => get<ScenarioDetail>(`/scenarios/${encodeURIComponent(id)}`),
+  createSession: (scenarioId: string, repId: string, preGoal?: string) =>
+    post<CreateSessionOut>("/sessions", { scenario_id: scenarioId, rep_id: repId, pre_goal: preGoal }),
+  getSession: (id: string) => get<SessionView>(`/sessions/${encodeURIComponent(id)}`),
+  sendTurn: (id: string, text: string) => post<TurnOut>(`/sessions/${encodeURIComponent(id)}/turns`, { text }),
+  finishSession: (id: string) => post<FinishOut>(`/sessions/${encodeURIComponent(id)}/finish`),
+  saveRecord: (id: string, note: string) =>
+    post<{ session_id: string; saved: boolean }>(`/sessions/${encodeURIComponent(id)}/record`, { note }),
 };
