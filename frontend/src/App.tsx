@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import ComingSoonPage from "./pages/ComingSoonPage";
 import ScenarioDetailPage from "./pages/ScenarioDetailPage";
 import ScenarioListPage from "./pages/ScenarioListPage";
+import SessionPage from "./pages/SessionPage";
 
 export default function App() {
   return (
@@ -10,7 +11,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<ScenarioListPage />} />
         <Route path="scenarios/:id" element={<ScenarioDetailPage />} />
-        <Route path="session/:id" element={<ComingSoonPage title="演练" />} />
+        <Route path="session/:id" element={<SessionPage />} />
         <Route path="report/:id" element={<ComingSoonPage title="复盘报告" />} />
         <Route path="progress" element={<ComingSoonPage title="我的成长" />} />
         <Route path="team" element={<ComingSoonPage title="团队看板" />} />
