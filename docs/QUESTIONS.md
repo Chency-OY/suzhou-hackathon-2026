@@ -23,3 +23,5 @@
 | 2026-10-28 | B3 | test_intent.py 的 ci() 用 dict() 触发 ruff C408（建议改写字面量） | 按规则 3 在 dict( 起始行加最小 `# noqa: C408` 保留卡内代码原样语义（C408 为 unsafe fix，改写会改变卡内代码文本）；ruff 通过、31 tests passed |
 | 2026-10-29 | B5 | engine.py 用卡规则 3 要求的 `datetime.now(timezone.utc)` 触发 ruff UP017（建议改 `datetime.UTC` 别名） | 保持卡内写法（sqlmodel 要求带时区），2 处加最小 `# noqa: UP017`；未改行为 |
 | 2026-10-29 | B5 | test_engine.py 的 test_intent_and_event_recorded 解包了未使用的 `mock`，触发 RUF059（其修复被标 unsafe） | 加最小 `# noqa: RUF059` 保留卡内测试代码原样；其余安全项（I001/RUF022 __all__ 排序/RUF100 冗余 noqa）由 ruff --fix 自动处理 |
+| 2026-10-29 | B6 | 参考 §5.2 直接返回 `DoctorState` 会让响应里出现 `revealed_hidden_objection`，其名字含 `hidden_objection`，违反偏离 6（所有响应不得含该字串），§5.4 的 test_no_secrets_in_any_response 失败 | 按 A2 既有 `PersonaPublic` 模式新增 `StatePublic`（只含 trust/patience/engagement）与 `_state()`，三处返回（`CreateSessionOut`/`TurnOut`/`TurnView.state_after`）统一过滤；未改 DoctorState 模型本身 |
+| 2026-10-29 | B6 | `datetime.now(timezone.utc)`（卡规则 3 / 偏离 1 要求）触发 ruff UP017（建议 `datetime.UTC`） | 同 B5：保持卡内写法，加最小 `# noqa: UP017`；另 test_full_flow 解包未使用的 `persona` 触发 RUF059（unsafe fix），加 `# noqa: RUF059`，I001 由 ruff --fix 处理 |
