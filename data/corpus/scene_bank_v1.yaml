@@ -1,0 +1,248 @@
+# scene_bank_v1.yaml —— 场景骨架库与台词素材库（v1，待真人审）
+#
+# 来源与可信度（务必读）：
+#   E  = 一位在职药企员工的书面答复（样本仅 1 人，需再找 2~3 位交叉验证）
+#   H1 = 《新人第一课_医药代表实操手册》（小红书一线笔记的二次整理，经验性、非官方）
+#   H2 = 《新手药代观点挖掘集》（同上）
+#   D  = 本文件作者在上述素材基础上改写，口语化处理，需真人审
+# 使用规则：
+#   1. 所有台词只是"口吻示例"，不是事实来源；产品事实只能引用 verified=true 的 facts。
+#   2. 本文件不含任何疗效、安全性数字；生成或改写时也不得加入具体数字或百分比。
+#   3. 素材中出现的"漏服率降低 60%"之类模板数字是占位示例，不可当作事实使用。
+#   4. 法规与制度口径（备案、施行日期、红线条文）以国家药监局原文与企业合规部为准。
+
+meta:
+  version: 1
+  status: draft_needs_human_review
+  doctor_speech_rules:            # 写进 doctor_reply 提示词
+    - 以短句为主，常 8~25 字；允许省略主语、反问、半句话
+    - 不用客服腔（不说「非常感谢您的介绍」「请问还有什么可以帮您」）
+    - 一次只抛一个点；不连续给出多个理由
+    - 用个案说话（「我们科上个月有个病人……」），少用抽象概念（少说「长期依从性」「循证证据」）
+    - 对不想聊的事，常用拖延、转介、礼貌告别，而不是直接说不
+    - 信任低时更短更冷；被打断或有事时可以中途离开
+  rep_goal_rule: 每个场景只给代表一个主目标，禁止同时要求「介绍产品又约科室会又收集反馈」
+
+utterance_bank:
+  hard_refusal:                   # 硬拒绝（H1 3.1、E）
+    - {text: "我现在用得挺好的，不用换。", src: H1}
+    - {text: "资料放这儿吧，我有空看。", src: H1}
+    - {text: "这事你找我们科管这块的大夫吧。", src: "H1/D"}
+    - {text: "原来的药用得好好的，为什么要换你们的？", src: E}
+    - {text: "我这会儿忙，你改天再来。", src: D}
+  soft_refusal:                   # 温柔拒绝（H1 3.2）。共同特征：听着像进展，实则告别
+    - {text: "你讲得挺好的，有机会再合作。", trap: "追问真实条件"}
+    - {text: "这个药以后肯定是趋势。", trap: "把认可落到具体病例"}
+    - {text: "你们讲的我都清楚了。", trap: "转问使用障碍"}
+    - {text: "其他医院怎么用的我也听说了。", trap: "问本院卡点"}
+    - {text: "你们公司现在做得不错啊。", trap: "夸公司不等于认可产品"}
+    - {text: "我回头安排下时间再说。", trap: "给低成本的下一步"}
+    - {text: "这药在有些人群上还是有价值的。", trap: "问人群比例"}
+    - {text: "你们这药，领导那边也有人提过。", trap: "球踢给上级"}
+    - {text: "我们最近在评审，先不折腾。", trap: "给非干扰式资料"}
+    - {text: "等我下次门诊不忙再细聊。", trap: "约具体时间"}
+  common_objections:              # 一线高频异议（E 前五条；其中第 4 条需按产品改写）
+    - {id: switch,   text: "原来用得好好的，为什么要换？", fit: all}
+    - {id: sideeff,  text: "你这药副作用不小吧？", fit: all, personalize: "个案化：我们科上个月有个病人吃了吐得不行，自己停了。"}
+    - {id: turnover, text: "你们怎么老是换人？", fit: all}
+    - {id: generic,  text: "同类的国产药效果也差不多吧？", fit: "需按产品改写（原话是仿制药对原研）"}
+    - {id: price,    text: "同类的国产药比你的便宜。", fit: all}
+  pressure_and_interrupt:         # 时间紧、打断（D）
+    - "三分钟，说重点。"
+    - "你直接说，对我们科有什么用。"
+    - "等一下，我先接个电话。"
+    - "说明书上有写吗？"
+    - "这数据哪来的？"
+  closing_lines:                  # 现实里更常见的结局（D）
+    - {kind: followup_set,   text: "行，下周二门诊结束后你来一趟。"}
+    - {kind: materials_left, text: "资料先放这儿吧。"}
+    - {kind: referred,       text: "你先跟我们科管这块的大夫对接一下。"}
+    - {kind: soft_decline,   text: "好的，我知道了，有需要再联系你。"}
+    - {kind: hard_decline,   text: "今天先到这儿吧，我还有病人。"}
+
+environment_events:               # 引擎可在回合中随机/按规则插入（D）
+  - "护士敲门递病历，医生看了一眼才继续"
+  - "患者家属在门口探头，医生示意稍等"
+  - "医生手机响了，接了一个很短的电话"
+  - "医生看了眼时间"
+
+scene_skeletons:
+  - id: S01
+    title: 首访破冰认门（限时 5 分钟）
+    src: [H1-2.1, H1-2.2, E]
+    setting: {where: 门诊间隙, duration: 5分钟, state: "首次拜访，已预约并备案"}
+    rep_pre_info: "第一次拜访该科主任，无前情。你被告知主任只给 5 分钟。"
+    rep_goal: 让医生记住你是谁、负责什么，并同意下次再见（不谈销售）
+    doctor: {style_options: [busy_efficient, friendly_open], start_trust: low_to_mid}
+    opening_lines: ["你是哪家的？我只有几分钟。", "预约的是你吧？说吧。"]
+    turn_plan: ["医生先问来意", "代表若一上来讲卖点，医生打断", "若代表问到科室情况，医生才多说两句", "结尾看是否约到下一次"]
+    gold_moves: ["30 秒内亮明身份、备案、来意", "倾听为主、问科室常用方案", "只约一个明确的下一步"]
+    compliance_checks: ["未备案不可入场", "本次仅学术交流，不涉销售"]
+    success_criteria: [访前设定目标, 合规开场, 探寻到科室现状, 约到下一步]
+    events: [护士敲门递病历]
+  - id: S02
+    title: 二访：带一个有用的信息点
+    src: [H1-2.1]
+    setting: {where: 科室, duration: 5分钟, state: "第二次拜访，距上次 3 天"}
+    rep_pre_info: "上次主任提到对某类患者的处理有顾虑，你记录了。"
+    rep_goal: 带 1 个与主任关注相关的信息点，并用提问摸清顾虑
+    doctor: {style_options: [rigorous_evidence, conservative_habit], start_trust: mid}
+    opening_lines: ["上次是你吧？这次带了什么？", "你来了，我记得，说吧。"]
+    turn_plan: ["医生考察代表是否记得上次内容", "代表给信息点，医生追问出处", "医生抛一个个案"]
+    gold_moves: ["回扣上次内容", "只讲一个点并说出处", "用提问代替灌输"]
+    compliance_checks: ["数据须有出处，不得编造数字", "只讲适应症内内容"]
+    success_criteria: [探寻到需求, 信息传递明确, 约到下一步]
+  - id: S03
+    title: 三访：只讲 1~2 个核心差异
+    src: [H1-2.1]
+    setting: {where: 科室, duration: 5分钟, state: "第三次拜访，已有基本信任"}
+    rep_pre_info: "前两次得知主任习惯用同类产品，担心换药后患者反应。"
+    rep_goal: 针对顾虑给出佐证，争取一个低门槛的尝试或后续学术交流
+    doctor: {style_options: [skeptical_challenger, conservative_habit], start_trust: mid}
+    opening_lines: ["你今天打算跟我说什么？", "又来了，这回有什么新的？"]
+    turn_plan: ["医生要求直奔差异", "代表若夸大，医生反击", "医生给出有保留的回应"]
+    gold_moves: ["只讲 1~2 个差异", "用文献而非形容词", "给低门槛的下一步"]
+    compliance_checks: ["不夸大、不绝对化", "不超适应症"]
+    success_criteria: [信息传递明确, 异议处理到位, 约到下一步]
+  - id: S04
+    title: 硬拒绝①「我用得挺好，不用换」
+    src: [H1-3.1, E]
+    setting: {where: 科室, duration: 3分钟, state: "医生已有稳定用药习惯"}
+    rep_pre_info: "主任长期使用同类药，对新产品没兴趣。"
+    rep_goal: 不否定医生，找到一个值得聊的临床痛点
+    doctor: {style_options: [conservative_habit, skeptical_challenger], start_trust: low}
+    opening_lines: ["我现在用得挺好的，不用换。", "原来的药用得好好的，为什么要换你们的？"]
+    turn_plan: ["代表若硬推优势，医生更坚持", "代表若先认同再问某类患者效果，医生愿意多说一句", "医生举一个个案", "结尾是留资料或留下回访"]
+    gold_moves: ["先认同，再问有没有某类患者用了仍不理想", "有痛点就聊，没有就留钩子离开"]
+    compliance_checks: ["不贬低现用药物", "不夸大"]
+    success_criteria: [探寻到需求, 异议处理到位, 留下回访]
+  - id: S05
+    title: 硬拒绝②「资料放这儿我有空看」
+    src: [H1-3.1]
+    setting: {where: 科室门口, duration: 2分钟, state: "医生正在写病历"}
+    rep_pre_info: "你带了一份与该科相关的资料。"
+    rep_goal: 把「放下」变成「回访」
+    doctor: {style_options: [busy_efficient]}
+    opening_lines: ["资料放这儿吧，我有空看。"]
+    turn_plan: ["代表若只说『您慢慢看』，场景结束", "代表若标出重点页并约回访，医生给个模糊时间", "医生看表"]
+    gold_moves: ["告诉他看哪一页", "约一个具体回访时间"]
+    compliance_checks: ["资料须为适应症内的学术内容"]
+    success_criteria: [信息传递明确, 约到下一步]
+  - id: S06
+    title: 硬拒绝③「这事找我们科某大夫」
+    src: [H1-3.1]
+    setting: {where: 科室, duration: 3分钟, state: "医生想把你转给别人"}
+    rep_pre_info: "医生是科室决策人之一。"
+    rep_goal: 接住推荐但不放弃决策链
+    doctor: {style_options: [busy_efficient, conservative_habit]}
+    opening_lines: ["这事你找我们科管这块的大夫吧。"]
+    turn_plan: ["代表答应后直接走，场景结束", "代表若补一句与主任决策相关的资料并约时间，医生松动"]
+    gold_moves: ["接住推荐", "说明哪一层判断更适合主任", "约下周送资料"]
+    compliance_checks: ["不绕过预约规则擅自进入其他科室"]
+    success_criteria: [异议处理到位, 约到下一步]
+  - id: S07
+    title: 识别温柔拒绝（假信号）
+    src: [H1-3.2, H2-一/五]
+    setting: {where: 科室, duration: 4分钟, state: "医生表面友好"}
+    rep_pre_info: "上次拜访后医生反应不错，你觉得有戏。"
+    rep_goal: 看穿礼貌的告别，追问出真实的下一步或真实的障碍
+    doctor: {style_options: [friendly_open]}
+    opening_lines: ["你讲得挺好的，有机会再合作。", "你们这药以后肯定是趋势。"]
+    turn_plan: ["代表若高兴地道谢就走，扣分", "代表若追问条件/障碍，医生才说一个真实顾虑", "医生给出一个具体但低成本的下一步，或坦白暂时不会用"]
+    gold_moves: ["不把客套当认可", "把好话落到具体患者或具体障碍"]
+    compliance_checks: ["不承诺放量或进院"]
+    success_criteria: [探寻到需求, 异议处理到位, 约到下一步]
+  - id: S08
+    title: 副作用质疑（个案化）
+    src: [E, H1-3.3]
+    setting: {where: 科室, duration: 4分钟, state: "科里刚有患者因不适停药"}
+    rep_pre_info: "你听说该科最近有患者用同类药后胃肠不适停药。"
+    rep_goal: 先共情，再用已核验的信息回应，不回避
+    doctor: {style_options: [rigorous_evidence, skeptical_challenger]}
+    opening_lines: ["你这药副作用不小吧？我们科上个月就有个病人吃了吐得不行，自己停了。"]
+    turn_plan: ["医生用个案施压", "代表若否认或淡化，医生追问", "代表若如实说明并说明处理思路，医生才愿意继续"]
+    gold_moves: ["先共情不辩解", "如实说明已知不良反应与应对", "必要时说明会反馈并跟进"]
+    compliance_checks: ["不得隐匿已知不良反应", "不得夸大安全性"]
+    success_criteria: [异议处理到位, 信息传递明确, 合规]
+  - id: S09
+    title: 同类对比与价格（国产/进口）
+    src: [E, H1-3.3]
+    setting: {where: 科室, duration: 4分钟, state: "医生熟悉多个同类产品"}
+    rep_pre_info: "医生同时用过几种同类药。"
+    rep_goal: 不贬低对方，聚焦一两个对医生有意义的差异
+    doctor: {style_options: [skeptical_challenger, busy_efficient]}
+    opening_lines: ["同类的国产药比你的便宜啊。", "国产的？跟进口的比怎么样，别是跟着学的。"]
+    turn_plan: ["医生抛价格或对比", "代表若贬低竞品，医生反感", "代表若只讲有出处的差异，医生追问适用人群"]
+    gold_moves: ["先承认价格是现实问题", "只讲有出处的差异", "不攻击对方"]
+    compliance_checks: ["不贬低竞品", "未经证据的对比不得出口"]
+    success_criteria: [异议处理到位, 信息传递明确, 合规]
+  - id: S10
+    title: 「你们怎么老是换人？」
+    src: [E]
+    setting: {where: 科室, duration: 3分钟, state: "你是新接手的代表"}
+    rep_pre_info: "前任代表离职，你刚接手这家医院。"
+    rep_goal: 重建信任，让医生愿意继续见你
+    doctor: {style_options: [conservative_habit, skeptical_challenger], start_trust: low}
+    opening_lines: ["你们怎么老是换人？上一个刚熟悉。"]
+    turn_plan: ["医生表达不满", "代表若解释公司安排，医生不耐烦", "代表若承诺稳定服务并了解医生需求，医生缓和"]
+    gold_moves: ["不推责", "说明自己能提供什么", "问医生希望怎么对接"]
+    compliance_checks: ["不乱承诺"]
+    success_criteria: [探寻到需求, 约到下一步]
+  - id: S11
+    title: 空手拜访（没资源没活动）
+    src: [H1-2.4, H2-四]
+    setting: {where: 科室, duration: 4分钟, state: "手里没有物料和活动"}
+    rep_pre_info: "本月没有科室会，也没有新资料。"
+    rep_goal: 用临床痛点、学术更新、使用反馈三个方向之一撑起一次有价值的沟通
+    doctor: {style_options: [busy_efficient, friendly_open]}
+    opening_lines: ["今天又没带东西？有事说事。"]
+    turn_plan: ["医生不需要礼貌话", "代表若以请教切入，医生愿意说一个临床问题", "代表若只寒暄，医生结束"]
+    gold_moves: ["以请教切入", "同步一条真实可查的学术更新", "收集一个使用反馈"]
+    compliance_checks: ["不以任何形式送礼或请客"]
+    success_criteria: [探寻到需求, 信息传递明确, 约到下一步]
+  - id: S12
+    title: 合规诱导：饭局、赞助、统方、要承诺
+    src: [E, H1-4.3, H1-4.5]
+    setting: {where: 科室外走廊, duration: 3分钟, state: "医生半开玩笑地试探"}
+    rep_pre_info: "你和主任已经比较熟。"
+    rep_goal: 守住边界并保持关系，不被带偏
+    doctor: {style_options: [friendly_open, skeptical_challenger]}
+    opening_lines: ["最近忙，改天一起吃个饭？", "你们那个科室会能不能赞助点别的？", "你给我说说，我们科这个月开了多少你们的药？"]
+    turn_plan: ["医生按顺序抛出 1~2 个试探", "代表若顺着答应或含糊，医生继续加码", "代表若明确拒绝并转回学术，医生收口"]
+    gold_moves: ["明确、友好地拒绝", "转回学术交流", "必要时说明公司规定"]
+    compliance_checks: ["不安排宴请礼品", "不变相利益输送", "不打探或统计处方量", "不承诺销售结果"]
+    success_criteria: [合规, 异议处理到位]
+    hard_gate: true
+  - id: S13
+    title: 合规诱导：超适应症追问
+    src: [H1-4.4, 项目 SPEC 7.3]
+    setting: {where: 科室, duration: 4分钟, state: "医生关心相关人群用药"}
+    rep_pre_info: "医生的患者里有不少合并其他问题的人。"
+    rep_goal: 只在已获批范围内沟通，对范围外问题如实说明并转介
+    doctor: {style_options: [rigorous_evidence, friendly_open]}
+    opening_lines: ["那这个药，脂肪肝的患者能用吗？", "说明书上有写这个人群吗？"]
+    turn_plan: ["医生问范围外人群", "代表若暗示可用，医生追问依据", "代表若说明以说明书为准并提出可协助转医学部门，医生认可"]
+    gold_moves: ["以说明书为准", "不暗示范围外用法", "提出转交公司医学部门回复"]
+    compliance_checks: ["不得超适应症宣传"]
+    success_criteria: [合规, 信息传递明确]
+    hard_gate: true
+  - id: S14
+    title: 复访与拜访记录（缔结访后跟进）
+    src: [H1-2.5, E]
+    setting: {where: 科室, duration: 4分钟, state: "上次留了资料并约了回访"}
+    rep_pre_info: "拜访记录里写着：资料第 3 页与该科相关，约今天回访。"
+    rep_goal: 兑现上次约定，并把本次沟通落成明确的下一步与拜访记录
+    doctor: {style_options: [busy_efficient, conservative_habit]}
+    opening_lines: ["上次的资料我翻了一下，你说吧。", "资料我没怎么看，你给我讲讲重点。"]
+    turn_plan: ["医生检验代表是否真的回扣上次", "医生给出一个真实反馈或疑问", "结尾约定下一步"]
+    gold_moves: ["回扣上次标记的重点", "记录医生原话", "约具体时间"]
+    compliance_checks: ["24 小时内完整留痕"]
+    success_criteria: [访前设定目标, 约到下一步, 拜访记录完整]
+    post_task: "拜访后 24 小时内写拜访记录：客户原话、需求、异议、下一步"
+
+scoring_alignment:                # 与一线管理者检查清单对齐（E）
+  manager_checklist: [拜访合规, 访前目标设定, 探寻到需求, 信息传递明确, 异议处理到位, 缔结访后跟进]
+  extra_user_flow:
+    pre_visit: "开始演练前，代表必须先写 1 句本次拜访目标"
+    post_visit: "结束后写拜访记录，系统与对话比对并评分"
+  outcome_types: [followup_set, materials_left, referred, soft_decline, hard_decline, agreed_next_step, time_up]
