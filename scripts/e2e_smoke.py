@@ -7,12 +7,14 @@ import httpx
 
 SECRETS = ["hidden_objection", "traps", "initial_trust", "initial_patience", "time_budget_turns", "speech_habits",
            "backstory"]
+SESSION_SECRETS = SECRETS + ["meta", "bait", "baits", "turn_plan", "gold_moves", "compliance_checks"]
 PUBLIC_KEYS = {"department", "title", "hospital_tier", "style_hint", "difficulty"}
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8000")
+    ap.add_argument("--with-session", action="store_true", help="额外跑一遍会话端到端（会真实调用模型）")
     args = ap.parse_args()
     c = httpx.Client(base_url=args.base, timeout=30)
     fails: list[str] = []
@@ -58,6 +60,37 @@ def main() -> int:
     check("SPA 回退", 'id="root"' in c.get("/scenarios/scn_001").text)
     r404 = c.get("/api/not-exist")
     check("未知 API 返回 404 且非 HTML", r404.status_code == 404 and "<html" not in r404.text.lower())
+
+    if args.with_session:
+        rs = c.post("/api/sessions", json={"scenario_id": items[0]["id"], "rep_id": "rep_smoke",
+                                           "pre_goal": "了解医生关注点并约下次沟通"})
+        check("创建会话（带访前目标）", rs.status_code == 200)
+        if rs.status_code != 200:
+            print(rs.text[:300])
+        else:
+            sid = rs.json()["session_id"]
+            check("回复含开场白", bool(rs.json().get("opening_line")))
+
+            rt = c.post(f"/api/sessions/{sid}/turns", json={"text": "主任您好，想先了解一下您门诊这类患者的情况。"})
+            check("提交一轮", rt.status_code == 200 and bool(rt.json().get("doctor_reply")))
+            for s in SESSION_SECRETS:
+                check(f"回合无泄露 {s}", s not in rt.text)
+
+            check("未结束不能写记录", c.post(f"/api/sessions/{sid}/record",
+                                        json={"note": "客户原话：先放资料。下一步：下周回访。"}).status_code == 409)
+
+            rf = c.post(f"/api/sessions/{sid}/finish")
+            check("结束会话", rf.status_code == 200 and rf.json().get("ended") is True)
+
+            rr = c.post(f"/api/sessions/{sid}/record", json={"note": "客户原话：先放资料。下一步：下周回访。"})
+            check("保存拜访记录", rr.status_code == 200 and rr.json().get("saved") is True)
+
+            rg = c.get(f"/api/sessions/{sid}")
+            body = rg.text
+            check("回放含 pre_goal", rg.status_code == 200 and "了解医生关注点" in body)
+            check("回放含 visit_note", "下周回访" in body)
+            for s in SESSION_SECRETS:
+                check(f"回放无泄露 {s}", s not in body)
 
     print(f"\n失败 {len(fails)} 项" if fails else "\n全部通过")
     return 1 if fails else 0
