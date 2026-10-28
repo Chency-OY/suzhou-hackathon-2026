@@ -24,8 +24,10 @@ Signal = Literal[
     "relevant_to_concern", "asked_open_question", "cited_evidence", "empathy_shown",
     "addressed_objection", "vague_or_generic", "pushy", "exaggeration",
     "off_label_claim", "competitor_bashing", "ignored_doctor_question", "proposed_next_step",
+    "accepted_benefit", "disclosed_stat", "promised_outcome",
 ]
-EndReason = Literal["agreed_next_step", "doctor_left", "time_up", "rep_ended"]
+EndReason = Literal["agreed_next_step", "doctor_left", "time_up", "rep_ended",
+                   "materials_left", "referred", "soft_decline"]
 FindingKind = Literal["strength", "issue", "missed_opportunity", "compliance_violation"]
 
 
@@ -88,6 +90,7 @@ class Turn(BaseModel):
     text: str
     signals: list[Signal] = Field(default_factory=list)
     state_after: DoctorState | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class Session(BaseModel):
@@ -97,6 +100,8 @@ class Session(BaseModel):
     started_at: datetime
     ended_at: datetime | None = None
     end_reason: EndReason | None = None
+    pre_goal: str | None = None
+    visit_note: str | None = None
     turns: list[Turn] = Field(default_factory=list)
 
 

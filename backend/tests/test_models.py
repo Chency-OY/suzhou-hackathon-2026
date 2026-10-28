@@ -48,3 +48,10 @@ def test_old_scenario_rows_still_load():
            '"opening_line":"o","success_criteria":["x"],"source":"generated"}')
     s = Scenario.model_validate_json(old)
     assert s.baits == [] and s.skeleton_id is None and s.hard_gate is False
+
+
+def test_turn_meta_default_and_roundtrip():
+    from app.models import Turn
+    t = Turn(idx=0, speaker="doctor", text="你好", meta={"rep_turn_no": 0})
+    assert Turn.model_validate_json(t.model_dump_json()).meta == {"rep_turn_no": 0}
+    assert Turn(idx=1, speaker="rep", text="x").meta == {}

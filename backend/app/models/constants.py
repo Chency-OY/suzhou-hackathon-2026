@@ -29,6 +29,7 @@ SIGNALS = (
     "relevant_to_concern", "asked_open_question", "cited_evidence", "empathy_shown",
     "addressed_objection", "vague_or_generic", "pushy", "exaggeration",
     "off_label_claim", "competitor_bashing", "ignored_doctor_question", "proposed_next_step",
+    "accepted_benefit", "disclosed_stat", "promised_outcome",
 )
 
 assert sum(DIMENSION_WEIGHTS.values()) == 100
