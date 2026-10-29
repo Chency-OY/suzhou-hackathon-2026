@@ -37,6 +37,8 @@ def main() -> int:
             errs.append(f"{r.id} 开场白不在骨架库中")
         if r.skeleton_id in ("S12", "S13") and (not r.baits or not r.hard_gate):
             errs.append(f"{r.id} 合规场景缺少 baits 或 hard_gate")
+        if "主任" not in p.title and any("主任" in x for x in (r.rep_goal, r.context_brief, r.pre_info, *r.success_criteria)):
+            errs.append(f"{r.id} 称呼与职称不符")
     print(f"场景 {len(rows)} 个；覆盖骨架 {len({r.skeleton_id for r in rows})}/14；类型分布 "
           f"{ {t: sum(1 for r in rows if r.type == t) for t in sorted({r.type for r in rows})} }")
     if errs:

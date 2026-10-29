@@ -68,3 +68,20 @@ def test_llm_path_and_leak_falls_back(tmp_path):
                         "pre_info": "上次见面气氛一般，没有细聊。"}, ensure_ascii=False)
     rep2 = build_scenarios(MockLLM({"scenario_fill": leaky}), DEMO, BANK, out_dir=tmp_path)
     assert rep2["via"].get("fallback", 0) > 0 and rep2["scenarios"] == 36
+
+
+def test_titles_are_consistent_in_public_texts(tmp_path):
+    zhuzhi = [p.model_copy(update={"title": "主治医师"}) for p in DEMO]
+    build_scenarios(None, zhuzhi, BANK, out_dir=tmp_path)
+    rows = [json.loads(x) for x in (tmp_path / "scenarios.jsonl").read_text(encoding="utf-8").splitlines()]
+    for r in rows:
+        for f in ("rep_goal", "context_brief", "pre_info"):
+            assert "主任" not in r[f], (r["id"], f)
+        assert all("主任" not in c for c in r["success_criteria"])
+
+
+def test_check_fill_rejects_wrong_honorific():
+    p = DEMO[0].model_copy(update={"title": "主治医师"})
+    bad = FillDraft(context_brief="您将拜访一位内分泌科的主治医师，这次第一次拜访该科主任，时间很紧。",
+                    pre_info="上次见面气氛一般，没有细聊。")
+    assert "称呼" in check_fill(p, bad)

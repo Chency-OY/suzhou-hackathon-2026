@@ -45,8 +45,20 @@ def pick_persona(personas: list[DoctorPersona], sk: Skeleton, dept: str, used: C
     return best
 
 
+def honorific(p: DoctorPersona) -> str:
+    """称呼要与职称一致：主任医师、副主任医师可称主任，主治医师只能称医生。"""
+    return "主任" if "主任" in p.title else "医生"
+
+
+def localize(text: str, p: DoctorPersona) -> str:
+    h = honorific(p)
+    return text if h == "主任" else text.replace("主任", h)
+
+
 def check_fill(p: DoctorPersona, d: FillDraft) -> str | None:
     text = d.context_brief + d.pre_info
+    if honorific(p) != "主任" and "主任" in text:
+        return "称呼与职称不符（主治医师不应称主任）"
     if leaks_hidden(p.hidden_objection, d.context_brief, d.pre_info):
         return "泄露了医生的隐藏异议"
     if any(w in text for w in TRAP_WORDS):
@@ -57,8 +69,9 @@ def check_fill(p: DoctorPersona, d: FillDraft) -> str | None:
 
 
 def fallback_fill(sk: Skeleton, p: DoctorPersona) -> FillDraft:
-    brief = f"您将拜访{DEPT_CN[p.department]}的{p.title}（{p.hospital_tier}）。{sk.rep_pre_info}"
-    return FillDraft(context_brief=brief[:160], pre_info=sk.rep_pre_info[:120])
+    pre = localize(sk.rep_pre_info, p)
+    brief = f"您将拜访{DEPT_CN[p.department]}的{p.title}（{p.hospital_tier}）。{pre}"
+    return FillDraft(context_brief=brief[:160], pre_info=pre[:120])
 
 
 def _setting_cn(setting: dict) -> str:
@@ -74,7 +87,7 @@ def fill_one(provider: LLMProvider | None, sk: Skeleton, p: DoctorPersona,
     retry = ""
     for _ in range(max_attempts):
         user = prompt.render(
-            skeleton_title=sk.title, rep_goal=sk.rep_goal, rep_pre_info=sk.rep_pre_info,
+            skeleton_title=sk.title, rep_goal=localize(sk.rep_goal, p), rep_pre_info=localize(sk.rep_pre_info, p),
             setting=_setting_cn(sk.setting), department_cn=DEPT_CN[p.department], title=p.title,
             hospital_tier=p.hospital_tier, style=p.style, hidden_objection=p.hidden_objection, retry_note=retry)
         draft, degraded = structured_call(
@@ -113,8 +126,8 @@ def build_scenarios(provider: LLMProvider | None, personas: list[DoctorPersona],
             seen_sk[sk.id] += 1
             scenarios.append(Scenario(
                 id=f"scn_{len(scenarios) + 1:03d}", type=SKELETON_TYPE[sk.id], persona_id=p.id,
-                rep_goal=sk.rep_goal, context_brief=draft.context_brief, opening_line=opening,
-                success_criteria=list(sk.success_criteria), source="generated", skeleton_id=sk.id,
+                rep_goal=localize(sk.rep_goal, p), context_brief=draft.context_brief, opening_line=opening,
+                success_criteria=[localize(c, p) for c in sk.success_criteria], source="generated", skeleton_id=sk.id,
                 setting=dict(sk.setting), pre_info=draft.pre_info, turn_plan=list(sk.turn_plan),
                 gold_moves=list(sk.gold_moves), compliance_checks=list(sk.compliance_checks),
                 baits=list(SKELETON_BAITS.get(sk.id, [])), events=list(sk.events),
