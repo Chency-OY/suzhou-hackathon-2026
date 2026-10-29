@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """任务卡队列。让小模型每次只看一张卡，换助手也能接上。
-  python scripts/taskq.py split TASK_CARDS_v1.md   拆成 tasks/cards/NN_ID.md（已有状态不覆盖）
+  python scripts/taskq.py split TASK_CARDS_v1.md   拆成 tasks/cards/NN_ID.md（会清空旧卡文件；已有状态不覆盖）
+  python scripts/taskq.py split --add TASK_CARDS_v2.md   追加一批新卡，保留旧卡与状态（已存在的卡号会跳过）
   python scripts/taskq.py next                      打印下一张可做的卡
   python scripts/taskq.py done ID                   跑该卡的验收命令，通过才标记完成并追加 docs/PROGRESS.md
   python scripts/taskq.py status                    查看全部状态
@@ -64,24 +65,33 @@ def check_frozen() -> bool:
     return True
 
 
-def cmd_split(bundle: str) -> None:
+def cmd_split(bundle: str, add: bool = False) -> None:
     text = Path(bundle).read_text("utf-8")
     cards = [p for p in re.split(r"(?m)^(?=## CARD )", text) if p.startswith("## CARD ")]
     head = text.split("## CARD ", 1)[0].strip()
     CARDS.mkdir(parents=True, exist_ok=True)
     if head:
         RULES.write_text(head + "\n", "utf-8")
-    for old in CARDS.glob("*.md"):
-        old.unlink()
+    existing = sorted(CARDS.glob("*.md"))
+    known = {parse_card(p)["id"] for p in existing} if add else set()
+    start = len(existing) if add else 0
+    if not add:
+        for old in existing:
+            old.unlink()
     st = load_status()
-    for i, c in enumerate(cards, 1):
+    n = 0
+    for i, c in enumerate(cards, start + 1):
         m = HEAD.match(c.splitlines()[0].strip())
         if not m:
             raise SystemExit(f"卡片首行格式错误：{c.splitlines()[0]}")
+        if m.group(1) in known:
+            print(f"跳过已存在的卡：{m.group(1)}")
+            continue
         (CARDS / f"{i:02d}_{m.group(1)}.md").write_text(c.strip() + "\n", "utf-8")
         st.setdefault(m.group(1), "todo")
+        n += 1
     save_status(st)
-    print(f"已拆分 {len(cards)} 张卡 -> {CARDS}")
+    print(f"已{'追加' if add else '拆分'} {n} 张卡 -> {CARDS}")
 
 
 def cmd_next() -> int:
@@ -140,8 +150,8 @@ def main() -> int:
         print(__doc__)
         return 0
     cmd = a[0]
-    if cmd == "split" and len(a) == 2:
-        cmd_split(a[1])
+    if cmd == "split" and len(a) in (2, 3):
+        cmd_split([x for x in a[1:] if x != "--add"][0], add="--add" in a)
     elif cmd == "next":
         return cmd_next()
     elif cmd == "done" and len(a) == 2:
