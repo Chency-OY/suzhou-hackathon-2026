@@ -7,3 +7,4 @@
 - 2026-10-28 | signal_judge.md | 0.2.0 | 改版：补充 3 个合规信号（accepted_benefit/disclosed_stat/promised_outcome）（§4.5）
 - 2026-10-29 | signal_judge.md | 0.3.0 | 新增 declined_boundary 信号；明确 evaded_boundary 由程序判定，模型不得输出（C4）
 - 2026-10-29 | scenario_fill.md | 0.2.0 | 新增第 4 条要求：称呼必须与职称一致，主治医师不得称"主任"（C6）
+- 2026-10-29 | rep_bot.md | 0.1.0 | 新增：自适应代表模拟器提示词（C7）

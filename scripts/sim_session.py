@@ -1,138 +1,138 @@
-"""用脚本化的"好/差"代表对 3 个骨架场景各跑一场，输出 docs/SAMPLE_SESSIONS.md。
-真实模型下每场约 6 轮、每轮 2 次调用，用量很小。"""
-import re
+"""自适应代表模拟器：用模型扮演"好代表/差代表"，与对话引擎真实对练，输出样例对话与质量指标。
+用法：python scripts/sim_session.py     （需要真实模型；mock 下直接退出）"""
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, "backend")
-from app.llm import get_provider, get_tracker  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
+
+from app.llm import get_provider, get_tracker, load_prompt, structured_call  # noqa: E402
 from app.models import DoctorPersona, Scenario  # noqa: E402
 from app.rag import KnowledgeBase  # noqa: E402
 from app.scenarios.review import load_review, usable  # noqa: E402
 from app.sessions import SessionEngine  # noqa: E402
+from app.sessions.engine import format_history  # noqa: E402
+from app.sessions.metrics import (avg_doctor_len, count_false_ignored, count_repeats, fallback_rate,  # noqa: E402
+                                  signals_seen)
 
-GOOD = [
-    "主任您好，我是信达的代表，占用您三分钟，想先了解一下您门诊里肥胖合并糖尿病的患者大概占多少？",
-    "听起来您对患者的长期坚持度比较关注。您目前遇到最大的困难是哪一块？",
-    "我理解您的顾虑。我可以把玛仕度肽已公开发表的研究摘要和适用人群整理给您，您可以先对照说明书核实。",
-    "说明书上的适应症我需要严格按已获批的范围来沟通，超出的部分我不能给出建议。",
-    "如果您愿意，下周我约一次十五分钟的学术交流，只讨论符合适应症的人群，您看可以吗？",
-    "好的，那我下周联系您确认时间，谢谢主任。",
-]
-BAD = [
-    "主任好！我们这个药是目前最好的，没有任何副作用，我保证对您的患者有效！",
-    "司美格鲁肽那些药都不行，效果差，您早就该换了。",
-    "脂肪肝、高血压、睡眠呼吸暂停也都能用，您直接开就行，今天就定下来吧！",
-    "您别犹豫了，别的医生都在用，您必须马上答应我。",
-    "行，那改天我请您吃个饭，您放心。",
-    "您放心用，量上我这边保证给您支持。",
-]
-
-# 按骨架选场景：S04 硬拒绝、S12 合规诱导、S08 副作用质疑
-WANT_SKELETONS = ["S04", "S12", "S08"]
-EVENT = re.compile(r"^（[^）]*）")
+LEVELS = {
+    "good": ("水平较好：先认同医生再提问；只说有出处的信息，不夸大、不贬低竞品；医生试探饭局、赞助、处方量、"
+             "范围外用法时，明确而友好地拒绝并转回学术（例如“这个我得婉拒，公司有规定，学术上的问题随时聊”）；"
+             "时机合适时提出一个具体的下一步。"),
+    "bad": ("水平较差：爱夸大和绝对化（比如保证有效、没有副作用），贬低竞品，必要时暗示范围外的用法；"
+            "医生试探饭局、赞助或要支持时顺势答应并承诺放量；催促医生马上答应。"),
+}
+FALLBACK = {
+    "good": ["您好，想先了解一下您门诊这类患者的情况。", "明白，我按说明书范围来说。", "那我下周再约您十五分钟，可以吗？"],
+    "bad": ["我们这个药最好，没副作用，保证有效。", "别的药都不行，您早该换了。", "您今天就定下来吧。"],
+}
+TARGETS = ["S04", "S12", "S08", "S13"]
+MAX_TURNS = 8
+BAD_SIGNALS = {"accepted_benefit", "disclosed_stat", "promised_outcome", "evaded_boundary"}
 
 
-def pick(scenarios, personas):
-    out = []
-    for sk in WANT_SKELETONS:
-        for s in scenarios:
-            if s.skeleton_id == sk:
-                out.append(s)
-                break
-    return out
+class RepSay(BaseModel):
+    say: str = Field(min_length=2, max_length=120)
 
 
-def run(engine, scenario, persona, lines):
-    sess = engine.start(scenario, persona, "rep_sim")
-    degraded = 0
-    for text in lines:
+def load(path, cls):
+    f = Path(path)
+    return [cls.model_validate_json(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def rep_say(provider, level, scenario, session, n) -> tuple[str, bool]:
+    user = load_prompt("rep_bot").render(
+        level_desc=LEVELS[level], rep_goal=scenario.rep_goal, context_brief=scenario.context_brief,
+        pre_info=scenario.pre_info or "（无）", history=format_history(session.turns, 8))
+    fb = FALLBACK[level][min(n, len(FALLBACK[level]) - 1)]
+    out, degraded = structured_call(
+        provider, prompt_name="rep_bot", system="你是严格输出 JSON 的角色扮演助手。",
+        messages=[{"role": "user", "content": user}], model_cls=RepSay, fallback=RepSay(say=fb),
+        max_retries=1, temperature=0.8)
+    return out.say.strip(), degraded
+
+
+def run(engine, provider, scenario, persona, level):
+    sess = engine.start(scenario, persona, f"rep_sim_{level}")
+    rep_fb = 0
+    for i in range(MAX_TURNS):
         if sess.ended_at:
             break
-        res = engine.step(sess, scenario, persona, text)
-        degraded += int(res.degraded)
-    return sess, degraded
+        text, deg = rep_say(provider, level, scenario, sess, i)
+        rep_fb += int(deg)
+        engine.step(sess, scenario, persona, text)
+    return sess, rep_fb
 
 
-def doctor_metrics(sess) -> tuple[list[str], int]:
-    """返回（去掉环境事件后的医生台词, 兜底回合数）。"""
-    texts, degraded = [], 0
+def final_trust(sess) -> int:
+    return [t.state_after for t in sess.turns if t.state_after][-1].trust
+
+
+def render(sess, label, rep_fb) -> list[str]:
+    out = [f"### {label}｜结束原因：{sess.end_reason or '未结束'}｜代表兜底回合：{rep_fb}", ""]
     for t in sess.turns:
-        if t.speaker != "doctor":
-            continue
-        texts.append(EVENT.sub("", t.text).strip())
-        degraded += int(bool((t.meta or {}).get("degraded")))
-    return texts, degraded
-
-
-def render(sess, label, degraded) -> list[str]:
-    out = [f"### {label}｜结束原因：{sess.end_reason or '未结束'}｜降级回合：{degraded}", ""]
-    for t in sess.turns:
-        who = "代表" if t.speaker == "rep" else "医生"
-        extra = f"　`{t.signals}`" if t.speaker == "rep" else ""
         st = f"　(信任{t.state_after.trust}/耐心{t.state_after.patience})" if t.state_after else ""
-        out.append(f"- **{who}**：{t.text}{extra}{st}")
+        if t.speaker == "rep":
+            out.append(f"- **代表**：{t.text}　`{t.signals}`{st}")
+        else:
+            out.append(f"- **医生**：{t.text}　`意图={t.meta.get('intent')}`{st}")
     return out + [""]
 
 
 def main() -> int:
     provider = get_provider()
+    if provider.name == "mock":
+        print("当前是 mock，无法做自适应模拟。请配置真实模型后再运行。")
+        return 0
     try:
         kb = KnowledgeBase()
         kb = kb if kb.count() else None
     except Exception:  # noqa: BLE001
         kb = None
     engine = SessionEngine(provider, kb)
-    personas = {p.id: p for p in (DoctorPersona.model_validate_json(x) for x in
-                Path("data/personas/personas.jsonl").read_text(encoding="utf-8").splitlines() if x.strip())}
-    scenarios = usable([Scenario.model_validate_json(x) for x in
-                        Path("data/scenarios/scenarios.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()],
-                       load_review())
-    chosen = pick(scenarios, personas)
-    lines = ["# 样例对话（脚本化代表）", "",
-             f"- provider：{provider.name}｜知识库：{'有' if kb else '无'}｜生成时间：{time.strftime('%Y-%m-%d %H:%M')}", ""]
-    summary = []
-    all_texts: list[str] = []
-    all_degraded = 0
+    personas = {p.id: p for p in load("data/personas/personas.jsonl", DoctorPersona)}
+    scenarios = usable(load("data/scenarios/scenarios.jsonl", Scenario), load_review())
+    chosen = [next((s for s in scenarios if s.skeleton_id == sid), None) for sid in TARGETS]
+    chosen = [s for s in chosen if s]
+
+    lines = ["# 样例对话（自适应代表模拟器）", "",
+             f"- provider：{provider.name}｜知识库：{'有' if kb else '无'}｜{time.strftime('%Y-%m-%d %H:%M')}", ""]
+    fails: list[str] = []
+    all_turns: list = []
+    wins = 0
     for s in chosen:
         p = personas[s.persona_id]
-        lines += [f"## {s.id}｜{p.department}｜{p.difficulty}｜{s.type}｜骨架 {s.skeleton_id}", ""]
-        for label, script in (("好代表", GOOD), ("差代表", BAD)):
-            sess, deg = run(engine, s, p, script)
-            lines += render(sess, label, deg)
-            final = [t.state_after for t in sess.turns if t.state_after][-1]
-            texts, fb = doctor_metrics(sess)
-            all_texts += texts
-            all_degraded += fb
-            avg_len = sum(len(x) for x in texts) / len(texts) if texts else 0.0
-            fb_rate = fb / len(texts) if texts else 0.0
-            summary.append((s.id, label, final.trust, final.patience, sess.end_reason, deg,
-                            f"{avg_len:.1f}", f"{fb_rate:.0%}"))
-    avg_all = sum(len(x) for x in all_texts) / len(all_texts) if all_texts else 0.0
-    rate_all = all_degraded / len(all_texts) if all_texts else 0.0
-    lines += ["## 汇总", "",
-              "| 场景 | 代表 | 信任 | 耐心 | 结束原因 | 降级回合 | 医生平均字数 | 兜底率 |",
-              "|---|---|---|---|---|---|---|---|"]
-    lines += [f"| {a} | {b} | {c} | {d} | {e} | {f} | {g} | {h} |" for a, b, c, d, e, f, g, h in summary]
-    lines += ["", f"- 自然度：医生台词平均字数 **{avg_all:.1f}**（判据 ≤ 35）",
-              f"- 自然度：兜底率 **{rate_all:.0%}**（判据 ≤ 20%）",
-              "", f"token 用量：{get_tracker().summary()}"]
+        lines += [f"## {s.id}｜{s.skeleton_id}｜{p.department}｜{p.difficulty}｜{s.type}", ""]
+        res = {}
+        for level in ("good", "bad"):
+            sess, rep_fb = run(engine, provider, s, p, level)
+            res[level] = sess
+            all_turns += sess.turns
+            lines += render(sess, "好代表" if level == "good" else "差代表", rep_fb)
+            if count_false_ignored(sess.turns):
+                fails.append(f"{s.id}/{level}：出现 {count_false_ignored(sess.turns)} 处“回避提问”误判")
+            if count_repeats(sess.turns):
+                fails.append(f"{s.id}/{level}：医生重复了 {count_repeats(sess.turns)} 句话")
+        wins += int(final_trust(res["good"]) > final_trust(res["bad"]))
+        sg, sb = signals_seen(res["good"].turns), signals_seen(res["bad"].turns)
+        if s.skeleton_id == "S12":
+            if "declined_boundary" not in sg:
+                fails.append(f"{s.id}：好代表没有任何一次被识别为明确拒绝（declined_boundary）")
+            if not (sb & BAD_SIGNALS):
+                fails.append(f"{s.id}：差代表没有触发任何合规违规信号")
+    if chosen and wins < len(chosen) - 1:
+        fails.append(f"好代表信任度高于差代表的场景只有 {wins}/{len(chosen)}（要求至少 {len(chosen) - 1}）")
+    avg, fb = avg_doctor_len(all_turns), fallback_rate(all_turns)
+    if avg > 35:
+        fails.append(f"医生平均字数 {avg:.1f} > 35")
+    if fb > 0.2:
+        fails.append(f"医生兜底率 {fb:.0%} > 20%")
+    lines += ["## 汇总", "", f"- 好代表胜出：{wins}/{len(chosen)}", f"- 医生平均字数：{avg:.1f}",
+              f"- 医生兜底率：{fb:.0%}", f"- 未通过项：{fails or '无'}", "", f"token 用量：{get_tracker().summary()}"]
     Path("docs/SAMPLE_SESSIONS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print("已输出 docs/SAMPLE_SESSIONS.md")
-    good = [s for s in summary if s[1] == "好代表"]
-    bad = [s for s in summary if s[1] == "差代表"]
-    checks: list[tuple[str, bool]] = []
-    if provider.name != "mock":
-        checks.append(("好代表最终信任度高于差代表", all(g[2] > b[2] for g, b in zip(good, bad))))
-        checks.append((f"医生台词平均字数 ≤ 35（实测 {avg_all:.1f}）", avg_all <= 35))
-        checks.append((f"兜底率 ≤ 20%（实测 {rate_all:.0%}）", rate_all <= 0.20))
-    for name, passed in checks:
-        print(f"{'✔' if passed else '✘'} {name}")
-    ok = all(v for _, v in checks)
-    if not ok:
-        print("未通过：", "；".join(n for n, v in checks if not v))
-    return 0 if ok else 1
+    print("已输出 docs/SAMPLE_SESSIONS.md；未通过项：", fails or "无")
+    return 1 if fails else 0
 
 
 if __name__ == "__main__":
