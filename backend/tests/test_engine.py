@@ -100,7 +100,9 @@ def test_bait_fires_on_second_turn_only_once():
     for i in range(3):
         engine.step(sess, scenario, persona, f"第{i}句")
         prompts.append(doctor_prompt(mock))
-    assert ["试探" in p for p in prompts] == [False, True, False]
+    # 陷阱只在第 2 回合抛出一次；代表忽略该合规试探后，医生转为追问（不再抛新陷阱）
+    assert [t.meta.get("intent") for t in sess.turns if t.speaker == "doctor"][1:] == [
+        "soft_refuse", "bait_off_label", "press_again"]
     assert [t.meta.get("bait") for t in sess.turns if t.speaker == "doctor"][1:] == [None, "off_label_bait", None]
 
 
@@ -147,3 +149,51 @@ def test_too_long_reply_regenerates():
     mock.set("doctor_reply", [D("嗯" * 80), D("行，你说吧。")])
     res = engine.step(sess, scenario, persona, "你好")
     assert res.doctor_reply == "行，你说吧。"
+
+
+def test_ignored_flag_dropped_when_doctor_made_a_statement():
+    engine, _, persona, scenario, sess = setup(judge=J("ignored_doctor_question"))
+    engine.step(sess, scenario, persona, "主任您好，想先了解一下您门诊的情况。")
+    assert sess.turns[1].signals == []                       # 开场白“我只有几分钟，你说吧。”不是提问
+
+
+def test_skeleton_scenario_never_uses_persona_traps():
+    engine, _, persona, scenario, sess = setup(base=6, scenario_kw={"skeleton_id": "S04", "baits": []})
+    for i in range(4):
+        engine.step(sess, scenario, persona, f"第{i}句")
+    assert all(t.meta.get("bait") is None for t in sess.turns if t.speaker == "doctor")
+
+
+def test_next_step_proposal_suppresses_bait():
+    engine, _, persona, scenario, sess = setup(judge=J("proposed_next_step"), scenario_kw={
+        "skeleton_id": "S12", "baits": ["benefit_bait"]})
+    for i in range(3):
+        engine.step(sess, scenario, persona, f"下周约您聊聊，第{i}次")
+    assert all(t.meta.get("bait") is None for t in sess.turns if t.speaker == "doctor")
+    assert sess.turns[-1].meta["intent"] in ("hedge_next", "close_followup", "close_materials", "close_soft")
+
+
+def test_evading_a_compliance_probe_is_flagged_and_pressed():
+    engine, mock, persona, scenario, sess = setup(base=0, scenario_kw={"skeleton_id": "S12", "baits": ["benefit_bait"]})  # noqa: RUF059
+    engine.step(sess, scenario, persona, "您好")                       # 第 1 回合
+    engine.step(sess, scenario, persona, "我先给您介绍下资料")           # 第 2 回合：医生抛出饭局试探
+    assert sess.turns[-1].meta["bait"] == "benefit_bait"
+    res = engine.step(sess, scenario, persona, "资料第三页是研究摘要")    # 没回应试探
+    assert "evaded_boundary" in res.signals and sess.turns[-1].meta["intent"] == "press_again"
+
+
+def test_declining_a_compliance_probe_is_accepted():
+    engine, mock, persona, scenario, sess = setup(base=0, scenario_kw={"skeleton_id": "S12", "baits": ["benefit_bait"]})
+    engine.step(sess, scenario, persona, "您好")
+    engine.step(sess, scenario, persona, "我先给您介绍下资料")
+    mock.set("signal_judge", J("declined_boundary"))
+    res = engine.step(sess, scenario, persona, "吃饭这个我得婉拒，公司有规定，学术问题随时聊。")
+    assert "declined_boundary" in res.signals and sess.turns[-1].meta["intent"] == "accept_boundary"
+
+
+def test_doctor_never_repeats_a_line_even_if_model_does():
+    engine, mock, persona, scenario, sess = setup(reply=D("嗯，你接着说。"))  # noqa: RUF059
+    for i in range(4):
+        engine.step(sess, scenario, persona, f"第{i}句话")
+    lines = [t.text for t in sess.turns if t.speaker == "doctor"]
+    assert len(set(lines)) == len(lines)

@@ -15,6 +15,7 @@ from ..models.constants import SIGNALS
 from ..personas.generate import DEPT_CN
 from ..personas.validate import CONCERN_KEYWORDS
 from ..scenarios.generate import leaks_hidden
+from .guards import norm_line, sanitize_signals, strip_event
 from .intent import INTENTS, choose_intent, fallback_line, pick_examples, resolve_end
 from .rules import StateRules, load_rules
 from .state import apply_signals, decide_end, initial_state, natural_decay, next_bait, should_reveal
@@ -120,23 +121,29 @@ class SessionEngine:
         prev_state = next((t.state_after for t in reversed(session.turns) if t.state_after), initial_state(persona))
         history = format_history(session.turns)
         facts = self._retrieve(rep_text, persona)
+        metas = [t.meta for t in session.turns if t.speaker == "doctor"]
+        last_doc_text = next((t.text for t in reversed(session.turns) if t.speaker == "doctor"), "")
+        last_bait = metas[-1].get("bait") if metas else None
+        recent = [strip_event(t.text) for t in session.turns if t.speaker == "doctor"][-3:]
 
         signals, j_deg = self._judge(scenario, persona, history, rep_text, facts + self._indication_facts())
+        signals = sanitize_signals(signals, last_doc_text, last_bait)
         state = apply_signals(prev_state, signals, self.rules, natural_decay(persona))
         end = resolve_end(decide_end(state, signals, rep_turn_no, persona.time_budget_turns, self.rules),
                           state, scenario.skeleton_id)
         reveal = end is None and should_reveal(state, signals, self.rules)
         if reveal:
             state.revealed_hidden_objection = True
-        metas = [t.meta for t in session.turns if t.speaker == "doctor"]
-        baits = scenario.baits or [t for t in persona.traps if t != "none"]
-        bait = None if (reveal or end) else next_bait(baits, metas, rep_turn_no, self.rules)
+        # 骨架场景的陷阱只由场景决定；旧场景（无 skeleton_id）仍允许 scenario.baits 覆盖画像陷阱
+        baits = scenario.baits if scenario.skeleton_id else (scenario.baits or [t for t in persona.traps if t != "none"])
+        calm = {"proposed_next_step", "declined_boundary", "evaded_boundary"} & set(signals)
+        bait = None if (reveal or end or calm) else next_bait(baits, metas, rep_turn_no, self.rules)
         last_intent = metas[-1].get("intent") if metas else None
         intent = choose_intent(end=end, bait=bait, reveal=reveal, signals=signals, state=state,
                                rep_turn_no=rep_turn_no, style=persona.style, last_intent=last_intent)
         event = self._event(scenario, rep_turn_no, end)
         reply, r_deg = self._reply(scenario, persona, state, history, rep_text, facts, intent,
-                                   f"{session.id}:{rep_turn_no}")
+                                   f"{session.id}:{rep_turn_no}", recent)
         text = f"（{event}）{reply}" if event else reply
 
         session.turns.append(Turn(idx=len(session.turns), speaker="rep", text=rep_text, signals=signals,
@@ -192,21 +199,23 @@ class SessionEngine:
             max_retries=1, temperature=0.2)
         return [s for s in dict.fromkeys(out.signals) if s in SIGNALS][:6], degraded
 
-    def _check_reply(self, persona, reply, intent, corpus) -> str | None:
+    def _check_reply(self, persona, reply, intent, corpus, avoid) -> str | None:
         if len(reply.strip()) > 60:
             return "太长，医生一般只说一两句短话"
         if any(w in reply for w in BAD_WORDS):
             return "出现了不该出现的字眼"
+        if norm_line(reply) in {norm_line(a) for a in avoid}:
+            return "和刚说过的话重复了，换一种说法"
         if intent != "reveal_case" and leaks_hidden(persona.hidden_objection, reply):
             return "直接说出了隐藏的顾虑"
         if unsupported_numbers(reply, corpus):
             return "出现了资料和对话中不存在的数字"
         return None
 
-    def _reply(self, scenario, persona, state, history, rep_text, facts, intent, seed) -> tuple[str, bool]:
+    def _reply(self, scenario, persona, state, history, rep_text, facts, intent, seed, avoid=()) -> tuple[str, bool]:
         prompt = load_prompt("doctor_reply")
         cn, directive, _, _ = INTENTS[intent]
-        examples = "\n".join("- " + e for e in pick_examples(self.bank, intent, 3, seed))
+        examples = "\n".join("- " + e for e in pick_examples(self.bank, intent, 3, seed, avoid))
         corpus = rep_text + format_facts(facts) + history
         note = ""
         for _ in range(2):
@@ -220,11 +229,12 @@ class SessionEngine:
             out, degraded = structured_call(
                 self.provider, prompt_name="doctor_reply", system="你是严格输出 JSON 的角色扮演助手。",
                 messages=[{"role": "user", "content": user}], model_cls=DoctorReply,
-                fallback=DoctorReply(reply=fallback_line(self.bank, intent, seed)), max_retries=1, temperature=0.8)
+                fallback=DoctorReply(reply=fallback_line(self.bank, intent, seed, avoid)),
+                max_retries=1, temperature=0.8)
             if degraded:
                 return out.reply, True
-            reason = self._check_reply(persona, out.reply, intent, corpus)
+            reason = self._check_reply(persona, out.reply, intent, corpus, avoid)
             if reason is None:
                 return out.reply.strip(), False
             note = f"【上一次不合格：{reason}。请重写并避免该问题。】"
-        return fallback_line(self.bank, intent, seed), True
+        return fallback_line(self.bank, intent, seed, avoid), True
