@@ -25,6 +25,7 @@ Signal = Literal[
     "addressed_objection", "vague_or_generic", "pushy", "exaggeration",
     "off_label_claim", "competitor_bashing", "ignored_doctor_question", "proposed_next_step",
     "accepted_benefit", "disclosed_stat", "promised_outcome",
+    "declined_boundary", "evaded_boundary",
 ]
 EndReason = Literal["agreed_next_step", "doctor_left", "time_up", "rep_ended",
                    "materials_left", "referred", "soft_decline"]

@@ -5,3 +5,4 @@
 - 2026-10-28 | scenario_fill.md | 0.1.0 | 新增：骨架场景的背景补全
 - 2026-10-28 | doctor_reply.md | 0.2.0 | 改版：意图驱动、短句口语、带口吻示例（T10/§4.6 重写）
 - 2026-10-28 | signal_judge.md | 0.2.0 | 改版：补充 3 个合规信号（accepted_benefit/disclosed_stat/promised_outcome）（§4.5）
+- 2026-10-29 | signal_judge.md | 0.3.0 | 新增 declined_boundary 信号；明确 evaded_boundary 由程序判定，模型不得输出（C4）

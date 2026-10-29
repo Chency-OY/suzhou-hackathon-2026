@@ -24,5 +24,5 @@ def test_scenario_fill_variables():
 
 def test_judge_has_compliance_signals():
     body = load_prompt("signal_judge").body
-    for s in ("accepted_benefit", "disclosed_stat", "promised_outcome"):
+    for s in ("accepted_benefit", "disclosed_stat", "promised_outcome", "declined_boundary"):
         assert s in body

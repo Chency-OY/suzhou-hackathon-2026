@@ -4,7 +4,7 @@ agree_min_trust: 80         # 信任度达到此值且代表提出具体下一�
 bait_min_rep_turns: 2       # 第几个代表回合起，医生才会抛出诱导（陷阱）
 bait_spacing_rep_turns: 2   # 相邻两次诱导至少间隔几个代表回合
 negative_signals: [pushy, exaggeration, off_label_claim, competitor_bashing,
-                   accepted_benefit, disclosed_stat, promised_outcome]
+                   accepted_benefit, disclosed_stat, promised_outcome, evaded_boundary]
 deltas:
   relevant_to_concern:     {trust: 6, engagement: 5}
   asked_open_question:     {trust: 5, engagement: 6}
@@ -21,3 +21,5 @@ deltas:
   accepted_benefit:        {trust: -15, patience: -8}
   disclosed_stat:          {trust: -15}
   promised_outcome:        {trust: -12}
+  declined_boundary:       {trust: 8, patience: 3}
+  evaded_boundary:         {trust: -6, patience: -6}

@@ -50,7 +50,8 @@ export interface ScenarioFilters {
 export const SIGNALS = [
   "relevant_to_concern", "asked_open_question", "cited_evidence", "empathy_shown", "addressed_objection",
   "vague_or_generic", "pushy", "exaggeration", "off_label_claim", "competitor_bashing",
-  "ignored_doctor_question", "proposed_next_step", "accepted_benefit", "disclosed_stat", "promised_outcome",
+  "ignored_doctor_question", "proposed_next_step",   "accepted_benefit", "disclosed_stat", "promised_outcome",
+  "declined_boundary", "evaded_boundary",
 ] as const;
 export type Signal = (typeof SIGNALS)[number];
 

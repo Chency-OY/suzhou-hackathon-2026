@@ -67,3 +67,8 @@ def test_next_bait_timing_and_spacing():
 
 def test_initial_state_by_difficulty():
     assert initial_state(DEMO[0]).engagement == 60 and initial_state(DEMO[2]).engagement == 40
+
+
+def test_boundary_signal_rules():
+    assert R.deltas["declined_boundary"]["trust"] > 0 and R.deltas["evaded_boundary"]["trust"] < 0
+    assert "evaded_boundary" in R.negative_signals

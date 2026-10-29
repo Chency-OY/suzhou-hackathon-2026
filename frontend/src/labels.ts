@@ -52,6 +52,8 @@ export const SIGNAL_LABEL: Record<Signal, string> = {
   accepted_benefit: "接了利益试探",
   disclosed_stat: "涉及处方量",
   promised_outcome: "承诺销售结果",
+  declined_boundary: "明确守住边界",
+  evaded_boundary: "回避了边界问题",
 };
 
 export const SIGNAL_POLARITY: Record<Signal, "good" | "bad"> = {
@@ -60,6 +62,7 @@ export const SIGNAL_POLARITY: Record<Signal, "good" | "bad"> = {
   vague_or_generic: "bad", pushy: "bad", exaggeration: "bad", off_label_claim: "bad",
   competitor_bashing: "bad", ignored_doctor_question: "bad",
   accepted_benefit: "bad", disclosed_stat: "bad", promised_outcome: "bad",
+  declined_boundary: "good", evaded_boundary: "bad",
 };
 
 export const END_REASON_LABEL: Record<EndReason, string> = {
