@@ -23,6 +23,28 @@ def test_resolve_end():
     assert resolve_end(None, hi, None) is None
 
 
+def test_boundary_intents():
+    assert ci(signals=["declined_boundary"]) == "accept_boundary"
+    assert ci(signals=["evaded_boundary"]) == "press_again"
+    assert ci(signals=["declined_boundary", "proposed_next_step"]) == "accept_boundary"
+    assert ci(signals=["accepted_benefit", "declined_boundary"]) == "pull_back"
+    assert ci(bait="stat_bait", signals=["evaded_boundary"]) == "bait_stat"
+
+
+def test_avoid_recent_lines_and_variety():
+    for intent in ("close_hard", "close_soft", "close_followup", "close_materials"):
+        assert len(pick_examples(BANK, intent, 99, "s")) >= 3
+    full = pick_examples(BANK, "close_hard", 99, "s")
+    got = fallback_line(BANK, "close_hard", "s", avoid=[full[0], full[1]])
+    assert got not in full[:2]
+    assert fallback_line(BANK, "close_hard", "s", avoid=full) in full            # 全避开时退回完整池，不崩
+
+
+def test_repeat_question_examples_name_the_question():
+    for e in pick_examples(BANK, "repeat_question", 99, "s"):
+        assert "这个" not in e and "那个" not in e
+
+
 def test_closing_intents():
     assert ci(end="doctor_left") == "close_hard" and ci(end="agreed_next_step") == "close_followup"
     assert ci(end="materials_left") == "close_materials" and ci(end="referred") == "close_refer"
@@ -45,6 +67,8 @@ def test_priority_order():
 
 def test_normal_flow():
     assert ci(style="busy_efficient", signals=["asked_open_question"]) == "time_pressure"
+    assert ci(style="busy_efficient", signals=["proposed_next_step"]) == "hedge_next"     # 先回应对方提出的下一步
+    assert ci(state=DoctorState(trust=50, patience=10), signals=["proposed_next_step"]) == "hedge_next"
     assert ci(style="busy_efficient", signals=["asked_open_question"], last_intent="time_pressure") == "open_up"
     assert ci(signals=[], rep_turn_no=1, state=DoctorState(trust=20, patience=60)) == "hard_refuse"
     assert ci(signals=[], rep_turn_no=1) == "soft_refuse"
@@ -68,4 +92,6 @@ def test_every_intent_has_examples_and_short_lines(intent):
 def test_examples_are_deterministic_and_use_bank():
     assert pick_examples(BANK, "soft_refuse", 3, "a") == pick_examples(BANK, "soft_refuse", 3, "a")
     assert all(x in BANK.lines("soft_refusal") for x in pick_examples(BANK, "soft_refuse", 3, "a"))
-    assert fallback_line(BANK, "close_followup", "z") in BANK.closing("followup_set")
+    pool = pick_examples(BANK, "close_followup", 99, "z")
+    assert fallback_line(BANK, "close_followup", "z") in pool
+    assert BANK.closing("followup_set")[0] in pool                      # 台词库里的句子仍在池中

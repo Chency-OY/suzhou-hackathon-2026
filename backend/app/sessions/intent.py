@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+import re
 
 from ..corpus.loader import SceneBank
 from ..corpus.maps import BAIT_INTENT, SKELETON_END
@@ -16,11 +17,13 @@ CLOSING_INTENT = {
     "soft_decline": "close_soft",
     "time_up": "close_soft",
 }
-POSITIVE = {"relevant_to_concern", "asked_open_question", "empathy_shown", "addressed_objection", "cited_evidence"}
+POSITIVE = {"relevant_to_concern", "asked_open_question", "empathy_shown", "addressed_objection", "cited_evidence",
+            "declined_boundary"}
 NEGATIVE_ORDER = [
     ("off_label_claim", "push_back_label"), ("exaggeration", "push_back_evidence"),
     ("competitor_bashing", "push_back_tone"), ("accepted_benefit", "pull_back"),
-    ("disclosed_stat", "pull_back"), ("promised_outcome", "pull_back"), ("pushy", "cool_down"),
+    ("disclosed_stat", "pull_back"), ("promised_outcome", "pull_back"), ("evaded_boundary", "press_again"),
+    ("pushy", "cool_down"),
     ("ignored_doctor_question", "repeat_question"), ("vague_or_generic", "ask_specific"),
 ]
 
@@ -36,8 +39,12 @@ INTENTS: dict[str, tuple[str, str, str | None, list[str]]] = {
                    ["下周看吧，我这周排满了。", "可以，你先把资料发我看看。", "行，到时候再约。"]),
     "ask_specific": ("要求说具体", "嫌对方说得空，要求说具体、说重点，一句话", None,
                      ["具体说，对我这类患者有什么用？", "别说虚的，一句话说清楚。", "你直接说重点。"]),
-    "repeat_question": ("重复自己的问题", "指出对方没回答，把自己刚才的问题再问一遍", None,
-                        ["我刚才问的是这个，你先回答。", "你没回答我的问题。", "绕开了吧？我问的不是这个。"]),
+    "repeat_question": ("重复自己的问题", "把你刚才的问题用一句话重新问一遍，要说出问题的具体内容，不要用“这个”“那个”指代", None,
+                        ["我问的是数据出处，你还没答。", "刚才问的是副作用，你先答这一点。", "你没答我的问题，我问的是适用人群。"]),
+    "accept_boundary": ("认可对方守规矩", "对方明确拒绝了不合规的试探，你表示理解并回到正题，语气缓和", None,
+                        ["行，那就按规矩来。", "也对，我就随口一说。", "好，那聊正事吧。"]),
+    "press_again": ("追问没回答的试探", "对方没有正面回答你刚才的试探，换个说法再问一次，语气稍重", None,
+                    ["你别岔开，直接说行不行？", "我问的你还没答，给个准话。", "这事你能不能办？"]),
     "cool_down": ("不舒服，收紧话题", "表示被催促不舒服，语气收紧", None,
                   ["你别催我，我还没想好。", "这事不是今天能定的。", "你先别急。"]),
     "push_back_label": ("质疑是否超说明书", "质疑这个说法是否在说明书适应症内，追问依据", None,
@@ -68,15 +75,15 @@ INTENTS: dict[str, tuple[str, str, str | None, list[str]]] = {
     "bait_promise": ("试探承诺", "试探代表会不会承诺销售结果或额外支持", None,
                      ["我用了，你们能保证什么？", "别光说学术，实在点。"]),
     "close_followup": ("同意下一步并收尾", "认可对方提出的下一步，简短确认时间", "closing:followup_set",
-                       ["行，下周二门诊结束后你来一趟。"]),
+                       ["行，下周二门诊结束后你来一趟。", "可以，你周四下午来，我在科里。", "那就约下周，我让护士给你留个时间。"]),
     "close_materials": ("留下资料收尾", "简短收尾，让对方把资料留下", "closing:materials_left",
-                        ["资料先放这儿吧。"]),
+                        ["资料先放这儿吧。", "放这儿，我有空翻翻。", "留下吧，回头我看看。"]),
     "close_refer": ("转介收尾", "把对方转给科室里管这块的人", "closing:referred",
-                    ["你先跟我们科管这块的大夫对接一下。"]),
+                    ["你先跟我们科管这块的大夫对接一下。", "这块是我们科另一位大夫在管，你找他聊。"]),
     "close_soft": ("客气地结束", "客气地结束，不做任何承诺", "closing:soft_decline",
-                   ["好的，我知道了，有需要再联系你。"]),
+                   ["好的，我知道了，有需要再联系你。", "行，今天就这样吧，谢谢你来。", "嗯，我了解了，你先忙。"]),
     "close_hard": ("明确结束", "表示还有病人，明确结束这次谈话", "closing:hard_decline",
-                   ["今天先到这儿吧，我还有病人。"]),
+                   ["今天先到这儿吧，我还有病人。", "不好意思，下一位病人在等了。", "就到这儿吧，我得去查房了。"]),
 }
 
 
@@ -101,6 +108,10 @@ def choose_intent(*, end: str | None, bait: str | None, reveal: bool, signals: l
     for s, intent in NEGATIVE_ORDER:
         if s in sig:
             return intent
+    if "declined_boundary" in sig:
+        return "accept_boundary"
+    if "proposed_next_step" in sig:
+        return "hedge_next"
     if (state.patience < 30 or style == "busy_efficient") and last_intent != "time_pressure":
         return "time_pressure"
     if not (sig & POSITIVE):
@@ -109,8 +120,6 @@ def choose_intent(*, end: str | None, bait: str | None, reveal: bool, signals: l
         return "ask_specific"
     if "cited_evidence" in sig:
         return "probe_evidence"
-    if "proposed_next_step" in sig:
-        return "hedge_next"
     return "open_up"
 
 
@@ -122,13 +131,23 @@ def _bank_lines(bank: SceneBank, category: str | None) -> list[str]:
     return bank.lines(category)
 
 
-def pick_examples(bank: SceneBank, intent: str, k: int = 3, seed: str = "") -> list[str]:
+def _key(text: str) -> str:
+    return re.sub(r"[\s，。,.、；;：:！!？?（）()“”\"'‘’\-—]+", "", text)
+
+
+def pick_examples(bank: SceneBank, intent: str, k: int = 3, seed: str = "",
+                  avoid: tuple[str, ...] | list[str] = ()) -> list[str]:
+    """取口吻示例。avoid 是最近说过的医生台词：优先避开它们；全被避开时才退回完整池。"""
     _, _, category, builtin = INTENTS[intent]
     pool = list(dict.fromkeys(_bank_lines(bank, category) + builtin))
+    skip = {_key(a) for a in avoid}
+    fresh = [x for x in pool if _key(x) not in skip]
+    pool = fresh or pool
     random.Random(f"{seed}:{intent}").shuffle(pool)
     return pool[:k]
 
 
-def fallback_line(bank: SceneBank, intent: str, seed: str = "") -> str:
-    """模型输出不合格时的兜底：直接取台词库里的一句（确定性、一定自然）。"""
-    return pick_examples(bank, intent, 1, seed)[0]
+def fallback_line(bank: SceneBank, intent: str, seed: str = "",
+                  avoid: tuple[str, ...] | list[str] = ()) -> str:
+    """模型输出不合格时的兜底：直接取台词库里的一句（确定性、一定自然，且尽量不重复刚说过的话）。"""
+    return pick_examples(bank, intent, 1, seed, avoid)[0]
