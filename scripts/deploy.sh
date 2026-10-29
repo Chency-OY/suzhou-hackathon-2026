@@ -6,7 +6,14 @@ if [ ! -d .venv ]; then
   python3 -m venv .venv 2>/dev/null || python3 -m virtualenv .venv
 fi
 . .venv/bin/activate
-pip install -q -U pip && pip install -q -e ".[dev,rag]"
+# 依赖安装：优先离线 wheelhouse（服务器无外网），其次在线；都失败则沿用现有环境并明确告警
+if ls wheelhouse/*.whl >/dev/null 2>&1; then
+  python scripts/extract_requirements.py --extras rag > /tmp/rep_trainer_req.txt
+  pip install --no-index --find-links wheelhouse -r /tmp/rep_trainer_req.txt \
+    || echo "警告：离线安装失败，沿用现有依赖"
+elif ! pip install -q -e ".[dev,rag]"; then
+  echo "警告：没有 wheelhouse 且在线安装失败，沿用现有依赖（如新增了依赖，服务可能起不来）"
+fi
 if [ -f frontend/package.json ] && command -v pnpm >/dev/null && [ ! -f frontend/dist/index.html -o "${REBUILD_WEB:-1}" = "1" ]; then
   (cd frontend && pnpm install --frozen-lockfile && pnpm build)
 fi

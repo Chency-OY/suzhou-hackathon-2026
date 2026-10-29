@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios gen-scenarios-v2 review web-build deploy healthcheck apply-review sim
+.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios gen-scenarios-v2 review web-build deploy healthcheck apply-review sim wheelhouse
 PY ?= python3
 VENV = . .venv/bin/activate
 
@@ -49,3 +49,6 @@ apply-review:
 
 sim:
 	$(VENV) && python scripts/sim_session.py
+
+wheelhouse:
+	bash scripts/build_wheelhouse.sh

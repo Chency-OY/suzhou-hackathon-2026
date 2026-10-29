@@ -50,3 +50,13 @@ deploy.sh：重建 venv（无 python3-venv 包时自动回退 virtualenv）→ �
 1. `apt install python3.12-venv`（消除 virtualenv 回退）
 2. 可选：安装 `deploy/rep-trainer.service` 为 systemd 服务（替代 run_prod+cron，装后须删除 crontab 中两条 `# rep-trainer` 条目避免双进程抢端口）
 3. 可选：nginx 反代 + `/etc/nginx/.htpasswd_rep`（公网暴露时必须）
+
+## 离线依赖（服务器无外网）
+服务器无法访问 pypi，`make deploy` 在 pip 阶段会失败。机制：在有网的开发机预先下载依赖包到 `wheelhouse/`，服务器离线安装。
+
+- 开发机（有外网）：`make wheelhouse`（即 `bash scripts/build_wheelhouse.sh`，默认目标 Python 3.12 + x86_64 Linux；不同平台用 `SERVER_PY=3.11` 等环境变量覆盖）。
+- `scripts/extract_requirements.py` 从 `pyproject.toml` 提取第三方依赖（含 `rag` 可选组），供 `pip download` 与服务器 `pip install --no-index` 使用。
+- `scripts/push_to_server.sh` 的 rsync 不排除 `wheelhouse/`（它被 `.gitignore` 忽略，但需随仓库树传到服务器）。
+- 服务器 `deploy.sh` 优先 `pip install --no-index --find-links wheelhouse`；无 `wheelhouse/` 时回退在线安装；都失败则沿用现有依赖并告警。
+
+**只在新增或升级依赖时**需要重跑 `make wheelhouse` 再 `make deploy`；当前没有新增依赖，所以暂时不需要。
