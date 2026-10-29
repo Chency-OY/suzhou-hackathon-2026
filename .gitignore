@@ -13,3 +13,9 @@ frontend/dist/
 run/
 logs/
 .env.server
+
+# 仓库清洁守卫（C1）
+_tmp_*
+Makefile??????
+data/usage/
+wheelhouse/

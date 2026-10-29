@@ -20,7 +20,6 @@
 | 2026-10-25 | T9 | 参考实现把 mount_frontend 加在 health 路由注册前，SPA 兜底路由吞掉 /api/health（404） | 调整 main.py：health 路由先注册、mount_frontend 最后调用（与任务书 4.3/4.4 注释要求一致） |
 | 2026-10-28 | A3 | 任务卡 skeleton_gen.py 的 sorted(...)[0] 取最优画像写法触发 ruff FURB192（建议改 min） | 保持卡内代码原样，加最小 `# noqa: FURB192`（sorted 稳定排序与 min 等价，不改行为）；顺带移除卡内未使用的 import json、修正测试文件 import 排序（I001 自动修复） |
 | 2026-10-28 | B3 | test_intent.py 的 ci() 用 dict() 触发 ruff C408（建议改写字面量） | 按规则 3 在 dict( 起始行加最小 `# noqa: C408` 保留卡内代码原样语义（C408 为 unsafe fix，改写会改变卡内代码文本）；ruff 通过、31 tests passed |
-| 2026-10-28 | B3 | test_intent.py 的 ci() 用 dict() 触发 ruff C408（建议改写字面量） | 按规则 3 在 dict( 起始行加最小 `# noqa: C408` 保留卡内代码原样语义（C408 为 unsafe fix，改写会改变卡内代码文本）；ruff 通过、31 tests passed |
 | 2026-10-29 | B5 | engine.py 用卡规则 3 要求的 `datetime.now(timezone.utc)` 触发 ruff UP017（建议改 `datetime.UTC` 别名） | 保持卡内写法（sqlmodel 要求带时区），2 处加最小 `# noqa: UP017`；未改行为 |
 | 2026-10-29 | B5 | test_engine.py 的 test_intent_and_event_recorded 解包了未使用的 `mock`，触发 RUF059（其修复被标 unsafe） | 加最小 `# noqa: RUF059` 保留卡内测试代码原样；其余安全项（I001/RUF022 __all__ 排序/RUF100 冗余 noqa）由 ruff --fix 自动处理 |
 | 2026-10-29 | B6 | 参考 §5.2 直接返回 `DoctorState` 会让响应里出现 `revealed_hidden_objection`，其名字含 `hidden_objection`，违反偏离 6（所有响应不得含该字串），§5.4 的 test_no_secrets_in_any_response 失败 | 按 A2 既有 `PersonaPublic` 模式新增 `StatePublic`（只含 trust/patience/engagement）与 `_state()`，三处返回（`CreateSessionOut`/`TurnOut`/`TurnView.state_after`）统一过滤；未改 DoctorState 模型本身 |
