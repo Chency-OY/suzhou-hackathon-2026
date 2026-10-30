@@ -1,5 +1,5 @@
 import type {
-  CreateSessionOut, FieldDiary, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
+  AcademicRadar, CreateSessionOut, FieldDiary, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -51,4 +51,7 @@ export const api = {
   deleteDiary: (id: string) => fetch(apiUrl(`/diary/${encodeURIComponent(id)}`), {
     method: "DELETE", credentials: "same-origin",
   }).then((response) => parse<{ ok: boolean }>(response)),
+  listRadar: () => get<AcademicRadar[]>("/radar"),
+  searchRadar: (doctorName: string, hospital: string, refresh = false) =>
+    post<AcademicRadar>("/radar/search", { doctor_name: doctorName, hospital, refresh }),
 };

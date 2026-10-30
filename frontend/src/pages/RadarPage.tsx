@@ -1,0 +1,58 @@
+import { useEffect, useState } from "react";
+import { api } from "../api";
+import type { AcademicRadar } from "../types";
+
+const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
+
+function RadarCard({ result }: { result: AcademicRadar }) {
+  return <article className="game-panel p-5 sm:p-6">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div><p className="game-kicker">PUBLIC RESEARCH / 公开学术资料</p>
+        <h2 className="mt-2 text-base font-bold">{result.doctor_name} · {result.hospital}</h2>
+        <p className="game-muted mt-1 text-xs">检索姓名：{result.search_name} · {new Date(result.searched_at).toLocaleString("zh-CN")}</p></div>
+      <span className="rounded-full border border-[#b9d5e3] px-3 py-1 text-xs text-[#176b91]">{result.works.length} 条候选论文</span>
+    </div>
+    {result.institution_name && <p className="game-muted mt-4 text-xs">索引中的医院：<a className="game-link" href={result.institution_url} target="_blank" rel="noreferrer">{result.institution_name} ↗</a></p>}
+    <p className="game-alert mt-4" role="status">{result.note}</p>
+    {result.works.length > 0 && <ol className="mt-4 space-y-3">{result.works.map((work) =>
+      <li key={work.id} className="rounded-lg border border-[#d5e4ed] bg-[#f7fafc] p-4">
+        <a className="game-link text-sm font-bold leading-6" href={work.url} target="_blank" rel="noreferrer">{work.title} ↗</a>
+        <p className="game-muted mt-2 text-xs leading-5">{work.publication_date || "日期未列"} · {work.journal || "期刊未列"} · {work.author_name} · {work.affiliation}</p>
+        <p className="mt-2 text-[11px] text-[#9b5a29]">同名候选，医生身份待确认</p>
+      </li>)}</ol>}
+  </article>;
+}
+
+export default function RadarPage() {
+  const [doctorName, setDoctorName] = useState("");
+  const [hospital, setHospital] = useState("");
+  const [results, setResults] = useState<AcademicRadar[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { void api.listRadar().then(setResults).catch((cause) => setError(errorText(cause))); }, []);
+
+  async function search() {
+    if (busy || doctorName.trim().length < 2 || hospital.trim().length < 4) return;
+    setBusy(true); setError("");
+    try {
+      const result = await api.searchRadar(doctorName.trim(), hospital.trim());
+      setResults((current) => [result, ...current.filter((item) => item.id !== result.id)]);
+    } catch (cause) { setError(errorText(cause)); }
+    finally { setBusy(false); }
+  }
+
+  return <div className="mx-auto max-w-4xl">
+    <p className="game-kicker">ACADEMIC RADAR / 学术雷达</p>
+    <h1 className="game-title mt-2">输入医院与姓名，查公开论文</h1>
+    <p className="game-muted mt-3 text-sm leading-7">从公开学术索引检索论文题名、日期、期刊和原始链接。中文姓名会自动转成拼音；同名作者可能混淆，请打开原文核对，候选记录不会直接进入医生画像。</p>
+    <section className="game-panel mt-6 p-5 sm:p-7">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-xs font-bold">医生姓名<input className="game-field mt-2" value={doctorName} maxLength={80} onChange={(event) => setDoctorName(event.target.value)} placeholder="例如：张伟" /></label>
+        <label className="text-xs font-bold">医院正式名称<input className="game-field mt-2" value={hospital} maxLength={120} onChange={(event) => setHospital(event.target.value)} placeholder="例如：苏州大学附属第一医院" /></label>
+      </div>
+      <button className="game-btn mt-5" type="button" disabled={busy || doctorName.trim().length < 2 || hospital.trim().length < 4} onClick={() => void search()}>{busy ? "正在检索…" : "查询公开资料 →"}</button>
+      {error && <div className="game-alert mt-4" role="alert">{error}</div>}
+    </section>
+    <div className="mt-8 space-y-4">{results.map((result) => <RadarCard key={result.id} result={result} />)}</div>
+  </div>;
+}

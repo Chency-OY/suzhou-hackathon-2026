@@ -13,6 +13,7 @@ dependencies = [
   "pydantic-settings>=2.2",
   "sqlmodel>=0.0.16",
   "httpx>=0.27",
+  "pypinyin>=0.55",
   "pyyaml>=6.0",
 ]
 

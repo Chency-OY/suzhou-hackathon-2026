@@ -120,3 +120,29 @@ export interface FieldDiary {
   degraded: boolean;
   review_status: string;
 }
+
+export interface AcademicWork {
+  id: string;
+  title: string;
+  publication_date: string;
+  journal: string;
+  author_name: string;
+  affiliation: string;
+  url: string;
+  doi: string;
+  identity_status: "candidate" | "confirmed";
+}
+
+export interface AcademicRadar {
+  id: string;
+  owner_id: string;
+  doctor_name: string;
+  hospital: string;
+  searched_at: string;
+  institution_name: string;
+  institution_url: string;
+  search_name: string;
+  status: "found" | "no_match" | "ambiguous_institution";
+  works: AcademicWork[];
+  note: string;
+}
