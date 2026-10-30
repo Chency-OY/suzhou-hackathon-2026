@@ -123,6 +123,24 @@ export interface FieldDiary {
   review_status: string;
 }
 
+export interface ReviewEvidence { id: string; excerpt: string; source: string; url: string }
+export interface ClaimFinding {
+  claim: string;
+  status: "possible_conflict" | "possible_support" | "insufficient" | "out_of_scope";
+  evidence_id: string;
+  evidence_quote: string;
+  candidates: ReviewEvidence[];
+}
+export interface DiaryReview {
+  id: string;
+  diary_id: string;
+  owner_id: string;
+  reviewed_at: string;
+  findings: ClaimFinding[];
+  academic_candidate_count: number;
+  academic_identity_confirmed: boolean;
+}
+
 export interface AcademicWork {
   id: string;
   title: string;

@@ -240,6 +240,21 @@ class PlaybookCard(BaseModel):
 
 `POST /sessions` 只接受 `scenario_id`，`rep_id` 由登录账号确定；`GET/POST /sessions/{id}` 只能访问同一账号的练习。旧演示会话保留在数据库，但不自动归属新账号，也不跨账号展示。
 
+### 6.2 前线日记的资料对照（公网演示扩展）
+
+日记由登录账号私有保存。资料对照仅处理 AI 整理出的待核医学说法，使用 `verified=true` 且来源于本品公开说明书的整理条目；模型只能返回“可能相符”“可能冲突”“资料不足”“范围外”，不能输出正式医学结论。每条候选资料链接到公开原说明书，用户须人工核对原文。同名论文候选只计数展示，作者身份未确认时不参与裁定。
+
+| 方法 | 路径 | 请求 | 响应 |
+|---|---|---|---|
+| POST | `/diary` | `{raw_text,hospital?,doctor_name?}` | `FieldDiary`，保留原话与整理摘要 |
+| GET | `/diary` | – | 当前账号的日记，最多 100 篇 |
+| GET | `/diary/{id}` | – | 属于当前账号的 `FieldDiary` |
+| POST | `/diary/{id}/review` | 可选 `?refresh=true` | `DiaryReview`，包含各说法的状态、引用摘录与候选来源；默认缓存 24 小时 |
+| GET | `/diary/{id}/review` | – | 已保存的 `DiaryReview` |
+| DELETE | `/diary/{id}` | – | `{ok:true}`，同时删除资料对照结果 |
+
+跨账号访问日记或审阅结果统一返回 404。对照前先排除疑问句和竞品比较；模型引用必须逐字出现在候选整理条目中，否则降级为“资料不足”。
+
 ## 7. 核心逻辑规格
 
 ### 7.1 医生状态机（`sessions/engine.py`）

@@ -54,3 +54,27 @@ def test_diary_preserves_note_when_model_output_is_invalid(clients):
     item = response.json()
     assert item["degraded"] is True
     assert item["digest"]["summary"] == item["raw_text"]
+
+
+def test_review_is_private_cached_and_deleted_with_diary(clients):
+    first, second, mock = clients
+    digest = {"summary": "拜访后回忆", "first_impressions": ["我很紧张"],
+              "doctor_feedback": [], "what_to_improve": [], "next_visit": [],
+              "uncertain_claims": ["信尔美没有副作用"]}
+    mock.set("field_diary", json.dumps(digest, ensure_ascii=False))
+    mock.set("diary_tribunal", "not JSON")
+    item = first.post("/api/diary", json={"raw_text": "今天有人说信尔美没有副作用，我想核对资料。"}).json()
+    path = f"/api/diary/{item['id']}/review"
+    assert second.post(path).status_code == 404
+    response = first.post(path)
+    assert response.status_code == 200
+    review = response.json()
+    assert review["findings"][0]["status"] == "insufficient"
+    assert review["findings"][0]["candidates"]
+    calls = len([call for call in mock.calls if call["prompt_name"] == "diary_tribunal"])
+    assert first.post(path).json()["id"] == review["id"]
+    assert len([call for call in mock.calls if call["prompt_name"] == "diary_tribunal"]) == calls
+    assert second.get(path).status_code == 404
+    assert first.get(path).json()["id"] == review["id"]
+    assert first.delete(f"/api/diary/{item['id']}").status_code == 200
+    assert first.get(path).status_code == 404
