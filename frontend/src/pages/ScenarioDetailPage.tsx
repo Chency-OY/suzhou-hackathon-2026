@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { DifficultyBadge, Tag } from "../components/Badge";
 import { useAsync } from "../hooks";
@@ -10,6 +10,8 @@ const SESSION_ENABLED = import.meta.env.VITE_ENABLE_SESSION === "1";
 export default function ScenarioDetailPage() {
   const { id = "" } = useParams();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const diaryId = searchParams.get("diary");
   const { data, error, loading } = useAsync(() => api.getScenario(id), [id]);
   const [starting, setStarting] = useState(false);
   const [startErr, setStartErr] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export default function ScenarioDetailPage() {
     setStarting(true);
     setStartErr(null);
     try {
-      const out = await api.createSession(data.id);
+      const out = await api.createSession(data.id, diaryId);
       nav(`/session/${out.session_id}`);
     } catch (e) {
       setStartErr(e instanceof Error ? e.message : String(e));
@@ -33,7 +35,8 @@ export default function ScenarioDetailPage() {
 
   return (
     <div>
-      <Link to="/home" className="game-link">← 返回任务大厅</Link>
+      <Link to={`/home${diaryId ? `?diary=${encodeURIComponent(diaryId)}` : ""}`} className="game-link">← 返回任务大厅</Link>
+      {diaryId && <p className="game-alert mt-4">将使用你日记里的沟通感受练习；不会把医学说法当成医生事实。</p>}
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
         <div><p className="game-kicker">MISSION BRIEF / 任务简报</p><h1 className="game-title mt-2 max-w-3xl">{data.rep_goal}</h1></div>
         <DifficultyBadge value={data.difficulty} />

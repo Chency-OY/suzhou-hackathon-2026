@@ -8,8 +8,10 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..db import Repo
 from ..deps import get_engine, get_repo
+from ..diary_rehearsal import rehearsal_note
 from ..models import DoctorPersona, DoctorState, Scenario, Session
 from ..models.auth import Account, SessionSummary
+from ..models.diary import FieldDiary
 from ..sessions import SessionEngine
 from .auth import get_current_account
 
@@ -29,6 +31,7 @@ def _err(status: int, code: str, msg: str) -> HTTPException:
 
 class CreateSessionIn(BaseModel):
     scenario_id: str = Field(min_length=1, max_length=64)
+    diary_id: str | None = Field(default=None, max_length=80)
 
 
 class CreateSessionOut(BaseModel):
@@ -80,7 +83,20 @@ class SessionOut(BaseModel):
     started_at: datetime
     ended_at: datetime | None
     end_reason: str | None
+    diary_id: str | None = None
+    rehearsal_note: str = ""
     turns: list[TurnView]
+
+
+def _own_rehearsal(repo: Repo, diary_id: str | None, account: Account, allow_missing: bool = False) -> str:
+    if not diary_id:
+        return ""
+    diary = repo.get(FieldDiary, diary_id)
+    if not diary or diary.owner_id != account.id:
+        if allow_missing:
+            return ""
+        raise _err(404, "not_found", "日记不存在")
+    return rehearsal_note(diary)
 
 
 def _load(repo: Repo, session_id: str, account: Account) -> tuple[Session, Scenario, DoctorPersona]:
@@ -113,7 +129,9 @@ def create_session(body: CreateSessionIn, repo: Repo = Depends(get_repo),
     p = repo.get(DoctorPersona, sc.persona_id) if sc else None
     if not (sc and p):
         raise _err(404, "not_found", "场景不存在")
-    session = engine.start(sc, p, account.id)
+    if body.diary_id and not _own_rehearsal(repo, body.diary_id, account):
+        raise _err(422, "no_rehearsal_cues", "这篇日记没有可用于沟通练习的观察")
+    session = engine.start(sc, p, account.id, diary_id=body.diary_id)
     repo.save(session)
     return CreateSessionOut(session_id=session.id, opening_line=sc.opening_line,
                             doctor_state=session.turns[0].state_after)
@@ -127,7 +145,8 @@ def post_turn(session_id: str, body: TurnIn, repo: Repo = Depends(get_repo),
         session, sc, p = _load(repo, session_id, account)
         if session.ended_at:
             raise _err(409, "session_ended", "演练已结束")
-        res = engine.step(session, sc, p, body.text)
+        note = _own_rehearsal(repo, session.diary_id, account, allow_missing=True)
+        res = engine.step(session, sc, p, body.text, rehearsal_note=note)
         repo.save(session)
     return TurnOut(doctor_reply=res.doctor_reply, doctor_state=res.state, signals=res.signals, ended=res.ended,
                    end_reason=res.end_reason, degraded=res.degraded)
@@ -149,8 +168,9 @@ def finish_session(session_id: str, repo: Repo = Depends(get_repo),
 def get_session(session_id: str, repo: Repo = Depends(get_repo),
                 account: Account = Depends(get_current_account)):
     s, _, _ = _load(repo, session_id, account)
+    note = _own_rehearsal(repo, s.diary_id, account, allow_missing=True)
     return SessionOut(
         id=s.id, scenario_id=s.scenario_id, rep_id=s.rep_id, started_at=s.started_at, ended_at=s.ended_at,
-        end_reason=s.end_reason,
+        end_reason=s.end_reason, diary_id=s.diary_id, rehearsal_note=note,
         turns=[TurnView(idx=t.idx, speaker=t.speaker, text=t.text, signals=list(t.signals),
                         state_after=t.state_after) for t in s.turns])

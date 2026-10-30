@@ -81,6 +81,8 @@ export interface SessionView {
   started_at: string;
   ended_at: string | null;
   end_reason: EndReason | null;
+  diary_id: string | null;
+  rehearsal_note: string;
   turns: TurnView[];
 }
 

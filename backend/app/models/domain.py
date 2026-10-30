@@ -110,6 +110,7 @@ class Session(BaseModel):
     end_reason: EndReason | None = None
     pre_goal: str | None = None
     visit_note: str | None = None
+    diary_id: str | None = None
     turns: list[Turn] = Field(default_factory=list)
 
 

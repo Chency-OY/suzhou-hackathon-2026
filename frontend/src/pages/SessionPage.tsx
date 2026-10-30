@@ -60,6 +60,7 @@ export default function SessionPage() {
         const s = await api.getSession(id);
         if (off) return;
         setSession(s);
+        setGuided(!s.diary_id);
         const sc = await api.getScenario(s.scenario_id);
         if (!off) {
           setScenario(sc);
@@ -112,7 +113,7 @@ export default function SessionPage() {
 
   async function again() {
     if (!session) return;
-    try { const out = await api.createSession(session.scenario_id); nav(`/session/${out.session_id}`); }
+    try { const out = await api.createSession(session.scenario_id, session.rehearsal_note ? session.diary_id : null); nav(`/session/${out.session_id}`); }
     catch (e) { setError(msg(e)); }
   }
 
@@ -120,6 +121,7 @@ export default function SessionPage() {
   if (!session) return <div className="game-alert">{error}　<Link className="game-link" to="/home">返回任务大厅</Link></div>;
 
   return <div>
+    {session.rehearsal_note && <div className="game-alert mb-4" role="status"><strong>本轮日记线索：</strong>{session.rehearsal_note}<p className="mt-2 text-xs">这是你的主观回忆，只用于虚构演练的沟通风格，不代表医生真实观点。</p></div>}
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="game-kicker">DIALOGUE SIMULATION / 对话关卡</p><h1 className="mt-1.5 text-xl font-bold text-[#f0f8fc]">{scenario?.rep_goal ?? "正在加载任务目标"}</h1></div><span className="game-tag">{ended ? "本次演练已结束" : "对话进行中"}</span></div>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
       <section className={`game-panel game-chat ${guided ? "guided" : ""}`}>

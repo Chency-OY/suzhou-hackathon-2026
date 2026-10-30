@@ -28,6 +28,7 @@ function FilterSelect({ label, value, options, onChange }: {
 export default function ScenarioListPage() {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
+  const diaryId = searchParams.get("diary");
   const [filters, setFilters] = useState<ScenarioFilters>({ program: searchParams.get("program") === "xinermei" ? "xinermei" : "general" });
   const [startingId, setStartingId] = useState<string | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export default function ScenarioListPage() {
     setStartingId(id);
     setStartError(null);
     try {
-      const out = await api.createSession(id);
+      const out = await api.createSession(id, diaryId);
       nav(`/session/${out.session_id}`);
     } catch (e) {
       setStartError(e instanceof Error ? e.message : String(e));
@@ -52,6 +53,7 @@ export default function ScenarioListPage() {
 
   return (
     <div>
+      {diaryId && <div className="game-alert mb-5" role="status">这次会把你日记中的沟通感受作为虚构演练线索。医学说法不会进入角色设定。<Link className="game-link ml-2" to="/diary">返回日记</Link></div>}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
         <section className="game-hero px-6 py-8 sm:px-9 sm:py-10">
           <p className="game-kicker">MISSION CONTROL / 任务大厅</p>
@@ -111,7 +113,7 @@ export default function ScenarioListPage() {
                 <button type="button" className="game-btn" disabled={!SESSION_ENABLED || !!startingId} onClick={() => void start(scenario.id)}>
                   {startingId === scenario.id ? "正在进入…" : "开始任务"}<span aria-hidden="true">→</span>
                 </button>
-                <Link className="game-link" to={`/scenarios/${scenario.id}`}>查看任务简报</Link>
+                <Link className="game-link" to={`/scenarios/${scenario.id}${diaryId ? `?diary=${encodeURIComponent(diaryId)}` : ""}`}>查看任务简报</Link>
               </div>
             </article>
           ))}

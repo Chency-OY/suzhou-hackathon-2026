@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { FieldDiary } from "../types";
 import { startVoiceInput, voiceInputAvailable } from "../voice";
@@ -14,7 +15,7 @@ function DiaryCard({ item, onDelete }: { item: FieldDiary; onDelete: (id: string
   return <article className="game-panel p-5 sm:p-6">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div><p className="game-kicker">FIELD NOTES / 拜访回忆</p><h2 className="mt-2 text-base font-bold">{item.hospital || "未填医院"}{item.doctor_name ? ` · ${item.doctor_name}` : ""}</h2><p className="game-muted mt-1 text-xs">{new Date(item.created_at).toLocaleString("zh-CN")}</p></div>
-      <button className="game-link border-0 bg-transparent" type="button" onClick={() => onDelete(item.id)}>删除这篇</button>
+      <div className="flex flex-wrap items-center gap-4">{!item.degraded && <Link className="game-link" to={`/home?diary=${encodeURIComponent(item.id)}`}>用这篇日记再练一次 →</Link>}<Link className="game-link" to="/radar">查公开论文 ↗</Link><button className="game-link border-0 bg-transparent" type="button" onClick={() => onDelete(item.id)}>删除这篇</button></div>
     </div>
     {item.degraded && <div className="game-alert mt-4">AI 整理暂不可用，已保存原话，可稍后回看。</div>}
     <p className="mt-5 rounded-lg border border-[#d5e4ed] bg-[#f5f9fc] p-4 text-sm leading-7">{item.digest.summary}</p>
