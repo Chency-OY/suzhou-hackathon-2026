@@ -33,7 +33,7 @@ function Bubble({ turn }: { turn: TurnView }) {
         {m && <div className="mb-1 text-xs italic text-slate-400">{m[1]}</div>}
         <div
           className={`whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-            rep ? "bg-slate-900 text-white" : "border border-slate-200 bg-white"
+            rep ? "border border-sky-200 bg-sky-100 text-slate-800" : "border border-slate-200 bg-white"
           }`}
         >
           {body}
@@ -178,7 +178,7 @@ export default function SessionPage() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-      <section className="flex h-[calc(100vh-9rem)] flex-col rounded-xl border border-slate-200 bg-slate-50">
+      <section className="flex h-[calc(100vh-9rem)] flex-col rounded-xl border border-sky-100 bg-sky-50/70">
         {scenario && (
           <details className="border-b border-slate-200 bg-white px-4 py-2 text-sm">
             <summary className="cursor-pointer font-medium">本次拜访目标：{scenario.rep_goal}</summary>

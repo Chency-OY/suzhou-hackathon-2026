@@ -1,12 +1,12 @@
 import { NavLink, Outlet } from "react-router-dom";
 
 const link = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-1.5 text-sm ${isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-200"}`;
+  `rounded-md px-3 py-1.5 text-sm ${isActive ? "bg-sky-100 text-sky-900" : "text-slate-600 hover:bg-sky-50"}`;
 
 export default function Layout() {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-sky-100 bg-white/85 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="text-base font-semibold">医药代表智能演练助手</div>
           <nav className="flex gap-2">
