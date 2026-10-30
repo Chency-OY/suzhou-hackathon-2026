@@ -9,6 +9,8 @@ data/usage/*.jsonl
 data/chroma/
 node_modules/
 frontend/dist/
+android/build/
+deploy/*.apk
 *.egg-info/
 run/
 logs/

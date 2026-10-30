@@ -1,5 +1,5 @@
 import type {
-  CreateSessionOut, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
+  CreateSessionOut, FieldDiary, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -46,4 +46,9 @@ export const api = {
   getSession: (id: string) => get<SessionView>(`/sessions/${encodeURIComponent(id)}`),
   sendTurn: (id: string, text: string) => post<TurnOut>(`/sessions/${encodeURIComponent(id)}/turns`, { text }),
   finishSession: (id: string) => post<FinishOut>(`/sessions/${encodeURIComponent(id)}/finish`),
+  listDiary: () => get<FieldDiary[]>("/diary"),
+  createDiary: (body: { hospital: string; doctor_name: string; raw_text: string }) => post<FieldDiary>("/diary", body),
+  deleteDiary: (id: string) => fetch(apiUrl(`/diary/${encodeURIComponent(id)}`), {
+    method: "DELETE", credentials: "same-origin",
+  }).then((response) => parse<{ ok: boolean }>(response)),
 };

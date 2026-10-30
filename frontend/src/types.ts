@@ -99,3 +99,24 @@ export interface TurnOut {
   end_reason: EndReason | null; degraded: boolean;
 }
 export interface FinishOut { session_id: string; ended: boolean; end_reason: EndReason | null; report_id: string | null }
+
+export interface DiaryDigest {
+  summary: string;
+  first_impressions: string[];
+  doctor_feedback: string[];
+  what_to_improve: string[];
+  next_visit: string[];
+  uncertain_claims: string[];
+}
+
+export interface FieldDiary {
+  id: string;
+  owner_id: string;
+  created_at: string;
+  hospital: string;
+  doctor_name: string;
+  raw_text: string;
+  digest: DiaryDigest;
+  degraded: boolean;
+  review_status: string;
+}

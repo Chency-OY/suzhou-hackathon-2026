@@ -20,3 +20,7 @@
 ## 模型配置
 
 运行服务通过仅服务器本地可读的环境文件设置 `LLM_PROVIDER=openai_compat`、`LLM_BASE_URL=https://api.deepseek.com`、`LLM_MODEL=deepseek-flash`、`LLM_THINKING=disabled` 和 `LLM_API_KEY`。密钥不能写入仓库或前端构建。默认仍为 mock，便于本地测试；公网服务单独覆盖配置。按需设置 `DAILY_TOKEN_CAP` 控制每日调用量。模型不可用或达到上限时，对话使用备用模拟回复并在页面提示。
+
+## 前线日记安卓包
+
+`android/build-apk.sh` 使用 Android SDK、`aapt`、`javac`、`dalvik-exchange`、`zipalign` 和 `apksigner` 构建包装当前 HTTPS 网站的 APK。发布密钥路径与密码由仅服务器本地可读的 `SIGNING_ENV` 文件提供；不要提交密钥。构建后将签名 APK 放在 `deploy/rep-trainer.apk`，由 Nginx 的精确路径 `/rep-trainer/rep-trainer.apk` 提供下载，并设置 `application/vnd.android.package-archive`。每次发布先运行 `apksigner verify`，再测试下载状态和文件哈希。网页内容更新无需重打 APK；原生包装代码改变时需要提高 `versionCode` 并重新签名。

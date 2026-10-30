@@ -5,6 +5,7 @@ import { guidedStep, QUALITY_LABEL } from "../guided";
 import { END_REASON_LABEL, SIGNAL_LABEL, SIGNAL_POLARITY } from "../labels";
 import { readHints, writeHints } from "../lib/rep";
 import type { ScenarioDetail, SessionView, TurnView } from "../types";
+import { startVoiceInput, voiceInputAvailable } from "../voice";
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -31,7 +32,26 @@ export default function SessionPage() {
   const [guided, setGuided] = useState(true);
   const [showFeedback, setShowFeedback] = useState(false);
   const [hints, setHints] = useState(readHints());
+  const [voiceListening, setVoiceListening] = useState(false);
+  const voiceStopRef = useRef<(() => void) | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => () => voiceStopRef.current?.(), []);
+
+  function toggleVoice() {
+    if (voiceListening) {
+      voiceStopRef.current?.();
+      setVoiceListening(false);
+      return;
+    }
+    setError(null);
+    voiceStopRef.current?.();
+    voiceStopRef.current = startVoiceInput(
+      (text) => setInput((current) => current ? `${current}，${text}` : text),
+      setError,
+      setVoiceListening,
+    );
+  }
 
   useEffect(() => {
     let off = false;
@@ -114,7 +134,7 @@ export default function SessionPage() {
           </> : <p className="text-xs text-[#bdd2dc]">正在加载题目…</p>}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#2b4d61] pt-3"><button className="game-link border-0 bg-transparent p-0" type="button" onClick={() => { setGuided(false); setShowFeedback(false); }}>切换到自由练习</button><button className="border-0 bg-transparent text-xs text-[#a6c2d0] hover:text-white" type="button" onClick={() => void finish()}>提前结束演练</button></div>
           <p className="mt-2 text-[10px] leading-5 text-[#88a7b8]">选项与反馈仅用于模拟教学，医学及合规内容请以正式资料和带教审核为准。</p>
-        </div> : <div className="border-t border-[#2b4d61] bg-[#102638] p-3 sm:p-4"><div className="mb-3 flex justify-between gap-3"><strong className="text-xs text-[#d5eaf2]">自由练习</strong><button className="game-link border-0 bg-transparent p-0" type="button" onClick={() => setGuided(true)}>返回引导教学</button></div><label className="sr-only" htmlFor="rep-message">输入你的回应</label><textarea id="rep-message" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }} rows={3} maxLength={2000} disabled={sending} placeholder="输入你想对医生说的话…" className="game-field min-h-[76px] resize-y text-sm leading-6" /><div className="mt-2 flex items-center justify-between gap-3"><button className="border-0 bg-transparent text-xs text-[#a6c2d0] hover:text-white" type="button" onClick={() => void finish()}>结束演练</button><div className="flex items-center gap-3"><span className="hidden text-[10px] text-[#80a0b2] sm:block">Enter 发送 · Shift+Enter 换行</span><button className="game-btn" type="button" onClick={() => void send()} disabled={sending || !input.trim()}>发送回应 →</button></div></div></div>}
+        </div> : <div className="border-t border-[#2b4d61] bg-[#102638] p-3 sm:p-4"><div className="mb-3 flex justify-between gap-3"><strong className="text-xs text-[#d5eaf2]">自由练习</strong><button className="game-link border-0 bg-transparent p-0" type="button" onClick={() => setGuided(true)}>返回引导教学</button></div><label className="sr-only" htmlFor="rep-message">输入你的回应</label><textarea id="rep-message" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }} rows={3} maxLength={2000} disabled={sending} placeholder="输入你想对医生说的话…" className="game-field min-h-[76px] resize-y text-sm leading-6" /><div className="mt-2 flex items-center justify-between gap-3"><button className="border-0 bg-transparent text-xs text-[#a6c2d0] hover:text-white" type="button" onClick={() => void finish()}>结束演练</button><div className="flex items-center gap-3"><span className="hidden text-[10px] text-[#80a0b2] sm:block">Enter 发送 · Shift+Enter 换行</span>{voiceInputAvailable() && <button className="game-btn game-btn-outline" type="button" onClick={toggleVoice} disabled={sending} aria-label={voiceListening ? "停止语音输入" : "开始语音输入"}>{voiceListening ? "停止录音" : "🎙 语音输入"}</button>}<button className="game-btn" type="button" onClick={() => void send()} disabled={sending || !input.trim()}>发送回应 →</button></div></div></div>}
       </section>
 
       <aside className="game-panel h-fit p-5"><div className="flex items-center justify-between gap-3"><h2 className="text-sm font-bold">训练状态</h2><span className="game-kicker !text-[9px]">STATUS</span></div><p className="game-muted mt-2 text-xs leading-6">以下数值仅为模拟训练状态，供练习时参考。</p><label className="mt-5 flex cursor-pointer items-center justify-between border-y border-[#2d4e61] py-3 text-xs text-[#c6dbe5]"><span>显示实时提示</span><input className="h-4 w-4 accent-[#79d9ed]" type="checkbox" checked={hints} onChange={(e) => { setHints(e.target.checked); writeHints(e.target.checked); }} /></label>{hints ? <>{state && <div className="pb-2"><Meter label="模拟信任" value={state.trust} color="#78d8bc" /><Meter label="模拟耐心" value={state.patience} color="#e8c27f" /><Meter label="模拟兴趣" value={state.engagement} color="#78d7ed" /></div>}<div className="mt-4 border-t border-[#2d4e61] pt-4 text-[11px] font-bold text-[#c6dbe5]">上一句识别结果</div><div className="mt-2 flex flex-wrap gap-1.5">{(lastRep?.signals.length ?? 0) === 0 && <span className="text-xs text-[#8ba9ba]">暂无明确提示</span>}{lastRep?.signals.map((signal) => <span key={signal} className={`game-tag ${SIGNAL_POLARITY[signal] === "good" ? "game-easy" : "game-hard"}`}>{SIGNAL_LABEL[signal]}</span>)}</div></> : <p className="mt-4 text-xs text-[#8ba9ba]">实时提示已隐藏。</p>}<p className="mt-6 text-[11px] leading-5 text-[#819eaf]">模型可能遗漏沟通行为；不能据此判断真实医生态度或合规结果。</p></aside>
