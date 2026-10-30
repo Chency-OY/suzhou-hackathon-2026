@@ -128,6 +128,24 @@ def test_offline_demo_reacts_to_clear_communication_signals():
     assert persona.hidden_objection not in response.doctor_reply
 
 
+def test_provider_outage_keeps_session_usable():
+    class UnavailableLLM(MockLLM):
+        name = "openai_compat"
+
+        def _complete(self, **kwargs):
+            raise RuntimeError("provider unavailable")
+
+    persona = DEMO[1]
+    scenario = make_scenario(persona_id=persona.id)
+    engine = SessionEngine(UnavailableLLM(), kb=None, rules=StateRules())
+    session = engine.start(scenario, persona, "rep_demo")
+    response = engine.step(session, scenario, persona, "您怎么看适用人群？")
+    assert response.degraded is True
+    assert response.signals == ["asked_open_question"]
+    assert response.doctor_reply
+    assert [turn.speaker for turn in session.turns] == ["doctor", "rep", "doctor"]
+
+
 def test_general_program_does_not_retrieve_product_kb():
     class ProductKnowledgeBase:
         def retrieve(self, *args, **kwargs):

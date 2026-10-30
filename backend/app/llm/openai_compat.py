@@ -28,17 +28,18 @@ class OpenAICompatProvider(LLMProvider):
         }
         if max_tokens:
             payload["max_tokens"] = max_tokens
+        if settings.llm_thinking in ("enabled", "disabled"):
+            payload["thinking"] = {"type": settings.llm_thinking}
         if json_mode and settings.llm_json_mode:
             payload["response_format"] = {"type": "json_object"}
         url = settings.llm_base_url.rstrip("/") + "/chat/completions"
         headers = {"Authorization": f"Bearer {settings.llm_api_key}"}
 
         last_exc: Exception | None = None
-        for attempt in range(3):
+        retryable_statuses = {408, 429, 500, 502, 503, 504}
+        for attempt in range(2):
             try:
                 r = httpx.post(url, json=payload, headers=headers, timeout=settings.llm_timeout_s)
-                if r.status_code in (429, 500, 502, 503, 504):
-                    raise httpx.HTTPStatusError("retryable", request=r.request, response=r)
                 r.raise_for_status()
                 data = r.json()
                 usage = data.get("usage") or {}
@@ -49,5 +50,8 @@ class OpenAICompatProvider(LLMProvider):
                 )
             except (httpx.HTTPError, KeyError, ValueError) as e:
                 last_exc = e
-                time.sleep(1.5 * (attempt + 1))
+                if isinstance(e, httpx.HTTPStatusError) and e.response.status_code not in retryable_statuses:
+                    break
+                if attempt == 0:
+                    time.sleep(1.5)
         raise RuntimeError(f"LLM 调用失败（{prompt_name}）：{last_exc}")

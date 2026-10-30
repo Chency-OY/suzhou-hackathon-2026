@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     llm_base_url: str = ""
     llm_api_key: str = ""
     llm_model: str = ""
+    llm_thinking: str = ""  # DeepSeek: enabled | disabled; empty keeps provider default
     llm_json_mode: bool = True
     llm_timeout_s: float = 90.0
     daily_token_cap: int = 0

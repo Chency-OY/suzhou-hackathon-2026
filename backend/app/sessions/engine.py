@@ -196,10 +196,14 @@ class SessionEngine:
             scenario_type=scenario.type, concerns="、".join(CONCERN_CN[c] for c in persona.concerns),
             style=persona.style, hidden_objection=persona.hidden_objection, facts=format_facts(facts),
             history=history, rep_text=safe_text(rep_text))
-        out, degraded = structured_call(
-            self.provider, prompt_name="signal_judge", system="你是严格输出 JSON 的裁判。",
-            messages=[{"role": "user", "content": user}], model_cls=JudgeOut, fallback=JudgeOut(),
-            max_retries=1, temperature=0.2)
+        try:
+            out, degraded = structured_call(
+                self.provider, prompt_name="signal_judge", system="你是严格输出 JSON 的裁判。",
+                messages=[{"role": "user", "content": user}], model_cls=JudgeOut, fallback=JudgeOut(),
+                max_retries=1, temperature=0.2, max_tokens=256)
+        except RuntimeError as exc:
+            log.warning("信号判断暂不可用，使用备用规则：%s", exc)
+            return self._demo_signals(rep_text), True
         return [s for s in dict.fromkeys(out.signals) if s in SIGNALS][:6], degraded
 
     @staticmethod
@@ -275,10 +279,15 @@ class SessionEngine:
                 intent_directive=self._directive(reveal, bait, end),
                 examples=self._fallback(persona, end),
                 retry_note=note)
-            out, degraded = structured_call(
-                self.provider, prompt_name="doctor_reply", system="你是严格输出 JSON 的角色扮演助手。",
-                messages=[{"role": "user", "content": user}], model_cls=DoctorReply,
-                fallback=DoctorReply(reply=self._fallback(persona, end)), max_retries=1, temperature=0.8)
+            try:
+                out, degraded = structured_call(
+                    self.provider, prompt_name="doctor_reply", system="你是严格输出 JSON 的角色扮演助手。",
+                    messages=[{"role": "user", "content": user}], model_cls=DoctorReply,
+                    fallback=DoctorReply(reply=self._fallback(persona, end)), max_retries=1,
+                    temperature=0.8, max_tokens=256)
+            except RuntimeError as exc:
+                log.warning("医生回复暂不可用，使用备用台词：%s", exc)
+                return self._fallback(persona, end), True
             if degraded:
                 return out.reply, True
             reason = self._check_reply(persona, out.reply, reveal, corpus)
