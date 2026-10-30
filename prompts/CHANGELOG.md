@@ -2,9 +2,8 @@
 格式：日期 | 文件 | 版本 | 变更说明
 - 2026-10-25 | persona_gen.md | 0.1.0 | 初版：医生画像批量合成（T5）
 - 2026-10-25 | scenario_gen.md | 0.1.0 | 初版：基于画像的场景草稿生成（T6）
-- 2026-10-28 | scenario_fill.md | 0.1.0 | 新增：骨架场景的背景补全
-- 2026-10-28 | doctor_reply.md | 0.2.0 | 改版：意图驱动、短句口语、带口吻示例（T10/§4.6 重写）
-- 2026-10-28 | signal_judge.md | 0.2.0 | 改版：补充 3 个合规信号（accepted_benefit/disclosed_stat/promised_outcome）（§4.5）
-- 2026-10-29 | signal_judge.md | 0.3.0 | 新增 declined_boundary 信号；明确 evaded_boundary 由程序判定，模型不得输出（C4）
-- 2026-10-29 | scenario_fill.md | 0.2.0 | 新增第 4 条要求：称呼必须与职称一致，主治医师不得称"主任"（C6）
-- 2026-10-29 | rep_bot.md | 0.1.0 | 新增：自适应代表模拟器提示词（C7）
+- 2026-10-25 | scenario_review.md | 0.1.0 | 场景预筛提示词（T11）
+- 2026-10-25 | signal_judge.md | 0.1.0 | 对话行为信号判定（T12）
+- 2026-10-25 | doctor_reply.md | 0.1.0 | 虚构医生回应生成（T12）
+- 2026-10-30 | doctor_reply.md | 0.2.0 | 合并上游简短口语化医生回复提示词，保留现有场景演练变量
+- 2026-10-30 | signal_judge.md | 0.3.0 | 合并上游合规信号判定规则

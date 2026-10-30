@@ -24,11 +24,10 @@ Signal = Literal[
     "relevant_to_concern", "asked_open_question", "cited_evidence", "empathy_shown",
     "addressed_objection", "vague_or_generic", "pushy", "exaggeration",
     "off_label_claim", "competitor_bashing", "ignored_doctor_question", "proposed_next_step",
-    "accepted_benefit", "disclosed_stat", "promised_outcome",
-    "declined_boundary", "evaded_boundary",
+    "accepted_benefit", "disclosed_stat", "promised_outcome", "declined_boundary", "evaded_boundary",
 ]
 EndReason = Literal["agreed_next_step", "doctor_left", "time_up", "rep_ended",
-                   "materials_left", "referred", "soft_decline"]
+                    "materials_left", "referred", "soft_decline"]
 FindingKind = Literal["strength", "issue", "missed_opportunity", "compliance_violation"]
 
 
@@ -52,23 +51,31 @@ class DoctorPersona(BaseModel):
 
 class Scenario(BaseModel):
     id: str
+    program_id: str = "xinermei"
     type: ScenarioType
     persona_id: str
     rep_goal: str
     context_brief: str
     opening_line: str
     success_criteria: list[str] = Field(default_factory=list)
-    source: Literal["generated", "playbook"] = "generated"
+    source: Literal["generated", "playbook", "curated"] = "generated"
     skeleton_id: str | None = None
     setting: dict[str, Any] = Field(default_factory=dict)
     pre_info: str = ""
-    turn_plan: list[str] = Field(default_factory=list)          # 内部：不得对外返回
-    gold_moves: list[str] = Field(default_factory=list)         # 内部：不得对外返回
-    compliance_checks: list[str] = Field(default_factory=list)  # 内部：不得对外返回
-    baits: list[str] = Field(default_factory=list)              # 内部：不得对外返回
-    events: list[str] = Field(default_factory=list)             # 内部：不得对外返回
+    turn_plan: list[str] = Field(default_factory=list)
+    gold_moves: list[str] = Field(default_factory=list)
+    compliance_checks: list[str] = Field(default_factory=list)
+    baits: list[str] = Field(default_factory=list)
+    events: list[str] = Field(default_factory=list)
     hard_gate: bool = False
     post_task: str | None = None
+
+
+class TrainingProgram(BaseModel):
+    id: str
+    title: str
+    description: str
+    scope: Literal["general", "product"]
 
 
 class DoctorState(BaseModel):

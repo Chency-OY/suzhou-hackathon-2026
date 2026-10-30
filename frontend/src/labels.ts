@@ -1,4 +1,4 @@
-import type { Department, Difficulty, EndReason, ScenarioType, Signal } from "./types";
+import type { Department, Difficulty, ScenarioType, EndReason, Signal } from "./types";
 
 export const DEPT_LABEL: Record<Department, string> = {
   endocrinology: "内分泌科",
@@ -25,15 +25,7 @@ export const TYPE_LABEL: Record<ScenarioType, string> = {
   competitor_compare: "竞品对比",
   time_pressure: "时间紧张",
   revisit_after_rejection: "被拒后再拜访",
-  off_label_bait: "超适应症追问",
-  second_visit: "二访",
-  third_visit: "三访",
-  hard_refusal: "硬拒绝",
-  soft_refusal: "温柔拒绝",
-  turnover: "换人后的信任",
-  empty_handed: "空手拜访",
-  compliance_bait: "合规考验",
-  followup_visit: "复访跟进",
+  off_label_bait: "合规考验",
 };
 
 export const SIGNAL_LABEL: Record<Signal, string> = {
@@ -49,11 +41,6 @@ export const SIGNAL_LABEL: Record<Signal, string> = {
   competitor_bashing: "贬低竞品",
   ignored_doctor_question: "回避提问",
   proposed_next_step: "提出下一步",
-  accepted_benefit: "接了利益试探",
-  disclosed_stat: "涉及处方量",
-  promised_outcome: "承诺销售结果",
-  declined_boundary: "明确守住边界",
-  evaded_boundary: "回避了边界问题",
 };
 
 export const SIGNAL_POLARITY: Record<Signal, "good" | "bad"> = {
@@ -61,8 +48,6 @@ export const SIGNAL_POLARITY: Record<Signal, "good" | "bad"> = {
   addressed_objection: "good", proposed_next_step: "good",
   vague_or_generic: "bad", pushy: "bad", exaggeration: "bad", off_label_claim: "bad",
   competitor_bashing: "bad", ignored_doctor_question: "bad",
-  accepted_benefit: "bad", disclosed_stat: "bad", promised_outcome: "bad",
-  declined_boundary: "good", evaded_boundary: "bad",
 };
 
 export const END_REASON_LABEL: Record<EndReason, string> = {
@@ -70,7 +55,4 @@ export const END_REASON_LABEL: Record<EndReason, string> = {
   doctor_left: "医生失去耐心，结束了对话",
   time_up: "拜访时间已到",
   rep_ended: "你主动结束了演练",
-  materials_left: "医生留下了资料，等你回访",
-  referred: "医生把你转介给了别人",
-  soft_decline: "医生客气地收了场",
 };

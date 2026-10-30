@@ -33,24 +33,19 @@ def main() -> int:
     repo = Repo()
     n_p = import_jsonl(repo, Path("data/personas/personas.jsonl"), DoctorPersona)
     from app.scenarios.review import load_review, rejected_ids
-    rej = rejected_ids(load_review())
+
+    rejected = rejected_ids(load_review())
     n_s = 0
-    sp = Path("data/scenarios/scenarios.jsonl")
-    if sp.exists():
-        for line in sp.read_text(encoding="utf-8").splitlines():
+    scenarios_path = Path("data/scenarios/scenarios.jsonl")
+    if scenarios_path.exists():
+        for line in scenarios_path.read_text(encoding="utf-8").splitlines():
             if line.strip():
-                sc = Scenario.model_validate_json(line)
-                if sc.id in rej:
-                    repo.delete(Scenario, sc.id)
+                scenario = Scenario.model_validate_json(line)
+                if scenario.id in rejected:
+                    repo.delete(Scenario, scenario.id)
                 else:
-                    repo.save(sc)
+                    repo.save(scenario)
                     n_s += 1
-    print(f"已排除被剔除场景：{len(rej)} 个")
-    keep = {s.id for s in (Scenario.model_validate_json(x) for x in Path("data/scenarios/scenarios.jsonl")
-                           .read_text(encoding="utf-8").splitlines() if x.strip())}
-    for old in repo.list(Scenario):
-        if old.id not in keep:
-            repo.delete(Scenario, old.id)
     verified = sum(f.verified for f in facts)
     print(f"知识库：facts={n_facts}（已核验 {verified}），说明书分块={n_label}"
           + ("" if label.exists() else "（未找到 data/sources/label.md）"))

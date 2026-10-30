@@ -1,5 +1,5 @@
 import type {
-  CreateSessionOut, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionView, TurnOut,
+  CreateSessionOut, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -25,23 +25,25 @@ async function parse<T>(r: Response): Promise<T> {
   return (await r.json()) as T;
 }
 
-const get = <T>(path: string) => fetch(`/api${path}`).then((r) => parse<T>(r));
+export const apiUrl = (path: string, base = import.meta.env.BASE_URL) => `${base}api${path}`;
+
+const get = <T>(path: string) => fetch(apiUrl(path), { credentials: "same-origin" }).then((r) => parse<T>(r));
 const post = <T>(path: string, body?: unknown) =>
-  fetch(`/api${path}`, {
+  fetch(apiUrl(path), {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   }).then((r) => parse<T>(r));
 
 export const api = {
+  listPrograms: () => get<TrainingProgram[]>("/programs"),
   listScenarios: (f: ScenarioFilters) =>
-    get<ScenarioItem[]>(`/scenarios${buildQuery({ dept: f.dept, difficulty: f.difficulty, type: f.type })}`),
+    get<ScenarioItem[]>(`/scenarios${buildQuery({ program: f.program, dept: f.dept, difficulty: f.difficulty, type: f.type })}`),
   getScenario: (id: string) => get<ScenarioDetail>(`/scenarios/${encodeURIComponent(id)}`),
-  createSession: (scenarioId: string, repId: string, preGoal?: string) =>
-    post<CreateSessionOut>("/sessions", { scenario_id: scenarioId, rep_id: repId, pre_goal: preGoal }),
+  createSession: (scenarioId: string) => post<CreateSessionOut>("/sessions", { scenario_id: scenarioId }),
+  listSessions: () => get<SessionSummary[]>("/sessions"),
   getSession: (id: string) => get<SessionView>(`/sessions/${encodeURIComponent(id)}`),
   sendTurn: (id: string, text: string) => post<TurnOut>(`/sessions/${encodeURIComponent(id)}/turns`, { text }),
   finishSession: (id: string) => post<FinishOut>(`/sessions/${encodeURIComponent(id)}/finish`),
-  saveRecord: (id: string, note: string) =>
-    post<{ session_id: string; saved: boolean }>(`/sessions/${encodeURIComponent(id)}/record`, { note }),
 };

@@ -8,6 +8,7 @@ from sqlmodel import Field, SQLModel, create_engine, select
 from sqlmodel import Session as DBSession
 
 from .config import settings
+from .models.auth import Account, LoginSession  # noqa: F401 - register auth tables in SQLModel metadata
 
 M = TypeVar("M", bound=BaseModel)
 

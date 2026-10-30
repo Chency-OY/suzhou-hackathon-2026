@@ -1,0 +1,20 @@
+[Unit]
+Description=Rep Trainer public demo
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/checkout
+Environment=LLM_PROVIDER=mock
+Environment=VECTOR_STORE=simple
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/path/to/checkout/.venv/bin/uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port APP_PORT
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+SyslogIdentifier=rep-trainer
+
+[Install]
+WantedBy=multi-user.target

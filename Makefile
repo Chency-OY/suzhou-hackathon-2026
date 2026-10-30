@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios gen-scenarios-v2 review web-build deploy healthcheck apply-review sim wheelhouse
+.PHONY: setup dev test lint build-facts seed gen-personas gen-scenarios review prescreen apply-review web-build deploy healthcheck
 PY ?= python3
 VENV = . .venv/bin/activate
 
@@ -29,11 +29,14 @@ gen-personas:
 gen-scenarios:
 	$(VENV) && python scripts/gen_scenarios.py
 
-gen-scenarios-v2:
-	$(VENV) && python scripts/gen_scenarios_v2.py
-
 review:
 	$(VENV) && python scripts/export_review.py
+
+prescreen:
+	$(VENV) && python scripts/prescreen_scenarios.py
+
+apply-review:
+	$(VENV) && python scripts/apply_review.py && python scripts/seed.py
 
 web-build:
 	cd frontend && pnpm install && pnpm build
@@ -43,12 +46,3 @@ deploy:
 
 healthcheck:
 	bash scripts/healthcheck.sh
-
-apply-review:
-	$(VENV) && python scripts/apply_review.py && python scripts/seed.py
-
-sim:
-	$(VENV) && python scripts/sim_session.py
-
-wheelhouse:
-	bash scripts/build_wheelhouse.sh

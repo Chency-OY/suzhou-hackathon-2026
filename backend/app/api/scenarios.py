@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from ..db import Repo
 from ..deps import get_repo
-from ..models import DoctorPersona, Scenario
+from ..models import DoctorPersona, Scenario, TrainingProgram
 
 router = APIRouter(prefix="/api")
+PROGRAMS_PATH = Path("data/programs.json")
 
 STYLE_HINTS = {
     "rigorous_evidence": "严谨循证型：重视数据与文献出处",
@@ -61,8 +65,13 @@ def _item(s: Scenario, p: DoctorPersona) -> ScenarioItem:
     return ScenarioItem(**s.model_dump(include=PUBLIC_FIELDS), department=p.department, difficulty=p.difficulty)
 
 
+@router.get("/programs", response_model=list[TrainingProgram])
+def list_programs():
+    return [TrainingProgram.model_validate(x) for x in json.loads(PROGRAMS_PATH.read_text(encoding="utf-8"))]
+
+
 @router.get("/scenarios", response_model=list[ScenarioItem])
-def list_scenarios(dept: str | None = None, difficulty: str | None = None,
+def list_scenarios(dept: str | None = None, difficulty: str | None = None, program: str | None = None,
                    type_: str | None = Query(None, alias="type"), repo: Repo = Depends(get_repo)):
     personas = {p.id: p for p in repo.list(DoctorPersona)}
     out = []
@@ -71,6 +80,7 @@ def list_scenarios(dept: str | None = None, difficulty: str | None = None,
         if p is None:
             continue
         if (dept and p.department != dept) or (difficulty and p.difficulty != difficulty) or (
+                program and s.program_id != program) or (
                 type_ and s.type != type_):
             continue
         out.append(_item(s, p))

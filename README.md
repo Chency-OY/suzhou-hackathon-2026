@@ -1,81 +1,33 @@
-# 医药代表智能演练助手（Rep Trainer）
+# 医学沟通训练台
 
-一个用于**医药代表拜访演练**的对话训练工具：系统扮演一位虚构医生，代表在真实感场景里练"怎么开口、怎么回应顾虑、怎么合规地推进下一步"。
+面向医药代表的合成情境演练。用户选择课程和场景，与虚构医生对话，结束后逐句回看自己的表达。当前提供「通用医学沟通」与「信尔美产品资料」两组课程。通用课程不读取产品知识库；产品课程以仓库中的公开资料为基础。
 
-设计上坚持两条原则：
+## 当前可用
 
-1. **学术推广优先**：反馈围绕是否切中医生关注点、是否引用可核验证据、是否提出具体下一步，而不是"话术是否说动对方"。
-2. **合规优先**：对超适应症宣传、贬低竞品、夸大表述、利益输送与统方等风险行为会给出明确信号提示；合规红线场景会在场景中标注。
+- 16 个经人工整理的合成场景（通用 12、信尔美 4），支持科室、难度和情境筛选。
+- 桌面游戏式任务界面：在任务大厅选课程、筛选情境并直接开始演练；对话关卡、练习档案与逐句复盘保持统一视觉。
+- 会话创建、对话、结束、回放；练习记录列表保存在当前浏览器，完整对话保存在服务器 SQLite。
+- 复盘展示原句、明确识别到的沟通行为和下一次练习建议。**目前没有可信的自动评分**。
+- 场景预筛、人工审核清单和隐藏设定泄露检查。人工审核状态仍为 `pending`，未替带教人员作通过决定。
 
-> 本项目是**训练工具**，不提供任何医疗建议，也不用于真实的推广沟通。
-
----
+公网预览首页：<https://chenxi-ouyang.online/rep-trainer/>（无需登录）；点击「进入训练」后使用演示账户登录，训练内容和 API 保留访问限制，凭据不在仓库中。首页和训练页使用[信达生物官网公开 Logo](https://www.innoventbio.com/)作视觉参考，并明确标注为非官方原型。这是 **离线演示模式**：医生由确定性规则模拟，不能用于医学或合规判断。原内网 GPU 服务不可从这台公网服务器访问，切换真实模型需单独配置可达的模型端点并完成内容与评分校准。
 
 ## 本地运行
 
-前置：Python 3.11+（建议用 `make setup` 自动建虚拟环境）、Node 18+ 与 pnpm（前端）。
-
 ```bash
-make setup                 # 建 .venv 并安装后端依赖；同时安装前端依赖
-make seed                  # 从仓库内 data/ 重建知识库与数据库（人物、场景、事实）
-make dev                   # 后端 uvicorn 热重载，默认 http://127.0.0.1:8000
-cd frontend && pnpm dev    # 前端开发服务器，默认 http://localhost:5173
+uv venv .venv
+uv pip install --python .venv/bin/python -e '.[dev]'
+cd frontend && pnpm install && pnpm build && cd ..
+VECTOR_STORE=simple .venv/bin/python scripts/seed.py
+VECTOR_STORE=simple .venv/bin/uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ```
 
-其它常用目标：
+运行测试：`bash scripts/verify_t11_t15.sh`；运行本机冒烟：`.venv/bin/python scripts/e2e_smoke.py --base http://127.0.0.1:8000 --with-session`。
 
-| 命令 | 作用 |
-|---|---|
-| `make test` | 后端 pytest + 前端 tsc/vitest |
-| `make lint` | `ruff check backend` |
-| `make build-facts` | 从 `data/sources/` 构建事实库 |
-| `make gen-personas` / `make gen-scenarios-v2` | 生成人物画像与（骨架驱动的）场景，需要可用的模型服务 |
-| `make review` / `make apply-review` | 导出人工审核样本 / 应用审核结果并重新入库 |
-| `make sim` | 用脚本化的"好/差代表"跑样例对话，输出到 `docs/SAMPLE_SESSIONS.md` |
-| `make web-build` | 构建前端静态资源到 `frontend/dist` |
+## 内容与资料
 
-模型服务通过环境变量配置（`.env`，不入库，参考 `.env.example`）：`LLM_PROVIDER`、`LLM_BASE_URL`、`LLM_MODEL`、`LLM_API_KEY`。
-`LLM_PROVIDER=mock` 时不联网，全部走兜底台词，可用于断网演示。
+- 课程目录：`data/programs.json`；画像与场景：`data/personas/personas.jsonl`、`data/scenarios/scenarios.jsonl`。
+- 信尔美资料从[信达生物公开说明书](https://img.innoventbio.com/product/W10030842001.pdf)整理；`data/sources/label.md` 记录录入来源和口径。两份不同适应症的说明书不得混用。
+- 所有医生、对话和案例均为合成。请勿输入真实患者或医生的个人信息。
 
----
-
-## 数据说明
-
-- **全部为合成数据**：人物画像、场景、对话语料均由程序生成，不对应任何真实医生、医院或患者。
-- **医学事实**来自公开资料，并在事实库中标注核验状态（`verified`）。核验状态只能由人工确认，代码不会自动改写事实表述。
-- **合规规则与评分相关配置**（`data/rubric/`）为**示意版本**，用于训练反馈，不构成合规意见或法律依据。
-- 任何台词、提示词与文档中都**不得出现疗效或安全性的具体数字**。
-
----
-
-## 目录说明
-
-```
-backend/      FastAPI 后端
-  app/api/        HTTP 接口（场景、会话）
-  app/sessions/   对话引擎：状态机、意图选择、规则
-  app/personas/   医生画像生成与校验
-  app/scenarios/  场景生成、骨架生成、人工审核
-  app/corpus/     台词素材库加载
-  app/llm/        模型 provider、提示词、结构化输出
-  app/rag/        事实检索（知识库）
-  app/models/     领域模型与常量
-frontend/     React + Vite 前端（场景列表、场景详情、演练页）
-prompts/      提示词模板（带版本号，变更记在 prompts/CHANGELOG.md）
-data/         数据：画像、场景、事实源、素材库、规则（运行时产物 app.db/chroma/usage 不入库）
-scripts/      生成、导入、部署、冒烟脚本
-docs/         进度、报告、部署与核验记录
-tasks/        任务卡与执行规则
-deploy/       部署相关模板
-```
-
-接口约定：`GET /api/scenarios`、`GET /api/scenarios/{id}`、`POST /api/sessions`（可带 `pre_goal`）、
-`POST /api/sessions/{id}/turns`、`POST /api/sessions/{id}/finish`、`POST /api/sessions/{id}/record`、`GET /api/sessions/{id}`。
-对外响应**不包含**内部字段（如 `meta`、`baits`、`turn_plan`、`gold_moves`、`compliance_checks`、`hidden_objection`）。
-
----
-
-## 免责声明
-
-本工具用于沟通技能训练与教学演示。它不提供医疗、诊断或治疗建议，也不得用于任何真实的药品推广、学术交流或商业沟通场景。
-所有的"医生"角色、病例描述与对话内容均为虚构合成，任何与实际医疗决策的关联都应避免。
+部署步骤、回滚和服务日志见 `docs/DEPLOY.md`；任务与已知限制见 `docs/PROGRESS.md`、`docs/INTEGRATION_ISSUES.md`。协作时先拉取 GitHub 最新提交，检查差异后再合并；服务器只部署已经提交并推送的版本，避免覆盖队友工作。

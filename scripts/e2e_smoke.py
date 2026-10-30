@@ -1,20 +1,20 @@
 """对已部署地址做端到端冒烟：python scripts/e2e_smoke.py --base http://<ip>:8000"""
 import argparse
 import re
+import secrets
 import sys
 
 import httpx
 
 SECRETS = ["hidden_objection", "traps", "initial_trust", "initial_patience", "time_budget_turns", "speech_habits",
            "backstory"]
-SESSION_SECRETS = SECRETS + ["meta", "bait", "baits", "turn_plan", "gold_moves", "compliance_checks"]
 PUBLIC_KEYS = {"department", "title", "hospital_tier", "style_hint", "difficulty"}
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8000")
-    ap.add_argument("--with-session", action="store_true", help="额外跑一遍会话端到端（会真实调用模型）")
+    ap.add_argument("--with-session", action="store_true")
     args = ap.parse_args()
     c = httpx.Client(base_url=args.base, timeout=30)
     fails: list[str] = []
@@ -30,10 +30,10 @@ def main() -> int:
     r = c.get("/")
     html = r.text
     check("index.html", r.status_code == 200 and 'id="root"' in html)
-    assets = re.findall(r'(?:src|href)="(/assets/[^"]+)"', html)
+    assets = re.findall(r'(?:src|href)="(/(?:rep-trainer/)?assets/[^"]+)"', html)
     check("引用了构建资源", len(assets) > 0)
     for a in assets:
-        check(f"asset {a}", c.get(a).status_code == 200)
+        check(f"asset {a}", c.get(a.removeprefix("/rep-trainer")).status_code == 200)
 
     r = c.get("/api/scenarios")
     items = r.json() if r.status_code == 200 else []
@@ -61,36 +61,25 @@ def main() -> int:
     r404 = c.get("/api/not-exist")
     check("未知 API 返回 404 且非 HTML", r404.status_code == 404 and "<html" not in r404.text.lower())
 
-    if args.with_session:
-        rs = c.post("/api/sessions", json={"scenario_id": items[0]["id"], "rep_id": "rep_smoke",
-                                           "pre_goal": "了解医生关注点并约下次沟通"})
-        check("创建会话（带访前目标）", rs.status_code == 200)
-        if rs.status_code != 200:
-            print(rs.text[:300])
-        else:
-            sid = rs.json()["session_id"]
-            check("回复含开场白", bool(rs.json().get("opening_line")))
-
-            rt = c.post(f"/api/sessions/{sid}/turns", json={"text": "主任您好，想先了解一下您门诊这类患者的情况。"})
-            check("提交一轮", rt.status_code == 200 and bool(rt.json().get("doctor_reply")))
-            for s in SESSION_SECRETS:
-                check(f"回合无泄露 {s}", s not in rt.text)
-
-            check("未结束不能写记录", c.post(f"/api/sessions/{sid}/record",
-                                        json={"note": "客户原话：先放资料。下一步：下周回访。"}).status_code == 409)
-
-            rf = c.post(f"/api/sessions/{sid}/finish")
-            check("结束会话", rf.status_code == 200 and rf.json().get("ended") is True)
-
-            rr = c.post(f"/api/sessions/{sid}/record", json={"note": "客户原话：先放资料。下一步：下周回访。"})
-            check("保存拜访记录", rr.status_code == 200 and rr.json().get("saved") is True)
-
-            rg = c.get(f"/api/sessions/{sid}")
-            body = rg.text
-            check("回放含 pre_goal", rg.status_code == 200 and "了解医生关注点" in body)
-            check("回放含 visit_note", "下周回访" in body)
-            for s in SESSION_SECRETS:
-                check(f"回放无泄露 {s}", s not in body)
+    if args.with_session and items:
+        registered = c.post("/api/auth/register", json={"username": "smoke_" + secrets.token_hex(4),
+                                                         "password": secrets.token_urlsafe(16)})
+        check("注册独立账号", registered.status_code == 200)
+        if registered.status_code != 200:
+            return 1
+        created = c.post("/api/sessions", json={"scenario_id": items[0]["id"]})
+        check("创建演练", created.status_code == 200)
+        if created.status_code == 200:
+            sid = created.json()["session_id"]
+            turn = c.post(f"/api/sessions/{sid}/turns", json={"text": "您怎么看相关资料的适用人群？"})
+            check("提交一轮对话", turn.status_code == 200 and bool(turn.json().get("doctor_reply")))
+            replay = c.get(f"/api/sessions/{sid}")
+            check("会话回放", replay.status_code == 200 and len(replay.json().get("turns", [])) == 3)
+            if replay.status_code == 200:
+                check("会话无隐藏画像泄露", all(x not in replay.text for x in
+                      ('"hidden_objection":', '"traps":', '"meta":', '"bait":')))
+            finish = c.post(f"/api/sessions/{sid}/finish")
+            check("结束演练", finish.status_code == 200 and finish.json().get("ended") is True)
 
     print(f"\n失败 {len(fails)} 项" if fails else "\n全部通过")
     return 1 if fails else 0

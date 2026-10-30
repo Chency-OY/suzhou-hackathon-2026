@@ -2,7 +2,7 @@
 
 - 生成时间：2026-10-29 07:48:21
 - 分支：main　最近提交：553c502 [B10] 部署、端到端与 README
-- 冻结文件校验（SPEC.md / AGENTS.md 的哈希前 12 位）：7d976436fc9b 38d4aad9a690 
+- 冻结文件校验（SPEC.md / AGENTS.md 的哈希前 12 位）：7d976436fc9b 38d4aad9a690
 
 ## 最近 15 次提交
 ```
@@ -234,12 +234,12 @@ prompts          203 行
 
 ## Makefile 目标
 ```
-setup dev test lint build-facts seed gen-personas gen-scenarios gen-scenarios-v2 review web-build deploy healthcheck apply-review sim 
+setup dev test lint build-facts seed gen-personas gen-scenarios gen-scenarios-v2 review web-build deploy healthcheck apply-review sim
 ```
 
 ## 提示词与版本
 ```
-CHANGELOG.md                 
+CHANGELOG.md
 _example.md                  version: 0.1.0
 doctor_reply.md              version: 0.2.0
 persona_gen.md               version: 0.1.0

@@ -45,10 +45,10 @@ def decide_end(state: DoctorState, signals: list[str], rep_turn_no: int, budget:
     return None
 
 
-def next_bait(baits: list[str], doctor_metas: list[dict], rep_turn_no: int, rules: StateRules) -> str | None:
+def next_bait(p: DoctorPersona, doctor_metas: list[dict], rep_turn_no: int, rules: StateRules) -> str | None:
+    pending = [t for t in p.traps if t != "none"]
     fired = [m for m in doctor_metas if m.get("bait")]
-    done = {m["bait"] for m in fired}
-    pending = [t for t in baits if t != "none" and t not in done]
+    pending = [t for t in pending if t not in {m["bait"] for m in fired}]
     if not pending or rep_turn_no < rules.bait_min_rep_turns:
         return None
     if fired and rep_turn_no - max(m.get("rep_turn_no", 0) for m in fired) < rules.bait_spacing_rep_turns:

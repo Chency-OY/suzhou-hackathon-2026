@@ -20,11 +20,6 @@ DEFAULT_DELTAS: dict[str, dict[str, int]] = {
     "competitor_bashing": {"trust": -10},
     "ignored_doctor_question": {"trust": -8, "patience": -8},
     "proposed_next_step": {"trust": 3},
-    "accepted_benefit": {"trust": -15, "patience": -8},
-    "disclosed_stat": {"trust": -15},
-    "promised_outcome": {"trust": -12},
-    "declined_boundary": {"trust": 8, "patience": 3},
-    "evaded_boundary": {"trust": -6, "patience": -6},
 }
 
 
@@ -35,8 +30,7 @@ class StateRules(BaseModel):
     bait_min_rep_turns: int = 2
     bait_spacing_rep_turns: int = 2
     negative_signals: list[str] = Field(default_factory=lambda: ["pushy", "exaggeration", "off_label_claim",
-                                                                 "competitor_bashing", "accepted_benefit",
-                                                                 "disclosed_stat", "promised_outcome", "evaded_boundary"])
+                                                                 "competitor_bashing"])
 
     @model_validator(mode="after")
     def _check(self):

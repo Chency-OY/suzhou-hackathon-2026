@@ -54,21 +54,16 @@ def test_decide_end_priority():
 
 
 def test_next_bait_timing_and_spacing():
-    B = ["off_label_bait", "competitor_bash_bait"]
-    assert next_bait(B, [], 1, R) is None
-    assert next_bait(B, [], 2, R) == "off_label_bait"
+    p = DEMO[8].model_copy(update={"traps": ["off_label_bait", "competitor_bash_bait"]})
+    assert next_bait(p, [], 1, R) is None
+    assert next_bait(p, [], 2, R) == "off_label_bait"
     fired = [{"bait": "off_label_bait", "rep_turn_no": 2}]
-    assert next_bait(B, fired, 3, R) is None                     # 间隔不足
-    assert next_bait(B, fired, 4, R) == "competitor_bash_bait"
+    assert next_bait(p, fired, 3, R) is None                     # 间隔不足
+    assert next_bait(p, fired, 4, R) == "competitor_bash_bait"
     both = fired + [{"bait": "competitor_bash_bait", "rep_turn_no": 4}]
-    assert next_bait(B, both, 9, R) is None
-    assert next_bait([], [], 5, R) is None                 # 无陷阱
+    assert next_bait(p, both, 9, R) is None
+    assert next_bait(DEMO[0], [], 5, R) is None                 # 无陷阱
 
 
 def test_initial_state_by_difficulty():
     assert initial_state(DEMO[0]).engagement == 60 and initial_state(DEMO[2]).engagement == 40
-
-
-def test_boundary_signal_rules():
-    assert R.deltas["declined_boundary"]["trust"] > 0 and R.deltas["evaded_boundary"]["trust"] < 0
-    assert "evaded_boundary" in R.negative_signals

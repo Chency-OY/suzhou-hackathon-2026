@@ -135,6 +135,7 @@ class DoctorPersona(BaseModel):
 ```python
 class Scenario(BaseModel):
     id: str
+    program_id: str                  # 培训课程：general 或产品资料包 ID；默认 xinermei 兼容旧数据
     type: Literal["first_visit","post_conference","safety_concern","competitor_compare",
                   "time_pressure","revisit_after_rejection","off_label_bait"]
     persona_id: str
@@ -142,7 +143,7 @@ class Scenario(BaseModel):
     context_brief: str             # 给代表看的背景（不含 hidden_objection）
     opening_line: str              # 医生第一句话
     success_criteria: list[str]    # 供评分参考
-    source: Literal["generated","playbook"] = "generated"
+    source: Literal["generated","playbook","curated"] = "generated"
 ```
 
 ### 5.3 Session / Turn
@@ -208,7 +209,8 @@ class PlaybookCard(BaseModel):
 
 | 方法 | 路径 | 请求 | 响应 |
 |---|---|---|---|
-| GET | `/scenarios?dept=&difficulty=&type=` | – | `Scenario[]`（不含 hidden_objection） |
+| GET | `/scenarios?program=&dept=&difficulty=&type=` | – | `Scenario[]`（不含 hidden_objection） |
+| GET | `/programs` | – | 可选培训课程（通用沟通/已核实产品资料包） |
 | GET | `/scenarios/{id}` | – | `Scenario` + `persona_public`（脱敏后的画像：职称、医院级别、风格提示） |
 | POST | `/sessions` | `{scenario_id, rep_id}` | `{session_id, opening_line, doctor_state}` |
 | POST | `/sessions/{id}/turns` | `{text}` | `{doctor_reply, doctor_state, signals, ended, end_reason}` |
@@ -222,6 +224,21 @@ class PlaybookCard(BaseModel):
 | POST | `/admin/personas/generate` | `{n, department, difficulty_mix}` | 任务结果摘要 |
 
 错误统一 `{error:{code,message}}`。`/turns` 可选 SSE 流式，MVP 先非流式。
+
+### 6.1 独立账号与练习归属（公网演示扩展）
+
+注册只使用账号名和密码，不采集邮箱、手机号或真实姓名。密码使用带独立随机盐的 PBKDF2-SHA256 哈希保存；会话使用随机令牌，数据库只保存令牌哈希。浏览器通过 Secure、HttpOnly、SameSite=Lax Cookie 保持登录；公网训练 API 仍需经过 Nginx 身份校验，后端再次校验账号。旧的共用 BasicAuth 凭据不能单独读取、创建或修改练习。
+
+| 方法 | 路径 | 请求 | 响应 |
+|---|---|---|---|
+| POST | `/auth/register` | `{username,password}` | `{id,username}` + 登录 Cookie；重复账号为 409 |
+| POST | `/auth/login` | `{username,password}` | `{id,username}` + 登录 Cookie；凭据错误为 401 |
+| POST | `/auth/logout` | – | `{ok:true}`，撤销当前令牌并清 Cookie |
+| GET | `/auth/me` | – | 当前账号 `{id,username}`，未登录为 401 |
+| GET | `/auth/check` | – | Nginx 内部鉴权：登录为 204，否则 401 |
+| GET | `/sessions` | – | 当前账号的练习列表，按开始时间倒序，最多 100 条 |
+
+`POST /sessions` 只接受 `scenario_id`，`rep_id` 由登录账号确定；`GET/POST /sessions/{id}` 只能访问同一账号的练习。旧演示会话保留在数据库，但不自动归属新账号，也不跨账号展示。
 
 ## 7. 核心逻辑规格
 
@@ -295,7 +312,7 @@ ignored_doctor_question: {trust: -8, patience: -8}
 
 ## 8. 前端页面（MVP）
 1. **场景选择页**：按科室/难度筛选，卡片展示"背景简介、目标、难度"，不展示隐藏异议。
-2. **演练页**：聊天界面；侧边实时显示医生"信任度/耐心"条与简短提示（可开关，训练新人时开、考核时关）；结束按钮。
+2. **演练页**：默认三步选择式引导教学（理解医生、回应问题、约定下一步），每步三项回应并在选择后解释理由，学员确认后再进入下一步；可切换自由文字练习。两种模式共用聊天记录与模拟医生回应；侧边实时显示医生"信任度/耐心"条与简短提示（可开关，训练新人时开、考核时关）；结束按钮。引导反馈仅为模拟教学，不替代正式医学或合规审核。
 3. **复盘页**：总分与封顶提示、维度雷达图、逐句时间轴（点击 Finding 跳转到对话原句并高亮 quote）、"更好的说法"对照、下一步练习建议。
 4. **成长页**：同一场景多次练习的得分折线。
 5. **管理者看板**：团队维度均分、高频失分、高频异议、打法卡片审核（approve）。

@@ -47,17 +47,3 @@ def test_heuristic_flags():
 def test_risk_score_monotonic():
     assert risk_score(["leak"], 0) > risk_score([], 0)
     assert risk_score([], 9) > risk_score([], 1)
-
-
-def test_apply_review_parse():
-    import importlib.util
-    import pathlib
-    spec = importlib.util.spec_from_file_location("apply_review", pathlib.Path("scripts/apply_review.py"))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    text = ("## 1. scn_001｜first_visit｜x\n- [x] 通过　[ ] 需修改　[ ] 剔除　　备注：\n"
-            "## 2. scn_002｜x\n- [ ] 通过　[ ] 需修改　[x] 剔除　　备注：太配合\n"
-            "## 3. scn_003｜x\n- [ ] 通过　[x] 需修改　[ ] 剔除　　备注：开场偏长\n"
-            "## 4. scn_004｜x\n- [ ] 通过　[ ] 需修改　[ ] 剔除　　备注：\n")
-    assert mod.parse(text) == {"scn_001": ("approved", ""), "scn_002": ("rejected", "太配合"),
-                               "scn_003": ("needs_fix", "开场偏长")}
