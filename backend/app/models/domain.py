@@ -59,6 +59,7 @@ class Scenario(BaseModel):
     opening_line: str
     success_criteria: list[str] = Field(default_factory=list)
     source: Literal["generated", "playbook", "curated"] = "generated"
+    team_id: str | None = None
     skeleton_id: str | None = None
     setting: dict[str, Any] = Field(default_factory=dict)
     pre_info: str = ""
@@ -168,6 +169,9 @@ class ScorerDraft(BaseModel):
 
 class PlaybookCard(BaseModel):
     id: str
+    team_id: str = ""
+    created_by: str = ""
+    source_scenario_id: str = ""
     title: str
     applicable_scenario_types: list[ScenarioType]
     applicable_departments: list[Department]
@@ -176,4 +180,11 @@ class PlaybookCard(BaseModel):
     example_lines: list[str] = Field(default_factory=list, max_length=3)
     evidence_session_ids: list[str] = Field(default_factory=list)
     avg_score_of_source: float = 0.0
-    status: Literal["candidate", "approved"] = "candidate"
+    status: Literal["candidate", "approved", "rejected"] = "candidate"
+
+
+class PlaybookDraft(BaseModel):
+    title: str = Field(min_length=4, max_length=80)
+    situation: str = Field(min_length=8, max_length=240)
+    effective_response_pattern: str = Field(min_length=8, max_length=300)
+    example_lines: list[str] = Field(default_factory=list, max_length=6)

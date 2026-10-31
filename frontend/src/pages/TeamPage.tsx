@@ -2,13 +2,14 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { SIGNAL_LABEL, SIGNAL_POLARITY } from "../labels";
-import { SIGNALS, type Signal, type TeamInfo, type TeamInsights } from "../types";
+import { SIGNALS, type PlaybookCardView, type Signal, type TeamInfo, type TeamInsights } from "../types";
 
 const message = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 export default function TeamPage() {
   const [team, setTeam] = useState<TeamInfo | null>(null);
   const [insights, setInsights] = useState<TeamInsights | null>(null);
+  const [cards, setCards] = useState<PlaybookCardView[]>([]);
   const [inviteCode, setInviteCode] = useState("");
   const [teamName, setTeamName] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -19,8 +20,8 @@ export default function TeamPage() {
   useEffect(() => {
     let active = true;
     api.getTeam().then(async (found) => {
-      const result = await api.getTeamInsights();
-      if (active) { setTeam(found); setInsights(result); }
+      const [result, foundCards] = await Promise.all([api.getTeamInsights(), api.listPlaybookCards()]);
+      if (active) { setTeam(found); setInsights(result); setCards(foundCards); }
     }).catch((cause) => { if (active && message(cause) !== "尚未加入团队") setError(message(cause)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -30,7 +31,7 @@ export default function TeamPage() {
     event.preventDefault(); setBusy(true); setError("");
     try {
       const result = await api.createTeam(teamName.trim());
-      setTeam(result); setInviteCode(result.invite_code); setInsights(await api.getTeamInsights());
+      setTeam(result); setInviteCode(result.invite_code); setInsights(await api.getTeamInsights()); setCards([]);
     } catch (cause) { setError(message(cause)); } finally { setBusy(false); }
   }
 
@@ -38,19 +39,31 @@ export default function TeamPage() {
     event.preventDefault(); setBusy(true); setError("");
     try {
       const result = await api.joinTeam(joinCode.trim());
-      setTeam(result); setJoinCode(""); setInsights(await api.getTeamInsights());
+      setTeam(result); setJoinCode(""); setInsights(await api.getTeamInsights()); setCards(await api.listPlaybookCards());
     } catch (cause) { setError(message(cause)); } finally { setBusy(false); }
   }
 
   async function leave() {
     setBusy(true); setError("");
-    try { await api.leaveTeam(); setTeam(null); setInsights(null); setInviteCode(""); }
+    try { await api.leaveTeam(); setTeam(null); setInsights(null); setInviteCode(""); setCards([]); }
     catch (cause) { setError(message(cause)); } finally { setBusy(false); }
   }
 
   async function rotateInvite() {
     setBusy(true); setError("");
     try { const result = await api.rotateTeamInvite(); setTeam(result); setInviteCode(result.invite_code); }
+    catch (cause) { setError(message(cause)); } finally { setBusy(false); }
+  }
+
+  async function approveCard(cardId: string) {
+    setBusy(true); setError("");
+    try { await api.approvePlaybookCard(cardId); setCards(await api.listPlaybookCards()); }
+    catch (cause) { setError(message(cause)); } finally { setBusy(false); }
+  }
+
+  async function rejectCard(cardId: string) {
+    setBusy(true); setError("");
+    try { await api.rejectPlaybookCard(cardId); setCards(await api.listPlaybookCards()); }
     catch (cause) { setError(message(cause)); } finally { setBusy(false); }
   }
 
@@ -75,6 +88,7 @@ export default function TeamPage() {
       </section>
       <div className="mt-4 grid gap-4 sm:grid-cols-3"><div className="game-panel p-5"><p className="game-muted text-xs">已完成演练</p><strong className="mt-2 block text-2xl">{insights?.completed_sessions ?? 0}</strong></div><div className="game-panel p-5"><p className="game-muted text-xs">已评分演练</p><strong className="mt-2 block text-2xl">{insights?.scored_sessions ?? 0}</strong></div><div className="game-panel p-5"><p className="game-muted text-xs">训练参考均分</p><strong className="mt-2 block text-2xl">{insights?.average_score ?? "暂无"}</strong></div></div>
       <div className="mt-4 grid gap-4 md:grid-cols-2"><section className="game-panel p-5"><h2 className="text-base font-bold">团队常见失误</h2><p className="game-muted mt-1 text-xs">按出现该信号的演练次数计算。</p>{signalList(signals("bad"))}</section><section className="game-panel p-5"><h2 className="text-base font-bold">团队有效动作</h2><p className="game-muted mt-1 text-xs">这些是沟通信号，并不代表医学内容已核实。</p>{signalList(signals("good"))}</section></div>
+      <section className="game-panel mt-4 p-5 sm:p-7"><h2 className="text-base font-bold">团队打法卡片</h2><p className="game-muted mt-2 text-xs leading-6">成员可从自己的高分复盘推荐候选卡片。创建者审核后，卡片会生成一个只供本团队练习的新情境；卡片只讨论沟通方法，不能作为医学结论。</p>{cards.length === 0 ? <p className="game-muted mt-5 text-sm">暂无卡片。完成高分演练后，可在复盘页推荐沟通方法。</p> : <div className="mt-5 space-y-3">{cards.map((card) => <article className="rounded-lg border border-[#d5e4ed] bg-[#f7fafc] p-4" key={card.id}><div className="flex flex-wrap justify-between gap-2"><h3 className="text-sm font-bold">{card.title}</h3><span className="text-xs text-[#176b91]">{card.status === "approved" ? "已加入团队打法库" : card.status === "rejected" ? "未通过审核" : "待审核"}</span></div><p className="game-muted mt-2 text-xs leading-6">情境：{card.situation}</p><p className="mt-2 text-sm leading-6">做法：{card.effective_response_pattern}</p>{card.example_lines.length > 0 && <p className="game-muted mt-2 text-xs leading-6">示例：{card.example_lines.join(" / ")}</p>}<div className="mt-3">{card.status === "approved" && card.scenario_id ? <Link className="game-link text-xs" to={`/scenarios/${card.scenario_id}`}>练习这个情境 →</Link> : card.status === "rejected" ? <span className="game-muted text-xs">这张卡片不会进入团队训练</span> : team.role === "owner" ? <div className="flex flex-wrap gap-2"><button className="game-btn" type="button" disabled={busy} onClick={() => void approveCard(card.id)}>审核通过并生成练习</button><button className="game-btn game-btn-outline" type="button" disabled={busy} onClick={() => void rejectCard(card.id)}>不采用</button></div> : <span className="game-muted text-xs">等待团队创建者审核</span>}</div></article>)}</div>}</section>
       <Link className="game-btn mt-6" to="/home">针对常见问题继续演练 →</Link>
     </>}
   </div>;

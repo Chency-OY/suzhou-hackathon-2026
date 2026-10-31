@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from ..db import Repo
 from ..deps import get_repo
-from ..models import DoctorPersona, Scenario, TrainingProgram
+from ..models import DoctorPersona, Scenario, Session, TrainingProgram
+from ..models.team import TeamMembership
+from .auth import maybe_current_account
 
 router = APIRouter(prefix="/api")
 PROGRAMS_PATH = Path("data/programs.json")
@@ -71,11 +73,15 @@ def list_programs():
 
 
 @router.get("/scenarios", response_model=list[ScenarioItem])
-def list_scenarios(dept: str | None = None, difficulty: str | None = None, program: str | None = None,
+def list_scenarios(request: Request, dept: str | None = None, difficulty: str | None = None, program: str | None = None,
                    type_: str | None = Query(None, alias="type"), repo: Repo = Depends(get_repo)):
+    account = maybe_current_account(request, repo)
+    member = repo.get(TeamMembership, account.id) if account else None
     personas = {p.id: p for p in repo.list(DoctorPersona)}
     out = []
     for s in repo.list(Scenario):
+        if s.team_id and (not member or s.team_id != member.team_id):
+            continue
         p = personas.get(s.persona_id)
         if p is None:
             continue
@@ -88,8 +94,15 @@ def list_scenarios(dept: str | None = None, difficulty: str | None = None, progr
 
 
 @router.get("/scenarios/{scenario_id}", response_model=ScenarioDetail)
-def get_scenario(scenario_id: str, repo: Repo = Depends(get_repo)):
+def get_scenario(scenario_id: str, request: Request, repo: Repo = Depends(get_repo)):
     s = repo.get(Scenario, scenario_id)
+    if s and s.team_id:
+        account = maybe_current_account(request, repo)
+        member = repo.get(TeamMembership, account.id) if account else None
+        prior_session = any(item.rep_id == account.id and item.scenario_id == s.id
+                            for item in repo.list(Session)) if account else False
+        if (not member or member.team_id != s.team_id) and not prior_session:
+            s = None
     p = repo.get(DoctorPersona, s.persona_id) if s else None
     if not s or not p:
         raise HTTPException(status_code=404, detail={"error": {"code": "not_found", "message": "场景不存在"}})

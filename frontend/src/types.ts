@@ -140,6 +140,15 @@ export interface TeamInsights {
   average_score: number | null;
   signal_counts: Record<string, number>;
 }
+export interface PlaybookCardView {
+  id: string;
+  title: string;
+  situation: string;
+  effective_response_pattern: string;
+  example_lines: string[];
+  status: "candidate" | "approved" | "rejected";
+  scenario_id: string;
+}
 
 export interface DiaryDigest {
   summary: string;

@@ -35,3 +35,13 @@ class TeamInsights(BaseModel):
     scored_sessions: int
     average_score: float | None = None
     signal_counts: dict[str, int]
+
+
+class PlaybookCardView(BaseModel):
+    id: str
+    title: str
+    situation: str
+    effective_response_pattern: str
+    example_lines: list[str]
+    status: Literal["candidate", "approved", "rejected"]
+    scenario_id: str = ""

@@ -1,5 +1,5 @@
 import type {
-  AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TeamInfo, TeamInsights, TrainingProgram, TurnOut,
+  AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, PlaybookCardView, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TeamInfo, TeamInsights, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -63,4 +63,8 @@ export const api = {
   rotateTeamInvite: () => post<TeamInfo>("/team/invite"),
   leaveTeam: () => post<{ ok: boolean }>("/team/leave"),
   getTeamInsights: () => get<TeamInsights>("/team/insights"),
+  listPlaybookCards: () => get<PlaybookCardView[]>("/playbook-cards"),
+  extractPlaybookCard: (sessionId: string) => post<PlaybookCardView>("/playbook-cards/extract", { session_id: sessionId }),
+  approvePlaybookCard: (cardId: string) => post<PlaybookCardView>(`/playbook-cards/${encodeURIComponent(cardId)}/approve`),
+  rejectPlaybookCard: (cardId: string) => post<PlaybookCardView>(`/playbook-cards/${encodeURIComponent(cardId)}/reject`),
 };

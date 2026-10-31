@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
 import { guidedStep, QUALITY_LABEL } from "../guided";
@@ -16,17 +17,27 @@ const scoreDimensions: { id: ScoreDimension; label: string; max: number }[] = [
 
 export default function SessionReviewPage() {
   const { id = "" } = useParams();
+  const [shareStatus, setShareStatus] = useState("");
+  const [shareBusy, setShareBusy] = useState(false);
   const { data, error, loading } = useAsync(async () => {
     const session = await api.getSession(id);
     const scenario = await api.getScenario(session.scenario_id);
     const report = session.ended_at ? await api.getReport(`report_${id}`).catch(() => null) : null;
-    return { session, scenario, report };
+    const team = report?.scoring_mode === "model" ? await api.getTeam().catch(() => null) : null;
+    return { session, scenario, report, team };
   }, [id]);
+
+  async function shareCard() {
+    setShareBusy(true); setShareStatus("");
+    try { const card = await api.extractPlaybookCard(id); setShareStatus(card.status === "approved" ? `“${card.title}”已加入团队打法库。` : card.status === "rejected" ? `“${card.title}”此前未通过审核。` : `已提交“${card.title}”，等待团队创建者审核。`); }
+    catch (cause) { setShareStatus(cause instanceof Error ? cause.message : "提交失败，请稍后重试"); }
+    finally { setShareBusy(false); }
+  }
 
   if (loading) return <div className="game-panel p-10 text-center text-sm text-[#9bb7c6]">正在整理对话记录…</div>;
   if (error || !data) return <div className="game-alert">{error || "未找到会话"}</div>;
 
-  const { session, scenario, report } = data;
+  const { session, scenario, report, team } = data;
   const repTurns = session.turns.filter((turn) => turn.speaker === "rep");
   let repIndex = 0;
   const annotatedTurns = session.turns.map((turn) => {
@@ -59,6 +70,7 @@ export default function SessionReviewPage() {
         <a className="game-link" href={`#turn-${finding.turn_idx}`}>第 {finding.turn_idx + 1} 句 · “{finding.quote}” ↘</a><p>{finding.explanation}</p>{finding.better_version && <p className="game-muted">下次可以试试：{finding.better_version}</p>}
       </li>)}</ul></div>}
       {report.next_practice_tips.length > 0 && <p className="game-muted mt-4 text-xs">下次练习：{report.next_practice_tips.join("；")}</p>}
+      {report.total_score >= 80 && !report.capped_by_compliance && <div className="mt-5 border-t border-[#dce8ee] pt-4"><p className="game-muted text-xs leading-6">可将本次虚构演练中的沟通方法抽象为候选打法卡片。提交后只有你和团队创建者可见，审核通过才会进入团队打法库。</p>{team ? <button className="game-btn mt-3" type="button" disabled={shareBusy} onClick={() => void shareCard()}>{shareBusy ? "正在提炼…" : "推荐到团队打法库"}</button> : <Link className="game-link mt-3 inline-block" to="/team">先加入团队 →</Link>}{shareStatus && <p className="game-alert mt-3 text-xs" role="status">{shareStatus}</p>}</div>}
     </section>}
 
     <div className="mt-4 grid gap-4 md:grid-cols-2">

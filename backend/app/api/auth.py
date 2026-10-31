@@ -92,6 +92,15 @@ def get_current_account(request: Request, repo: Repo = Depends(get_repo)) -> Acc
         return account
 
 
+def maybe_current_account(request: Request, repo: Repo) -> Account | None:
+    try:
+        return get_current_account(request, repo)
+    except HTTPException as exc:
+        if exc.status_code == 401:
+            return None
+        raise
+
+
 @router.post("/register", response_model=AccountPublic)
 def register(body: Credentials, request: Request, response: Response, repo: Repo = Depends(get_repo)):
     _rate_limit(request, "register", "all", 10, 3600)
