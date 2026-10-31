@@ -55,9 +55,25 @@ export interface ProductPortfolioItem {
   generic_name: string;
   stage: "marketed" | "nda_review" | "pivotal";
   note: string;
+  target: string;
+  modality: string;
+  area: string;
+  overview: string;
+  overview_source_url: string;
+  key_points: string[];
+  detail_source_url?: string;
   source_url: string;
   checked_on: string;
   verified: boolean;
+}
+
+export interface ProductCheckResult {
+  product_id: string;
+  question_id: string;
+  status: "correct" | "partial" | "incorrect" | "unavailable";
+  feedback: string;
+  reference: string;
+  source_url: string;
 }
 
 export const SIGNALS = [

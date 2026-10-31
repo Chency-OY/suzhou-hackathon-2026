@@ -207,13 +207,14 @@ class PlaybookCard(BaseModel):
 
 基础路径 `/api`，JSON；时间 ISO8601。
 
-产品目录项 `ProductPortfolioItem` 包含 `id`、`name`、`generic_name`、`stage`（`marketed`、`nda_review` 或 `pivotal`）、`note`、`source_url`、`checked_on`、`verified`。`marketed` 指商业化组合已获批产品，含合作商业化产品；`nda_review` 和 `pivotal` 均为未获批的研发项目。目录只介绍状态，不输出适应症、疗效、用法和竞品比较。只有经官方说明书核实的产品资料包才能提供产品专项训练；其余产品可从通用沟通课程练习，不将目录状态作为医学事实评分依据。
+产品目录项 `ProductPortfolioItem` 包含名称、阶段、作用靶点、药物形式、主要领域、公开报告概览、核对日期和来源；只有说明书核对过的条目才展示具体用法与风险要点。`marketed` 指商业化组合已获批产品，含合作商业化产品；`nda_review` 和 `pivotal` 均为未获批项目。每张卡片直接展示概览并可站内展开，来源链接只用于人工核对。所有产品可进行三道基础资料口述测试：靶点与类型、阶段与领域、资料边界。模型只分类回答，供用户学习的参考内容由已核对字段生成；不进行正式医学事实评分。只有经官方说明书核实的产品资料包才能提供模拟医生情境演练。
 
 | 方法 | 路径 | 请求 | 响应 |
 |---|---|---|---|
 | GET | `/scenarios?program=&dept=&difficulty=&type=` | – | `Scenario[]`（不含 hidden_objection） |
 | GET | `/programs` | – | 可选培训课程（通用沟通/已核实产品资料包） |
 | GET | `/products` | – | `ProductPortfolioItem[]`：信达已商业化产品及接近上市的在研项目、状态、核对日期和官方来源 |
+| POST | `/products/{id}/check` | `{question_id,answer}`；访客每小时最多 6 次 | 单品资料测试分类、已核对的参考要点和来源；不保存回答 |
 | GET | `/scenarios/{id}` | – | `Scenario` + `persona_public`（脱敏后的画像：职称、医院级别、风格提示） |
 | POST | `/sessions` | `{scenario_id, rep_id}` | `{session_id, opening_line, doctor_state}` |
 | POST | `/sessions/{id}/turns` | `{text}` | `{doctor_reply, doctor_state, signals, judge_note, judge_degraded, ended, end_reason, degraded, report_id}` |
@@ -245,7 +246,7 @@ class PlaybookCard(BaseModel):
 
 `POST /sessions` 只接受 `scenario_id`，`rep_id` 由登录账号确定；`GET/POST /sessions/{id}` 只能访问同一账号的练习。旧演示会话保留在数据库，但不自动归属新账号，也不跨账号展示。
 
-免登录试用创建随机访客身份，仍经 HttpOnly Cookie 和同样的会话归属检查访问。每个访客最多建立 2 次演练，每次最多提交 6 句；访客可查看自己的情境、演练和复盘，不能使用私人日记、学术雷达、团队和打法卡片接口。试用 Cookie 24 小时后失效，不能用访客用户名密码重新登录。访客可在有效期内设置账号密码升级，身份 ID 不变，已有演练随之保留。模型密钥始终仅位于服务端环境配置，不进入浏览器资源或接口响应。
+免登录试用创建随机访客身份，仍经 HttpOnly Cookie 和同样的会话归属检查访问。每个访客最多建立 2 次演练，每次最多提交 6 句；访客可查看自己的情境、演练和复盘，也可临时预览日记整理、进行单品基础资料测试；持久化日记与学术雷达需要正式账号。试用 Cookie 24 小时后失效，不能用访客用户名密码重新登录。访客可在有效期内设置账号密码升级，身份 ID 不变，已有演练随之保留。模型密钥始终仅位于服务端环境配置，不进入浏览器资源或接口响应。
 
 ### 6.2 前线日记的资料对照（公网演示扩展）
 

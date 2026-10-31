@@ -76,7 +76,7 @@ def is_guest_account(account: Account) -> bool:
 
 def _guest_route_allowed(path: str) -> bool:
     return (path in {"/api/programs", "/api/scenarios", "/api/sessions", "/api/diary/preview"}
-            or path.startswith(("/api/auth/", "/api/scenarios/", "/api/sessions/", "/api/reports/")))
+            or path.startswith(("/api/auth/", "/api/scenarios/", "/api/sessions/", "/api/reports/", "/api/products/")))
 
 
 def _public(account: Account) -> AccountPublic:

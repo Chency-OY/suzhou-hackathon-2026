@@ -9,6 +9,7 @@ import SessionReviewPage from "./pages/SessionReviewPage";
 import DiaryPage from "./pages/DiaryPage";
 import RadarPage from "./pages/RadarPage";
 import ProductsPage from "./pages/ProductsPage";
+import ProductTestPage from "./pages/ProductTestPage";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="progress" element={<SessionHistoryPage />} />
         <Route path="diary" element={<DiaryPage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="products/:id/test" element={<ProductTestPage />} />
         <Route path="radar" element={<RadarPage />} />
         <Route path="*" element={<ComingSoonPage title="页面不存在" />} />
       </Route>

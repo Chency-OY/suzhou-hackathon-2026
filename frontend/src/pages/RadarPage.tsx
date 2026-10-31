@@ -109,8 +109,8 @@ export default function RadarPage() {
     <p className="game-muted mt-3 text-sm leading-7">实时搜索论文、会议和演讲网页，由 AI 整理带来源的回答；论文索引补充候选。结果不保证齐全，同名作者可能混淆，请打开原文核对，候选记录不会直接进入医生画像。</p>
     <section className="game-panel mt-6 p-5 sm:p-7">
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="text-xs font-bold">医生姓名<input className="game-field mt-2" value={doctorName} maxLength={80} onChange={(event) => setDoctorName(event.target.value)} placeholder="例如：张伟" /></label>
-        <label className="text-xs font-bold">医院正式名称<input className="game-field mt-2" value={hospital} maxLength={120} onChange={(event) => setHospital(event.target.value)} placeholder="例如：苏州大学附属第一医院" /></label>
+        <label className="text-xs font-bold">医生姓名<input className="game-field mt-2" type="text" lang="zh-CN" inputMode="text" autoComplete="name" value={doctorName} maxLength={80} onChange={(event) => setDoctorName(event.target.value)} placeholder="例如：张伟" /></label>
+        <label className="text-xs font-bold">医院正式名称<input className="game-field mt-2" type="text" lang="zh-CN" inputMode="text" value={hospital} maxLength={120} onChange={(event) => setHospital(event.target.value)} placeholder="例如：苏州大学附属第一医院" /></label>
       </div>
       <label className="mt-4 flex items-start gap-2 text-xs leading-6"><input className="mt-1" type="checkbox" checked={autoRefresh} onChange={(event) => setAutoRefresh(event.target.checked)} /><span>以后打开雷达页时自动更新这组检索词。每次间隔至少 24 小时；开启后，姓名和医院会再次发送给第三方 AI 检索服务与公开论文索引。随时可在结果卡片关闭。</span></label>
       <button className="game-btn mt-5" type="button" disabled={busy || doctorName.trim().length < 2 || hospital.trim().length < 4} onClick={() => void search()}>{busy ? "正在检索…" : "查询公开资料 →"}</button>

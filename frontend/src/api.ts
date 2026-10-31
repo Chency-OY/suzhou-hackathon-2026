@@ -1,5 +1,5 @@
 import type {
-  AcademicCrosscheck, AcademicRadar, CreateSessionOut, DiaryPreview, DiaryReview, FieldDiary, FinishOut, ProductPortfolioItem, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
+  AcademicCrosscheck, AcademicRadar, CreateSessionOut, DiaryPreview, DiaryReview, FieldDiary, FinishOut, ProductCheckResult, ProductPortfolioItem, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -39,6 +39,8 @@ const post = <T>(path: string, body?: unknown) =>
 export const api = {
   listPrograms: () => get<TrainingProgram[]>("/programs"),
   listProducts: () => get<ProductPortfolioItem[]>("/products"),
+  checkProductAnswer: (productId: string, questionId: string, answer: string) =>
+    post<ProductCheckResult>(`/products/${encodeURIComponent(productId)}/check`, { question_id: questionId, answer }),
   listScenarios: (f: ScenarioFilters) =>
     get<ScenarioItem[]>(`/scenarios${buildQuery({ program: f.program, dept: f.dept, difficulty: f.difficulty, type: f.type })}`),
   getScenario: (id: string) => get<ScenarioDetail>(`/scenarios/${encodeURIComponent(id)}`),
