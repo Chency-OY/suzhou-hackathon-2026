@@ -52,8 +52,10 @@ def test_guest_can_practice_privately_then_upgrade_without_losing_session(trial)
     assert other.get(f"/api/sessions/{sid}").status_code == 404
     assert other.get("/api/sessions").json() == []
 
-    for private_path in ("/api/diary", "/api/radar", "/api/team", "/api/playbook-cards"):
+    for private_path in ("/api/diary", "/api/radar"):
         assert client.get(private_path).status_code == 403
+    for retired_path in ("/api/team", "/api/playbook-cards"):
+        assert client.get(retired_path).status_code == 404
     assert client.post("/api/sessions", json={"scenario_id": "scn_guest", "diary_id": "diary_any"}).status_code == 403
 
     upgraded = client.post("/api/auth/upgrade", json={"username": "guestgraduate", "password": "strong-password-123"})

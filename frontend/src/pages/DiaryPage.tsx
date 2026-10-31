@@ -156,7 +156,7 @@ export default function DiaryPage() {
   return <div className="mx-auto max-w-4xl">
     <p className="game-kicker">FRONTLINE DIARY / 前线日记本</p>
     <h1 className="game-title mt-2">趁第一感受还清楚，马上说下来</h1>
-    <p className="game-muted mt-3 text-sm leading-7">点语音输入后可以连续口述十到二十分钟，直到你点停止；系统会把识别文字接在一起。确认原话后，DeepSeek 整理重点，完整原文也会保留。</p>
+    <p className="game-muted mt-3 text-sm leading-7">点语音输入后可以连续口述十到二十分钟，直到你点停止；系统会把识别文字接在一起。确认原话后，AI 整理重点，完整原文也会保留。</p>
 
     <section className="game-panel mt-6 p-5 sm:p-7">
       <div className="grid gap-3 sm:grid-cols-2">

@@ -26,7 +26,7 @@ function RadarCard({ result, onToggle, switching }: { result: AcademicRadar; onT
     {result.institution_name && <p className="game-muted mt-4 text-xs">索引中的医院：<a className="game-link" href={result.institution_url} target="_blank" rel="noreferrer">{result.institution_name} ↗</a></p>}
     <p className="game-alert mt-4" role="status">{result.note}</p>
     {points.length > 0 && <section className="mt-5 rounded-lg border border-[#c8dfe9] bg-[#f2f9fc] p-4">
-      <h3 className="text-sm font-bold">DeepSeek 整理的公开资料线索</h3>
+      <h3 className="text-sm font-bold">AI 整理的公开资料线索</h3>
       <p className="game-muted mt-1 text-xs leading-5">每条摘录来自下方链接；同名身份仍待人工确认，不能视为完整学术履历。</p>
       <ol className="mt-3 space-y-4">{points.map((point, index) => {
         const source = sourceById.get(point.source_id);
@@ -105,14 +105,14 @@ export default function RadarPage() {
 
   return <div className="mx-auto max-w-4xl">
     <p className="game-kicker">ACADEMIC RADAR / 学术雷达</p>
-    <h1 className="game-title mt-2">输入医院与姓名，请 DeepSeek 查公开资料</h1>
-    <p className="game-muted mt-3 text-sm leading-7">实时搜索论文、会议和演讲网页，由 DeepSeek 整理带来源的回答；OpenAlex 补充论文索引。结果不保证齐全，同名作者可能混淆，请打开原文核对，候选记录不会直接进入医生画像。</p>
+    <h1 className="game-title mt-2">输入医院与姓名，查公开学术资料</h1>
+    <p className="game-muted mt-3 text-sm leading-7">实时搜索论文、会议和演讲网页，由 AI 整理带来源的回答；论文索引补充候选。结果不保证齐全，同名作者可能混淆，请打开原文核对，候选记录不会直接进入医生画像。</p>
     <section className="game-panel mt-6 p-5 sm:p-7">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-xs font-bold">医生姓名<input className="game-field mt-2" value={doctorName} maxLength={80} onChange={(event) => setDoctorName(event.target.value)} placeholder="例如：张伟" /></label>
         <label className="text-xs font-bold">医院正式名称<input className="game-field mt-2" value={hospital} maxLength={120} onChange={(event) => setHospital(event.target.value)} placeholder="例如：苏州大学附属第一医院" /></label>
       </div>
-      <label className="mt-4 flex items-start gap-2 text-xs leading-6"><input className="mt-1" type="checkbox" checked={autoRefresh} onChange={(event) => setAutoRefresh(event.target.checked)} /><span>以后打开雷达页时自动更新这组检索词。每次间隔至少 24 小时；开启后，姓名和医院会再次发送给 DeepSeek Search 与 OpenAlex。随时可在结果卡片关闭。</span></label>
+      <label className="mt-4 flex items-start gap-2 text-xs leading-6"><input className="mt-1" type="checkbox" checked={autoRefresh} onChange={(event) => setAutoRefresh(event.target.checked)} /><span>以后打开雷达页时自动更新这组检索词。每次间隔至少 24 小时；开启后，姓名和医院会再次发送给第三方 AI 检索服务与公开论文索引。随时可在结果卡片关闭。</span></label>
       <button className="game-btn mt-5" type="button" disabled={busy || doctorName.trim().length < 2 || hospital.trim().length < 4} onClick={() => void search()}>{busy ? "正在检索…" : "查询公开资料 →"}</button>
       {error && <div className="game-alert mt-4" role="alert">{error}</div>}
     </section>

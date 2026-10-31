@@ -92,7 +92,7 @@ def collect_radar(repo: Repo, owner_id: str, doctor_name: str, hospital: str,
     result.refresh_error = "" if web_status == "ok" else "网页检索暂不可用；已保留可核对的论文索引。"
     if web_sources:
         result.status = "found"
-    notes = ["DeepSeek 实时检索公开网页，OpenAlex 补充论文候选；搜索结果不保证完整。"]
+    notes = ["AI 实时检索公开网页，论文索引补充候选；搜索结果不保证完整。"]
     if web_status != "ok":
         notes.append("实时网页检索暂不可用，当前主要显示论文索引候选。")
     elif not web_sources:

@@ -13,7 +13,6 @@ from ..llm import LLMProvider
 from ..models import DoctorPersona, DoctorState, Report, Scenario, Session
 from ..models.auth import Account, SessionSummary
 from ..models.diary import FieldDiary
-from ..models.team import TeamMembership
 from ..scoring import score_session
 from ..sessions import SessionEngine
 from .auth import get_current_account, is_guest_account
@@ -162,9 +161,7 @@ def create_session(body: CreateSessionIn, repo: Repo = Depends(get_repo),
     if not (sc and p):
         raise _err(404, "not_found", "场景不存在")
     if sc.team_id:
-        member = repo.get(TeamMembership, account.id)
-        if not member or member.team_id != sc.team_id:
-            raise _err(404, "not_found", "场景不存在")
+        raise _err(404, "not_found", "场景不存在")
     if is_guest_account(account) and body.diary_id:
         raise _err(403, "guest_limited", "试用模式不能使用私人日记")
     if body.diary_id and not _own_rehearsal(repo, body.diary_id, account):

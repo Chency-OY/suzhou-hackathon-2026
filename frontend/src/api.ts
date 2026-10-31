@@ -1,5 +1,5 @@
 import type {
-  AcademicCrosscheck, AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, PlaybookCardView, ProductPortfolioItem, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TeamInfo, TeamInsights, TrainingProgram, TurnOut,
+  AcademicCrosscheck, AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, ProductPortfolioItem, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -64,14 +64,4 @@ export const api = {
     method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ enabled }),
   }).then((response) => parse<AcademicRadar>(response)),
-  getTeam: () => get<TeamInfo>("/team"),
-  createTeam: (name: string) => post<TeamInfo>("/team", { name }),
-  joinTeam: (inviteCode: string) => post<TeamInfo>("/team/join", { invite_code: inviteCode }),
-  rotateTeamInvite: () => post<TeamInfo>("/team/invite"),
-  leaveTeam: () => post<{ ok: boolean }>("/team/leave"),
-  getTeamInsights: () => get<TeamInsights>("/team/insights"),
-  listPlaybookCards: () => get<PlaybookCardView[]>("/playbook-cards"),
-  extractPlaybookCard: (sessionId: string) => post<PlaybookCardView>("/playbook-cards/extract", { session_id: sessionId }),
-  approvePlaybookCard: (cardId: string) => post<PlaybookCardView>(`/playbook-cards/${encodeURIComponent(cardId)}/approve`),
-  rejectPlaybookCard: (cardId: string) => post<PlaybookCardView>(`/playbook-cards/${encodeURIComponent(cardId)}/reject`),
 };
