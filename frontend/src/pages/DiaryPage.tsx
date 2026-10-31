@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
-import type { DiaryReview, FieldDiary } from "../types";
+import type { AcademicCrosscheck, DiaryReview, FieldDiary } from "../types";
 import { startVoiceInput, voiceInputAvailable } from "../voice";
 
 const message = (error: unknown) => error instanceof Error ? error.message : String(error);
@@ -15,6 +15,9 @@ function DiaryCard({ item, onDelete }: { item: FieldDiary; onDelete: (id: string
   const [review, setReview] = useState<DiaryReview | null>(null);
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewError, setReviewError] = useState("");
+  const [crosscheck, setCrosscheck] = useState<AcademicCrosscheck | null>(null);
+  const [crossBusy, setCrossBusy] = useState(false);
+  const [crossError, setCrossError] = useState("");
 
   async function runReview() {
     setReviewBusy(true); setReviewError("");
@@ -22,6 +25,16 @@ function DiaryCard({ item, onDelete }: { item: FieldDiary; onDelete: (id: string
     catch (cause) { setReviewError(message(cause)); }
     finally { setReviewBusy(false); }
   }
+
+  async function runCrosscheck() {
+    setCrossBusy(true); setCrossError("");
+    try { setCrosscheck(await api.crosscheckDiaryAcademic(item.id)); }
+    catch (cause) { setCrossError(message(cause)); }
+    finally { setCrossBusy(false); }
+  }
+
+  const radarLink = item.doctor_name && item.hospital
+    ? `/radar?${new URLSearchParams({ doctor_name: item.doctor_name, hospital: item.hospital })}` : "/radar";
 
   const statusLabel = {
     possible_conflict: "可能与说明书不一致，待人工核对",
@@ -32,7 +45,14 @@ function DiaryCard({ item, onDelete }: { item: FieldDiary; onDelete: (id: string
   return <article className="game-panel p-5 sm:p-6">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div><p className="game-kicker">FIELD NOTES / 拜访回忆</p><h2 className="mt-2 text-base font-bold">{item.hospital || "未填医院"}{item.doctor_name ? ` · ${item.doctor_name}` : ""}</h2><p className="game-muted mt-1 text-xs">{new Date(item.created_at).toLocaleString("zh-CN")}</p></div>
-      <div className="flex flex-wrap items-center gap-4">{!item.degraded && <Link className="game-link" to={`/home?diary=${encodeURIComponent(item.id)}`}>用这篇日记再练一次 →</Link>}<Link className="game-link" to="/radar">查公开论文 ↗</Link><button className="game-link border-0 bg-transparent" type="button" onClick={() => onDelete(item.id)}>删除这篇</button></div>
+      <div className="flex flex-wrap items-center gap-4">{!item.degraded && <Link className="game-link" to={`/home?diary=${encodeURIComponent(item.id)}`}>用这篇日记再练一次 →</Link>}<Link className="game-link" to={radarLink}>查公开学术资料 ↗</Link><button className="game-link border-0 bg-transparent" type="button" onClick={() => onDelete(item.id)}>删除这篇</button></div>
+    </div>
+    <div className="mt-5 border-t border-[#d5e4ed] pt-4">
+      <button className="game-btn game-btn-outline" type="button" disabled={crossBusy || !item.doctor_name || !item.hospital} onClick={() => void runCrosscheck()}>{crossBusy ? "正在交叉核对…" : "对照日记与学术雷达 →"}</button>
+      {(!item.doctor_name || !item.hospital) && <p className="game-muted mt-2 text-xs">保存日记时填写姓名和医院，才能与同名学术线索对照。</p>}
+      {crossError && <div className="game-alert mt-3" role="alert">{crossError}</div>}
+      {crosscheck && <div className="mt-4 rounded-lg border border-[#d5e4ed] bg-[#f7fafc] p-4" role="status"><p className="text-xs leading-6">{crosscheck.note}</p>{crosscheck.status === "no_radar" && <Link className="game-link mt-2 inline-block text-xs" to={radarLink}>先手动搜索学术资料 →</Link>}{crosscheck.tensions.map((tension, index) => <div className="mt-4 border-t border-[#d5e4ed] pt-4 text-xs leading-6" key={`${tension.source_id}-${index}`}><p><strong>日记原话：</strong>“{tension.diary_quote}”</p><p className="mt-2"><strong>网页摘录：</strong>“{tension.source_quote}”</p><a className="game-link mt-2 inline-block" href={tension.source_url} target="_blank" rel="noreferrer">打开候选来源：{tension.source_title} ↗</a><p className="game-muted mt-2">{tension.note}</p></div>)}</div>}
+      <p className="game-muted mt-3 text-[11px] leading-5">仅核对学术活动原话；同名身份未确认，不会把网页线索自动写入模拟医生画像。</p>
     </div>
     {item.degraded && <div className="game-alert mt-4">AI 整理暂不可用，已保存原话，可稍后回看。</div>}
     <p className="mt-5 rounded-lg border border-[#d5e4ed] bg-[#f5f9fc] p-4 text-sm leading-7">{item.digest.summary}</p>

@@ -53,3 +53,34 @@ class DiaryReview(BaseModel):
     findings: list[ClaimFinding] = Field(default_factory=list, max_length=6)
     academic_candidate_count: int = 0
     academic_identity_confirmed: bool = False
+
+
+class AcademicTensionDraft(BaseModel):
+    diary_quote: str = Field(min_length=8, max_length=240)
+    source_id: str
+    source_quote: str = Field(min_length=8, max_length=240)
+
+
+class AcademicCrossDraft(BaseModel):
+    tensions: list[AcademicTensionDraft] = Field(default_factory=list, max_length=5)
+
+
+class AcademicTension(BaseModel):
+    diary_quote: str
+    source_id: str
+    source_quote: str
+    source_title: str
+    source_url: str
+    note: str = "同名网页线索与日记原话可能有出入，需核对原网页及人物身份。"
+
+
+class AcademicCrosscheck(BaseModel):
+    id: str
+    diary_id: str
+    owner_id: str
+    radar_id: str = ""
+    checked_at: datetime
+    policy_version: str
+    status: Literal["compared", "insufficient", "no_radar"]
+    tensions: list[AcademicTension] = Field(default_factory=list, max_length=5)
+    note: str

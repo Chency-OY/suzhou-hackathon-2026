@@ -192,6 +192,26 @@ export interface DiaryReview {
   academic_identity_confirmed: boolean;
 }
 
+export interface AcademicTension {
+  diary_quote: string;
+  source_id: string;
+  source_quote: string;
+  source_title: string;
+  source_url: string;
+  note: string;
+}
+export interface AcademicCrosscheck {
+  id: string;
+  diary_id: string;
+  owner_id: string;
+  radar_id: string;
+  checked_at: string;
+  policy_version: string;
+  status: "compared" | "insufficient" | "no_radar";
+  tensions: AcademicTension[];
+  note: string;
+}
+
 export interface AcademicWork {
   id: string;
   title: string;

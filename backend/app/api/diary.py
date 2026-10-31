@@ -8,11 +8,12 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 
+from ..academic_crosscheck import POLICY_VERSION, compare_academic
 from ..db import Repo
 from ..deps import get_provider, get_repo
 from ..llm import LLMProvider, load_prompt, structured_call
 from ..models.auth import Account
-from ..models.diary import DiaryDigest, DiaryReview, FieldDiary
+from ..models.diary import AcademicCrosscheck, DiaryDigest, DiaryReview, FieldDiary
 from ..models.radar import AcademicRadar
 from ..radar.openalex import radar_id
 from ..tribunal import assess_claim, extract_claims
@@ -47,6 +48,26 @@ def _own_diary(repo: Repo, diary_id: str, account: Account) -> FieldDiary:
     if not item or item.owner_id != account.id:
         raise _not_found()
     return item
+
+
+def _matching_radar(repo: Repo, item: FieldDiary, account: Account) -> AcademicRadar | None:
+    if not item.doctor_name or not item.hospital:
+        return None
+    radar = repo.get(AcademicRadar, radar_id(account.id, item.doctor_name, item.hospital))
+    if not radar or radar.owner_id != account.id or radar.web_status != "ok":
+        return None
+    return radar if datetime.now(UTC) - radar.searched_at < timedelta(hours=24) else None
+
+
+def _valid_academic_cache(repo: Repo, item: FieldDiary, account: Account) -> AcademicCrosscheck | None:
+    cached = repo.get(AcademicCrosscheck, f"academic_{item.id}")
+    radar = _matching_radar(repo, item, account)
+    if (cached and cached.owner_id == account.id and cached.policy_version == POLICY_VERSION
+            and datetime.now(UTC) - cached.checked_at < timedelta(hours=24)
+            and cached.radar_id == (radar.id if radar else "")
+            and (not radar or radar.searched_at <= cached.checked_at)):
+        return cached
+    return None
 
 
 def _fallback(raw_text: str) -> DiaryDigest:
@@ -123,9 +144,34 @@ def review_diary(diary_id: str, request: Request, refresh: bool = False, repo: R
     return review
 
 
+@router.get("/{diary_id}/academic-crosscheck", response_model=AcademicCrosscheck)
+def get_academic_crosscheck(diary_id: str, repo: Repo = Depends(get_repo),
+                            account: Account = Depends(get_current_account)):
+    item = _own_diary(repo, diary_id, account)
+    cached = _valid_academic_cache(repo, item, account)
+    if not cached:
+        raise _not_found()
+    return cached
+
+
+@router.post("/{diary_id}/academic-crosscheck", response_model=AcademicCrosscheck)
+def run_academic_crosscheck(diary_id: str, request: Request, repo: Repo = Depends(get_repo),
+                            account: Account = Depends(get_current_account),
+                            provider: LLMProvider = Depends(get_provider)):
+    item = _own_diary(repo, diary_id, account)
+    cached = _valid_academic_cache(repo, item, account)
+    if cached:
+        return cached
+    _rate_limit(request, "academic_crosscheck", account.id, 20, 3600)
+    result = compare_academic(item, _matching_radar(repo, item, account), provider)
+    repo.save(result)
+    return result
+
+
 @router.delete("/{diary_id}")
 def delete_diary(diary_id: str, repo: Repo = Depends(get_repo), account: Account = Depends(get_current_account)):
     _own_diary(repo, diary_id, account)
     repo.delete(DiaryReview, f"review_{diary_id}")
+    repo.delete(AcademicCrosscheck, f"academic_{diary_id}")
     repo.delete(FieldDiary, diary_id)
     return {"ok": True}

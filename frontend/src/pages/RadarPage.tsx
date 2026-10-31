@@ -47,8 +47,8 @@ function RadarCard({ result }: { result: AcademicRadar }) {
 }
 
 export default function RadarPage() {
-  const [doctorName, setDoctorName] = useState("");
-  const [hospital, setHospital] = useState("");
+  const [doctorName, setDoctorName] = useState(() => new URLSearchParams(window.location.search).get("doctor_name") || "");
+  const [hospital, setHospital] = useState(() => new URLSearchParams(window.location.search).get("hospital") || "");
   const [results, setResults] = useState<AcademicRadar[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");

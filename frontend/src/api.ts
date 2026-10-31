@@ -1,5 +1,5 @@
 import type {
-  AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, PlaybookCardView, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TeamInfo, TeamInsights, TrainingProgram, TurnOut,
+  AcademicCrosscheck, AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, PlaybookCardView, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TeamInfo, TeamInsights, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -51,6 +51,7 @@ export const api = {
   listDiary: () => get<FieldDiary[]>("/diary"),
   createDiary: (body: { hospital: string; doctor_name: string; raw_text: string }) => post<FieldDiary>("/diary", body),
   reviewDiary: (id: string) => post<DiaryReview>(`/diary/${encodeURIComponent(id)}/review`),
+  crosscheckDiaryAcademic: (id: string) => post<AcademicCrosscheck>(`/diary/${encodeURIComponent(id)}/academic-crosscheck`),
   deleteDiary: (id: string) => fetch(apiUrl(`/diary/${encodeURIComponent(id)}`), {
     method: "DELETE", credentials: "same-origin",
   }).then((response) => parse<{ ok: boolean }>(response)),
