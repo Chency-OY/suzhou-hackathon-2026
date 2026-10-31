@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -14,11 +15,14 @@ import android.webkit.WebViewClient;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends Activity {
     private static final int VOICE_REQUEST = 1001;
     private static final String HOME = "https://chenxi-ouyang.online/rep-trainer/diary";
     private WebView webView;
+    private TextToSpeech speech;
+    private boolean speechReady = false;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -34,6 +38,21 @@ public class MainActivity extends Activity {
         settings.setUserAgentString(settings.getUserAgentString() + " RepTrainerAndroid/1.0");
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
+        speech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(final int status) {
+                webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (status == TextToSpeech.SUCCESS && speech != null) {
+                            int language = speech.setLanguage(Locale.SIMPLIFIED_CHINESE);
+                            speechReady = language != TextToSpeech.LANG_MISSING_DATA
+                                    && language != TextToSpeech.LANG_NOT_SUPPORTED;
+                        }
+                    }
+                });
+            }
+        });
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -51,6 +70,20 @@ public class MainActivity extends Activity {
             startVoiceInput();
             return true;
         }
+        if ("reptrainer".equals(uri.getScheme()) && "speak".equals(uri.getHost())) {
+            String text = uri.getQueryParameter("text");
+            if (text == null || text.length() > 500 || !speechReady) {
+                sendSpeechError("语音播报暂不可用，可以继续看文字对话。");
+            } else if (speech.speak(text, TextToSpeech.QUEUE_FLUSH, null, "doctor_reply") == TextToSpeech.ERROR) {
+                sendSpeechError("语音播报失败，可以继续看文字对话。");
+            }
+            return true;
+        }
+        if ("reptrainer".equals(uri.getScheme()) && "stop".equals(uri.getHost())) {
+            if (speech != null) speech.stop();
+            return true;
+        }
+        if ("reptrainer".equals(uri.getScheme())) return true;
         if ("https".equals(uri.getScheme()) && "chenxi-ouyang.online".equals(uri.getHost())
                 && uri.getPath() != null && uri.getPath().startsWith("/rep-trainer/")) return false;
         try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
@@ -90,6 +123,15 @@ public class MainActivity extends Activity {
         webView.evaluateJavascript(script, null);
     }
 
+    private void sendSpeechError(String error) {
+        final String script = "window.dispatchEvent(new CustomEvent('rep-trainer-speech-error',{detail:{error:"
+                + JSONObject.quote(error) + "}}))";
+        webView.post(new Runnable() {
+            @Override
+            public void run() { webView.evaluateJavascript(script, null); }
+        });
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         webView.saveState(outState);
@@ -104,6 +146,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (speech != null) { speech.stop(); speech.shutdown(); }
         webView.destroy();
         super.onDestroy();
     }

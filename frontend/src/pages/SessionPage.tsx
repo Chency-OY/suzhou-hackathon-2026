@@ -4,6 +4,7 @@ import { api } from "../api";
 import { guidedStep, QUALITY_LABEL } from "../guided";
 import { END_REASON_LABEL, SIGNAL_LABEL, SIGNAL_POLARITY } from "../labels";
 import { readHints, writeHints } from "../lib/rep";
+import { speakDoctorReply, speechOutputAvailable } from "../speech";
 import type { ScenarioDetail, SessionView, TurnView } from "../types";
 import { startVoiceInput, voiceInputAvailable } from "../voice";
 
@@ -13,11 +14,11 @@ function Meter({ label, value, color }: { label: string; value: number; color: s
   return <div className="mt-4"><div className="mb-2 flex justify-between text-[11px] text-[#b3cbd7]"><span>{label}</span><strong>{value}</strong></div><div className="game-meter"><div style={{ width: `${value}%`, background: color }} /></div></div>;
 }
 
-function Bubble({ turn }: { turn: TurnView }) {
+function Bubble({ turn, onSpeak }: { turn: TurnView; onSpeak?: (text: string) => void }) {
   const rep = turn.speaker === "rep";
   return <div className={`mb-5 flex gap-3 ${rep ? "flex-row-reverse" : ""}`}>
     <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-md border text-xs font-bold ${rep ? "border-[#5b96a8] bg-[#28657a] text-[#e6f8fc]" : "border-[#497287] bg-[#1b4055] text-[#d8edf5]"}`}>{rep ? "我" : "医"}</div>
-    <div className="max-w-[82%] sm:max-w-[74%]"><div className={`mb-1.5 text-[10px] font-bold tracking-wider text-[#95b3c3] ${rep ? "text-right" : ""}`}>{rep ? "你 · 医药代表" : "模拟医生"}</div><div className={`game-bubble ${rep ? "rep" : ""}`}>{turn.text}</div></div>
+    <div className="max-w-[82%] sm:max-w-[74%]"><div className={`mb-1.5 flex items-center gap-2 text-[10px] font-bold tracking-wider text-[#95b3c3] ${rep ? "justify-end" : ""}`}><span>{rep ? "你 · 医药代表" : "模拟医生"}</span>{!rep && onSpeak && <button type="button" className="game-link border-0 bg-transparent p-0 text-[10px]" onClick={() => onSpeak(turn.text)} aria-label="朗读这句模拟医生回复">🔊 朗读</button>}</div><div className={`game-bubble ${rep ? "rep" : ""}`}>{turn.text}</div></div>
   </div>;
 }
 
@@ -33,10 +34,28 @@ export default function SessionPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [hints, setHints] = useState(readHints());
   const [voiceListening, setVoiceListening] = useState(false);
+  const [speechEnabled, setSpeechEnabled] = useState(false);
+  const speechEnabledRef = useRef(false);
+  const speechStopRef = useRef<(() => void) | null>(null);
   const voiceStopRef = useRef<(() => void) | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => () => voiceStopRef.current?.(), []);
+  useEffect(() => () => { voiceStopRef.current?.(); speechStopRef.current?.(); }, []);
+
+  function speak(text: string) {
+    speechStopRef.current?.();
+    speechStopRef.current = speakDoctorReply(text, (reason) => setError(reason));
+  }
+
+  function toggleSpeech() {
+    const enabled = !speechEnabledRef.current;
+    speechEnabledRef.current = enabled;
+    setSpeechEnabled(enabled);
+    if (enabled) {
+      const latest = [...(session?.turns ?? [])].reverse().find((turn) => turn.speaker === "doctor");
+      if (latest) speak(latest.text);
+    } else { speechStopRef.current?.(); speechStopRef.current = null; }
+  }
 
   function toggleVoice() {
     if (voiceListening) {
@@ -45,6 +64,8 @@ export default function SessionPage() {
       return;
     }
     setError(null);
+    speechStopRef.current?.();
+    speechStopRef.current = null;
     voiceStopRef.current?.();
     voiceStopRef.current = startVoiceInput(
       (text) => setInput((current) => current ? `${current}，${text}` : text),
@@ -88,6 +109,8 @@ export default function SessionPage() {
   async function send(chosenText?: string) {
     const text = (chosenText ?? input).trim();
     if (!text || sending || ended || !session) return;
+    voiceStopRef.current?.();
+    setVoiceListening(false);
     const before = session;
     setSending(true);
     setError(null);
@@ -96,6 +119,7 @@ export default function SessionPage() {
     try {
       const result = await api.sendTurn(before.id, text);
       setSession(await api.getSession(before.id));
+      if (speechEnabledRef.current) speak(result.doctor_reply);
       if (result.degraded) setError("本轮使用了备用模拟回应，请核对正式资料后再练习。");
       setShowFeedback(!!chosenText);
     } catch (e) {
@@ -125,9 +149,9 @@ export default function SessionPage() {
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="game-kicker">DIALOGUE SIMULATION / 对话关卡</p><h1 className="mt-1.5 text-xl font-bold text-[#f0f8fc]">{scenario?.rep_goal ?? "正在加载任务目标"}</h1></div><span className="game-tag">{ended ? "本次演练已结束" : "对话进行中"}</span></div>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
       <section className={`game-panel game-chat ${guided ? "guided" : ""}`}>
-        <div className="border-b border-[#2b4d61] px-5 py-3"><strong className="text-sm">模拟拜访现场</strong><div className="mt-1 text-[11px] text-[#8daabb]">{guided ? "选择你认为合适的回应，先看反馈，再进入下一步。" : "用自然语言回应医生；你的每句话都会进入复盘。"}</div></div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2b4d61] px-5 py-3"><div><strong className="text-sm">模拟拜访现场</strong><div className="mt-1 text-[11px] text-[#8daabb]">{guided ? "选择你认为合适的回应，先看反馈，再进入下一步。" : "用自然语言回应医生；你的每句话都会进入复盘。"}</div></div>{speechOutputAvailable() && <button className="game-btn game-btn-outline !min-h-8 !px-3 text-xs" type="button" aria-pressed={speechEnabled} onClick={toggleSpeech}>{speechEnabled ? "🔇 关闭自动朗读" : "🔊 听模拟医生说话"}</button>}</div>
         {scenario && <details className="border-b border-[#2b4d61] bg-[#173347] px-5 py-3"><summary className="cursor-pointer text-xs font-semibold text-[#b9dfea]">查看任务目标与背景</summary><p className="mt-3 text-xs leading-6 text-[#bdd2dc]">{scenario.context_brief}</p><ul className="mt-2 list-inside list-disc text-xs leading-6 text-[#bdd2dc]">{scenario.success_criteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
-        <div className="game-chat-log p-4 sm:p-6" aria-live="polite">{turns.map((turn) => <Bubble key={turn.idx} turn={turn} />)}{sending && <div className="text-xs text-[#9fbccb]">模拟医生正在回应…</div>}<div ref={bottomRef} /></div>
+        <div className="game-chat-log p-4 sm:p-6" aria-live="polite">{turns.map((turn) => <Bubble key={turn.idx} turn={turn} onSpeak={speechOutputAvailable() ? speak : undefined} />)}{sending && <div className="text-xs text-[#9fbccb]">模拟医生正在回应…</div>}<div ref={bottomRef} /></div>
         {error && <div className="game-alert mx-4 mb-2">{error}</div>}
         {guided && showFeedback && selected && <div className={`game-guided-feedback ${selected.quality}`} role="status"><strong>{QUALITY_LABEL[selected.quality]}</strong><p>{selected.feedback}</p>{recommended && <p className="mt-2"><b>可以这样说：</b>{recommended.text}</p>}{!ended && step && <button className="game-btn mt-3" type="button" onClick={() => setShowFeedback(false)}>进入第 {repTurns.length + 1} 题 →</button>}</div>}
         {ended ? <div className="border-t border-[#2b4d61] bg-[#102638] p-4"><div className="mb-3 text-xs font-semibold text-[#d9eaf1]">演练结束：{session.end_reason ? END_REASON_LABEL[session.end_reason] : "已结束"}</div><div className="flex flex-wrap gap-2"><Link className="game-btn" to={`/review/${session.id}`}>查看复盘 →</Link><button className="game-btn game-btn-outline" type="button" onClick={() => void again()}>再练一次</button><Link className="game-btn game-btn-outline" to="/home">返回任务大厅</Link></div></div> : guided ? <div className="game-guided-panel">
