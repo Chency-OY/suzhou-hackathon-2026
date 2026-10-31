@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
-  <title id="title">前线日记：打开的日记本与语音波形</title>
-  <rect width="96" height="96" rx="22" fill="#087f87"/>
-  <path d="M18 27c11-3 21-1 30 4v40c-9-5-19-7-30-4V27Zm60 0c-11-3-21-1-30 4v40c9-5 19-7 30-4V27Z" fill="#effbf8"/>
-  <path d="M48 32v39" stroke="#b8dedb" stroke-width="2"/>
-  <path d="M27 48v-5m7 12V38m7 13v-8m14 8v-8m7 12V38m7 10v-5" fill="none" stroke="#efb94f" stroke-width="4" stroke-linecap="round"/>
-  <path d="M18 73c11-3 21-1 30 4 9-5 19-7 30-4" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <title id="title">前线日记：语音对话</title>
+  <rect width="96" height="96" rx="22" fill="#2d66de"/>
+  <path d="M29 22h38c9 0 16 7 16 16v19c0 9-7 16-16 16H45L29 82l3-11c-10-2-17-8-17-18V38c0-9 6-16 14-16Z" fill="#fff"/>
+  <path d="M36 44v12m12-20v28m12-22v16" fill="none" stroke="#2d66de" stroke-width="6" stroke-linecap="round"/>
 </svg>
