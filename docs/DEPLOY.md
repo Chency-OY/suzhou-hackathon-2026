@@ -19,7 +19,7 @@
 
 ## 模型配置
 
-运行服务通过仅服务器本地可读的环境文件设置 `LLM_PROVIDER=openai_compat`、`LLM_BASE_URL=https://api.deepseek.com`、`LLM_MODEL=deepseek-flash`、`LLM_THINKING=disabled` 和 `LLM_API_KEY`。密钥不能写入仓库或前端构建。默认仍为 mock，便于本地测试；公网服务单独覆盖配置。按需设置 `DAILY_TOKEN_CAP` 控制每日调用量。模型不可用或达到上限时，对话使用备用模拟回复并在页面提示。
+运行服务通过仅服务器本地可读的环境文件设置 `LLM_PROVIDER=openai_compat`、`LLM_BASE_URL=https://api.deepseek.com`、`LLM_MODEL=deepseek-flash`、`LLM_THINKING=disabled` 和 `LLM_API_KEY`。密钥不能写入仓库或前端构建。默认仍为 mock，便于本地测试；公网服务单独覆盖配置。按需设置 `DAILY_TOKEN_CAP` 控制每日调用量。模型不可用或达到上限时，对话使用备用模拟回复并在页面提示。学术雷达使用同一服务器密钥调用 DeepSeek Search API，再由模型整理可核对的来源摘录；用户需主动输入姓名和医院，浏览结果只作候选资料，24 小时内使用账号私有缓存。
 
 ## 前线日记安卓包
 

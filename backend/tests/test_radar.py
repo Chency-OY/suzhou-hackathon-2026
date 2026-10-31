@@ -6,9 +6,10 @@ from uuid import uuid4
 
 import httpx
 from app.db import Repo
-from app.deps import get_repo
+from app.deps import get_provider, get_repo
+from app.llm import MockLLM
 from app.main import app
-from app.models.radar import AcademicRadar
+from app.models.radar import AcademicRadar, RadarWebSource
 from app.radar.openalex import _name_matches, _search_name, radar_id, search_academic
 from fastapi.testclient import TestClient
 
@@ -80,6 +81,46 @@ def test_radar_cache_and_account_isolation(tmp_path, monkeypatch):
         assert first.post("/api/radar/search", json=body).status_code == 200
         assert len(calls) == 1
         assert len(first.get("/api/radar").json()) == 1
+        assert second.get("/api/radar").json() == []
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_deepseek_answer_is_account_scoped_and_cached(tmp_path, monkeypatch):
+    repo = Repo(f"sqlite:///{tmp_path}/web-radar.db")
+    app.dependency_overrides[get_repo] = lambda: repo
+    quote = "甲某来自某某医院并参加公开学术会议"
+    model = MockLLM({"radar_answer": json.dumps({"points": [{"kind": "conference",
+        "statement": "找到一条待确认的会议线索。", "source_id": "web_1", "evidence_quote": quote}]}, ensure_ascii=False)})
+    app.dependency_overrides[get_provider] = lambda: model
+    calls = []
+
+    def fake_web(name, hospital):
+        calls.append((name, hospital))
+        source = RadarWebSource(id="web_1", kind="conference", title="会议日程",
+                                url="https://example.org/meeting", name_in_source=True,
+                                hospital_in_source=True)
+        return [source], {"web_1": quote}, "ok"
+
+    def fake_openalex(owner_id, doctor_name, hospital):
+        return AcademicRadar(id=radar_id(owner_id, doctor_name, hospital), owner_id=owner_id,
+                             doctor_name=doctor_name, hospital=hospital,
+                             searched_at=datetime.now(UTC), status="no_match")
+
+    monkeypatch.setattr("app.api.radar.search_web", fake_web)
+    monkeypatch.setattr("app.api.radar.search_academic", fake_openalex)
+    first = TestClient(app, headers={"x-real-ip": str(uuid4())})
+    second = TestClient(app, headers={"x-real-ip": str(uuid4())})
+    try:
+        assert first.post("/api/auth/register", json={"username": "webone", "password": "long-password-123"}).status_code == 200
+        assert second.post("/api/auth/register", json={"username": "webtwo", "password": "long-password-456"}).status_code == 200
+        body = {"doctor_name": "甲某", "hospital": "某某医院"}
+        result = first.post("/api/radar/search", json=body).json()
+        assert result["web_status"] == "ok" and result["radar_version"]
+        assert result["answer_points"][0]["evidence_quote"] == quote
+        assert result["web_sources"][0]["identity_status"] == "candidate"
+        assert first.post("/api/radar/search", json=body).json()["id"] == result["id"]
+        assert len(calls) == 1 and len(model.calls) == 1
         assert second.get("/api/radar").json() == []
     finally:
         app.dependency_overrides.clear()

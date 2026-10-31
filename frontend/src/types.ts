@@ -167,5 +167,29 @@ export interface AcademicRadar {
   search_name: string;
   status: "found" | "no_match" | "ambiguous_institution";
   works: AcademicWork[];
+  web_sources: RadarWebSource[];
+  answer_points: RadarAnswerPoint[];
+  web_status: "ok" | "unavailable" | "not_configured";
+  radar_version: string;
   note: string;
+}
+
+export interface RadarWebSource {
+  id: string;
+  kind: "paper" | "conference" | "talk";
+  title: string;
+  url: string;
+  site_name: string;
+  published_at: string;
+  snippet: string;
+  name_in_source: boolean;
+  hospital_in_source: boolean;
+  identity_status: "candidate";
+}
+
+export interface RadarAnswerPoint {
+  kind: "paper" | "conference" | "talk";
+  statement: string;
+  source_id: string;
+  evidence_quote: string;
 }

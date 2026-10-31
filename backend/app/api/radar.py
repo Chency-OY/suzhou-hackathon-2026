@@ -8,14 +8,17 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 
 from ..db import Repo
-from ..deps import get_repo
+from ..deps import get_provider, get_repo
+from ..llm import LLMProvider
 from ..models.auth import Account
 from ..models.radar import AcademicRadar
+from ..radar.deepseek_web import search_web, synthesize_answer
 from ..radar.openalex import radar_id, search_academic
 from .auth import _rate_limit, get_current_account
 
 router = APIRouter(prefix="/api/radar")
 log = logging.getLogger(__name__)
+RADAR_VERSION = "deepseek-web-v1"
 
 
 class RadarSearch(BaseModel):
@@ -41,19 +44,48 @@ def list_radar(repo: Repo = Depends(get_repo), account: Account = Depends(get_cu
 
 @router.post("/search", response_model=AcademicRadar)
 def run_radar(body: RadarSearch, request: Request, repo: Repo = Depends(get_repo),
-              account: Account = Depends(get_current_account)):
+              account: Account = Depends(get_current_account), provider: LLMProvider = Depends(get_provider)):
     key = radar_id(account.id, body.doctor_name, body.hospital)
     cached = repo.get(AcademicRadar, key)
-    if cached and not body.refresh and datetime.now(UTC) - cached.searched_at < timedelta(hours=24):
+    if (cached and cached.radar_version == RADAR_VERSION and cached.web_status != "unavailable"
+            and not body.refresh and datetime.now(UTC) - cached.searched_at < timedelta(hours=24)):
         return cached
     _rate_limit(request, "radar", account.id, 20, 3600)
+    web_sources = []
+    evidence = {}
+    web_status = "unavailable"
+    try:
+        web_sources, evidence, web_status = search_web(body.doctor_name, body.hospital)
+    except (httpx.HTTPError, ValueError, TypeError, KeyError) as exc:
+        log.warning("DeepSeek 实时网页检索暂不可用：%s", type(exc).__name__)
+    answer_points = synthesize_answer(body.doctor_name, body.hospital, web_sources, evidence, provider)
     try:
         result = search_academic(account.id, body.doctor_name, body.hospital)
     except (httpx.HTTPError, ValueError, KeyError) as exc:
-        log.warning("公开学术索引暂不可用：%s", exc)
+        log.warning("OpenAlex 论文索引暂不可用：%s", type(exc).__name__)
+        if cached and not web_sources:
+            return cached
+        result = AcademicRadar(id=key, owner_id=account.id, doctor_name=body.doctor_name,
+                               hospital=body.hospital, searched_at=datetime.now(UTC), status="no_match")
+    if web_status == "unavailable" and not result.works:
         if cached:
             return cached
         raise HTTPException(status_code=503, detail={"error": {"code": "radar_unavailable",
-                                                       "message": "公开学术索引暂不可用，请稍后重试"}}) from exc
+                                                       "message": "实时检索暂不可用，请稍后重试"}})
+    result.web_sources = web_sources
+    result.answer_points = answer_points
+    result.web_status = web_status
+    result.radar_version = RADAR_VERSION
+    if web_sources:
+        result.status = "found"
+    notes = ["DeepSeek 实时检索公开网页，OpenAlex 补充论文候选；搜索结果不保证完整。"]
+    if web_status != "ok":
+        notes.append("实时网页检索暂不可用，当前主要显示论文索引候选。")
+    elif not web_sources:
+        notes.append("本次网页检索未返回可展示来源，不能据此判断没有相关资料。")
+    elif not answer_points:
+        notes.append("没有足够的姓名、医院和原文依据生成回答，请逐条核对候选链接。")
+    notes.append("同名作者或演讲者身份未确认；网页和论文候选都不能直接写入医生画像。")
+    result.note = "".join(notes)
     repo.save(result)
     return result
