@@ -75,7 +75,7 @@ def is_guest_account(account: Account) -> bool:
 
 
 def _guest_route_allowed(path: str) -> bool:
-    return (path in {"/api/programs", "/api/scenarios", "/api/sessions"}
+    return (path in {"/api/programs", "/api/scenarios", "/api/sessions", "/api/diary/preview"}
             or path.startswith(("/api/auth/", "/api/scenarios/", "/api/sessions/", "/api/reports/")))
 
 
@@ -109,7 +109,7 @@ def get_current_account(request: Request, repo: Repo = Depends(get_repo)) -> Acc
             if account.created_at + GUEST_SECONDS <= int(time()):
                 raise _error(401, "guest_expired", "试用已到期，请重新开始或创建账号")
             if not _guest_route_allowed(request.url.path):
-                raise _error(403, "guest_limited", "试用仅开放情境演练；创建账号后可用日记、雷达和团队")
+                raise _error(403, "guest_limited", "试用可练习和临时整理口述；创建账号后可保存日记并使用学术雷达")
         return account
 
 

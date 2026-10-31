@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 class DiaryDigest(BaseModel):
     summary: str = Field(min_length=1, max_length=500)
+    doctor_name: str = Field(default="", max_length=80)
+    hospital: str = Field(default="", max_length=120)
     first_impressions: list[str] = Field(default_factory=list, max_length=6)
     doctor_feedback: list[str] = Field(default_factory=list, max_length=6)
     what_to_improve: list[str] = Field(default_factory=list, max_length=6)
@@ -25,6 +27,14 @@ class FieldDiary(BaseModel):
     digest: DiaryDigest
     degraded: bool = False
     review_status: str = "unreviewed"
+
+
+class DiaryPreview(BaseModel):
+    raw_text: str
+    doctor_name: str = ""
+    hospital: str = ""
+    digest: DiaryDigest
+    degraded: bool = False
 
 
 class ReviewEvidence(BaseModel):

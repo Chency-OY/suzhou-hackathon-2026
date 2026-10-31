@@ -3,10 +3,11 @@ from time import time
 
 import pytest
 from app.db import Repo
-from app.deps import get_engine, get_repo
+from app.deps import get_engine, get_provider, get_repo
 from app.llm import MockLLM
 from app.main import app
 from app.models.auth import Account
+from app.models.diary import FieldDiary
 from app.personas import build_demo_personas
 from app.sessions import SessionEngine, StateRules
 from fastapi.testclient import TestClient
@@ -25,6 +26,7 @@ def trial(tmp_path):
                         "doctor_reply": json.dumps({"reply": "请继续说。"}, ensure_ascii=False)})
     app.dependency_overrides[get_repo] = lambda: repo
     app.dependency_overrides[get_engine] = lambda: SessionEngine(provider, kb=None, rules=StateRules())
+    app.dependency_overrides[get_provider] = lambda: provider
     yield TestClient(app), repo
     app.dependency_overrides.clear()
 
@@ -92,3 +94,42 @@ def test_guest_trial_limits_and_expiry(trial):
         db.add(saved)
         db.commit()
     assert client.get("/api/auth/me").status_code == 401
+
+
+def test_guest_can_preview_spoken_diary_without_saving_then_upgrade(trial):
+    client, repo = trial
+    client.post("/api/auth/guest")
+    provider = app.dependency_overrides[get_provider]()
+    provider.set("field_diary", json.dumps({
+        "summary": "今天开场太急，下一次先问问题。", "doctor_name": "张主任", "hospital": "苏州医院",
+        "first_impressions": ["我开场太急"], "what_to_improve": ["下次先问问题"],
+    }, ensure_ascii=False))
+    raw = "今天在苏州医院拜访张主任，我开场太急，下次先问问题。"
+    preview = client.post("/api/diary/preview", json={"raw_text": raw})
+    assert preview.status_code == 200
+    assert preview.json()["raw_text"] == raw
+    assert preview.json()["doctor_name"] == "张主任"
+    assert preview.json()["hospital"] == "苏州医院"
+    assert preview.json()["digest"]["what_to_improve"] == ["下次先问问题"]
+    assert repo.list(FieldDiary) == []
+    assert client.get("/api/diary").status_code == 403
+    assert client.post("/api/diary/preview", json={"raw_text": "记" * 4001}).status_code == 422
+    assert repo.list(FieldDiary) == []
+
+    upgraded = client.post("/api/auth/upgrade", json={"username": "diaryguest", "password": "strong-password-123"})
+    assert upgraded.status_code == 200
+    saved = client.post("/api/diary", json={"raw_text": raw})
+    assert saved.status_code == 200
+    assert saved.json()["doctor_name"] == "张主任"
+    assert len(client.get("/api/diary").json()) == 1
+
+
+def test_guest_diary_preview_is_rate_limited_and_rejects_identifiers(trial):
+    client, repo = trial
+    client.post("/api/auth/guest")
+    assert client.post("/api/diary/preview", json={"raw_text": "请联系patient@example.com来了解。"}).status_code == 422
+    raw = "今天拜访后，我想先记下自己的第一感受。"
+    for _ in range(3):
+        assert client.post("/api/diary/preview", json={"raw_text": raw}).status_code == 200
+    assert client.post("/api/diary/preview", json={"raw_text": raw}).status_code == 429
+    assert repo.list(FieldDiary) == []

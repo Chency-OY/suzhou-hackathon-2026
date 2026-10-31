@@ -48,6 +48,24 @@ def test_diary_keeps_raw_words_and_separates_accounts(clients):
     assert first.get(f"/api/diary/{item['id']}").status_code == 404
 
 
+def test_voice_only_diary_extracts_only_names_and_hospitals_in_raw_words(clients):
+    first, _, mock = clients
+    raw = "今天在苏州大学附属第一医院拜访张主任，我一开始太着急，后来才问他在意什么。"
+    digest = {"summary": "今天的开场太急", "doctor_name": "张主任", "hospital": "苏州大学附属第一医院",
+              "first_impressions": ["我一开始太着急"], "what_to_improve": ["后来才问他在意什么"]}
+    mock.set("field_diary", json.dumps(digest, ensure_ascii=False))
+    result = first.post("/api/diary", json={"raw_text": raw}).json()
+    assert result["doctor_name"] == "张主任"
+    assert result["hospital"] == "苏州大学附属第一医院"
+    assert result["raw_text"] == raw
+
+    digest["doctor_name"] = "李主任"
+    digest["hospital"] = "另一家医院"
+    mock.set("field_diary", json.dumps(digest, ensure_ascii=False))
+    ungrounded = first.post("/api/diary", json={"raw_text": raw}).json()
+    assert ungrounded["doctor_name"] == "" and ungrounded["hospital"] == ""
+
+
 def test_diary_preserves_note_when_model_output_is_invalid(clients):
     first, _, mock = clients
     mock.set("field_diary", "not JSON")

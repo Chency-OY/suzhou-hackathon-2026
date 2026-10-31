@@ -144,11 +144,21 @@ export interface ReportView {
 
 export interface DiaryDigest {
   summary: string;
+  doctor_name?: string;
+  hospital?: string;
   first_impressions: string[];
   doctor_feedback: string[];
   what_to_improve: string[];
   next_visit: string[];
   uncertain_claims: string[];
+}
+
+export interface DiaryPreview {
+  raw_text: string;
+  doctor_name: string;
+  hospital: string;
+  digest: DiaryDigest;
+  degraded: boolean;
 }
 
 export interface FieldDiary {

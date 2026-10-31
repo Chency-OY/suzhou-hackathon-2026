@@ -49,13 +49,12 @@ export default function Layout() {
           <NavLink to="/products" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">03</b><span>信达产品目录</span>
           </NavLink>
-          {account && !account.is_guest && <><NavLink to="/diary" className={({ isActive }) => isActive ? "active" : ""}>
+          {account && <NavLink to="/diary" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">04</b><span>前线日记</span>
-          </NavLink>
-          <NavLink to="/radar" className={({ isActive }) => isActive ? "active" : ""}>
+          </NavLink>}
+          {account && !account.is_guest && <NavLink to="/radar" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">05</b><span>学术雷达</span>
-          </NavLink>
-          </>}
+          </NavLink>}
         </nav>
 
         <div className="mt-auto hidden border-t border-[#254154] px-3 pt-5 lg:block">
@@ -71,10 +70,10 @@ export default function Layout() {
         </header>
         {logoutError && <div className="game-alert mx-5 mt-3" role="alert">{logoutError}</div>}
         <div className="game-notice">独立培训演示原型，非信达生物官方系统。请以获批资料和正式审核意见为准。</div>
-        {account?.is_guest && <div className="game-guest-banner"><span>试用模式 · 24 小时有效 · 可练 2 个情境</span><button type="button" onClick={() => setUpgradeOpen(true)}>创建账号，保留本次演练 →</button></div>}
+        {account?.is_guest && <div className="game-guest-banner"><span>试用模式 · 24 小时有效 · 可练 2 个情境，也可试用日记整理</span><button type="button" onClick={() => setUpgradeOpen(true)}>创建账号，保存练习与日记 →</button></div>}
         <main className="game-content"><Outlet /></main>
       </div>
-      {upgradeOpen && <div className="game-upgrade-backdrop"><div className="game-upgrade-panel" role="dialog" aria-modal="true" aria-labelledby="upgrade-title"><button className="game-upgrade-close" type="button" onClick={() => setUpgradeOpen(false)} aria-label="关闭">×</button><p className="game-kicker">SAVE YOUR PROGRESS</p><h2 id="upgrade-title">保留这次试用的演练</h2><p>设置账号和密码后，刚才的对话与复盘会保留在你的账号中。</p><form onSubmit={(event) => void upgrade(event)}><label>账号<input className="game-field" autoFocus minLength={3} maxLength={24} pattern="[A-Za-z0-9_]{3,24}" required value={upgradeName} onChange={(event) => setUpgradeName(event.target.value)} /></label><label>密码<input className="game-field" type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={upgradePassword} onChange={(event) => setUpgradePassword(event.target.value)} /></label><label>确认密码<input className="game-field" type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={upgradeConfirm} onChange={(event) => setUpgradeConfirm(event.target.value)} /></label>{upgradeError && <div className="game-alert" role="alert">{upgradeError}</div>}<button className="game-btn" type="submit" disabled={upgradeBusy}>{upgradeBusy ? "正在保存…" : "保存为正式账号 →"}</button></form></div></div>}
+      {upgradeOpen && <div className="game-upgrade-backdrop"><div className="game-upgrade-panel" role="dialog" aria-modal="true" aria-labelledby="upgrade-title"><button className="game-upgrade-close" type="button" onClick={() => setUpgradeOpen(false)} aria-label="关闭">×</button><p className="game-kicker">SAVE YOUR PROGRESS</p><h2 id="upgrade-title">保存这次试用</h2><p>设置账号和密码后，刚才的对话与复盘会保留在账号中。日记草稿仍在这台设备，回到日记页点“整理这份草稿”即可保存。</p><form onSubmit={(event) => void upgrade(event)}><label>账号<input className="game-field" autoFocus minLength={3} maxLength={24} pattern="[A-Za-z0-9_]{3,24}" required value={upgradeName} onChange={(event) => setUpgradeName(event.target.value)} /></label><label>密码<input className="game-field" type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={upgradePassword} onChange={(event) => setUpgradePassword(event.target.value)} /></label><label>确认密码<input className="game-field" type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={upgradeConfirm} onChange={(event) => setUpgradeConfirm(event.target.value)} /></label>{upgradeError && <div className="game-alert" role="alert">{upgradeError}</div>}<button className="game-btn" type="submit" disabled={upgradeBusy}>{upgradeBusy ? "正在保存…" : "保存为正式账号 →"}</button></form></div></div>}
     </div>
   );
 }

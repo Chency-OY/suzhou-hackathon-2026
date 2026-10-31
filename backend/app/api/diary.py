@@ -13,11 +13,11 @@ from ..db import Repo
 from ..deps import get_provider, get_repo
 from ..llm import LLMProvider, load_prompt, structured_call
 from ..models.auth import Account
-from ..models.diary import AcademicCrosscheck, DiaryDigest, DiaryReview, FieldDiary
+from ..models.diary import AcademicCrosscheck, DiaryDigest, DiaryPreview, DiaryReview, FieldDiary
 from ..models.radar import AcademicRadar
 from ..radar.openalex import radar_id
 from ..tribunal import assess_claim, extract_claims
-from .auth import _rate_limit, get_current_account
+from .auth import _rate_limit, get_current_account, is_guest_account
 
 router = APIRouter(prefix="/api/diary")
 log = logging.getLogger(__name__)
@@ -106,7 +106,15 @@ def _merge_digests(parts: list[DiaryDigest]) -> DiaryDigest:
             if len(selected) == 6:
                 break
         fields[name] = selected
-    return DiaryDigest(summary=summary, **fields)
+    names = {part.doctor_name.strip() for part in parts if part.doctor_name.strip()}
+    hospitals = {part.hospital.strip() for part in parts if part.hospital.strip()}
+    return DiaryDigest(summary=summary, doctor_name=next(iter(names)) if len(names) == 1 else "",
+                       hospital=next(iter(hospitals)) if len(hospitals) == 1 else "", **fields)
+
+
+def _grounded_context(value: str, raw_text: str) -> str:
+    value = value.strip()
+    return value if value and value in raw_text and not _OBVIOUS_IDENTIFIER.search(value) else ""
 
 
 def _digest_chunk(raw_text: str, provider: LLMProvider) -> tuple[DiaryDigest, bool]:
@@ -136,10 +144,24 @@ def create_diary(body: NewDiary, repo: Repo = Depends(get_repo), account: Accoun
                  provider: LLMProvider = Depends(get_provider)):
     digest, degraded = _digest(body.raw_text, provider)
     item = FieldDiary(id=f"diary_{uuid4().hex}", owner_id=account.id, created_at=datetime.now(UTC),
-                      hospital=body.hospital, doctor_name=body.doctor_name,
+                      hospital=body.hospital or _grounded_context(digest.hospital, body.raw_text),
+                      doctor_name=body.doctor_name or _grounded_context(digest.doctor_name, body.raw_text),
                       raw_text=body.raw_text, digest=digest, degraded=degraded)
     repo.save(item)
     return item
+
+
+@router.post("/preview", response_model=DiaryPreview)
+def preview_diary(body: NewDiary, request: Request, account: Account = Depends(get_current_account),
+                  provider: LLMProvider = Depends(get_provider)):
+    if is_guest_account(account) and len(body.raw_text) > 4000:
+        raise HTTPException(status_code=422, detail={"error": {"code": "preview_too_long",
+                                                       "message": "试用预览最多 4000 字；创建账号后可保存更长口述"}})
+    _rate_limit(request, "diary_preview", account.id, 3, 3600)
+    digest, degraded = _digest(body.raw_text, provider)
+    return DiaryPreview(raw_text=body.raw_text, digest=digest, degraded=degraded,
+                        doctor_name=_grounded_context(digest.doctor_name, body.raw_text),
+                        hospital=_grounded_context(digest.hospital, body.raw_text))
 
 
 @router.get("", response_model=list[FieldDiary])

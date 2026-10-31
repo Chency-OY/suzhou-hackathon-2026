@@ -36,10 +36,12 @@ describe("持续语音输入", () => {
     instance.onresult?.({ results: [[{ transcript: "第三句" }]] });
     expect(text.mock.calls.map((call) => call[0])).toEqual(["第一句", "第二句", "第三句"]);
     stop();
+    instance.onresult?.({ results: [[{ transcript: "第三句" }], [{ transcript: "停止前最后一句" }]] });
     instance.onend?.();
     vi.advanceTimersByTime(1000);
     expect(instance.start).toHaveBeenCalledTimes(2);
     expect(instance.stop).toHaveBeenCalledTimes(1);
+    expect(text.mock.calls.map((call) => call[0])).toEqual(["第一句", "第二句", "第三句", "停止前最后一句"]);
     expect(listening).toHaveBeenLastCalledWith(false);
   });
 
