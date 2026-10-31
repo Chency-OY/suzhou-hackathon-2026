@@ -153,6 +153,10 @@ body { background: #f7fafc; }
 .sim-home-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 11px; margin-top: 22px; font-size: 11px; font-weight: 800; }
 .sim-home-steps span { padding: 8px 11px; border: 1px solid #ffffff4d; border-radius: 999px; background: #ffffff1d; color: #fff; }
 .sim-home-steps b { color: #b9d1ff; }
+.sim-home-download { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; margin-top: 20px; padding: 7px 13px 7px 8px; border: 1px solid #fff; border-radius: 11px; background: #fff; box-shadow: 0 9px 22px #153ba066; color: #2452bf; font-size: 13px; font-weight: 850; text-decoration: none; transition: transform .18s, box-shadow .18s; }
+.sim-home-download:hover { transform: translateY(-2px); box-shadow: 0 13px 25px #153ba077; }
+.sim-home-download b { margin-left: 14px; font-size: 19px; font-weight: 500; }
+.sim-home-download-hint { display: block; margin-top: 8px; color: #dce9ff; font-size: 10px; line-height: 1.5; }
 .sim-home-preview { position: relative; z-index: 1; align-self: center; min-width: 0; transform: rotate(3deg); padding: 12px; border: 1px solid #ffffff8c; border-radius: 18px; background: #f9fcff; box-shadow: 0 22px 50px #12318e70; color: #1e365c; }
 .sim-preview-top { display: flex; align-items: center; gap: 7px; border-bottom: 1px solid #e1e9f7; padding: 2px 2px 11px; color: #7689b0; font-size: 9px; font-weight: 850; letter-spacing: .1em; }
 .sim-preview-top i { width: 7px; height: 7px; border-radius: 50%; background: #4f7ded; box-shadow: 0 0 0 4px #dbe6ff; }
