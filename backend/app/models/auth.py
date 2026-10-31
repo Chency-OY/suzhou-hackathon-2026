@@ -37,6 +37,7 @@ class Credentials(BaseModel):
 class AccountPublic(BaseModel):
     id: str
     username: str
+    is_guest: bool = False
 
 
 class SessionSummary(BaseModel):

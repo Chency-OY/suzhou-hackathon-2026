@@ -1,4 +1,4 @@
-export interface Account { id: string; username: string }
+export interface Account { id: string; username: string; is_guest: boolean }
 
 const url = (path: string) => `${import.meta.env.BASE_URL}api/auth/${path}`;
 
@@ -28,6 +28,22 @@ async function submit(path: "login" | "register", username: string, password: st
 
 export const loginAccount = (username: string, password: string) => submit("login", username, password);
 export const registerAccount = (username: string, password: string) => submit("register", username, password);
+
+export async function startGuestTrial(): Promise<Account> {
+  const response = await fetch(url("guest"), { method: "POST", credentials: "same-origin" });
+  if (!response.ok) throw new Error(await readError(response));
+  return response.json() as Promise<Account>;
+}
+
+export async function upgradeGuestAccount(username: string, password: string): Promise<Account> {
+  const response = await fetch(url("upgrade"), {
+    method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return response.json() as Promise<Account>;
+}
 
 export async function logoutAccount(): Promise<void> {
   const response = await fetch(url("logout"), { method: "POST", credentials: "same-origin" });

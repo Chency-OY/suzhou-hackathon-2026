@@ -19,6 +19,8 @@ from ..models.auth import Account, AccountPublic, Credentials, LoginSession
 router = APIRouter(prefix="/api/auth")
 COOKIE = "rep_trainer_session"
 SESSION_SECONDS = 7 * 24 * 3600
+GUEST_SECONDS = 24 * 3600
+GUEST_PASSWORD_MARKER = "!guest-no-password!"
 ITERATIONS = 400_000
 _rate_lock = threading.Lock()
 _attempts: dict[str, list[float]] = {}
@@ -68,16 +70,30 @@ def _cookie_path(request: Request) -> str:
     return "/rep-trainer/" if request.headers.get("x-forwarded-prefix") == "/rep-trainer" else "/"
 
 
-def _issue_session(account: Account, response: Response, request: Request, repo: Repo) -> AccountPublic:
+def is_guest_account(account: Account) -> bool:
+    return account.password_hash == GUEST_PASSWORD_MARKER
+
+
+def _guest_route_allowed(path: str) -> bool:
+    return (path in {"/api/programs", "/api/scenarios", "/api/sessions"}
+            or path.startswith(("/api/auth/", "/api/scenarios/", "/api/sessions/", "/api/reports/")))
+
+
+def _public(account: Account) -> AccountPublic:
+    return AccountPublic(id=account.id, username=account.username, is_guest=is_guest_account(account))
+
+
+def _issue_session(account: Account, response: Response, request: Request, repo: Repo,
+                   seconds: int = SESSION_SECONDS) -> AccountPublic:
     token = secrets.token_urlsafe(32)
     with DBSession(repo.engine) as db:
         db.add(LoginSession(token_hash=_token_hash(token), account_id=account.id,
-                            expires_at=int(time()) + SESSION_SECONDS))
+                            expires_at=int(time()) + seconds))
         db.commit()
-    response.set_cookie(COOKIE, token, max_age=SESSION_SECONDS, path=_cookie_path(request),
+    response.set_cookie(COOKIE, token, max_age=seconds, path=_cookie_path(request),
                         secure=request.headers.get("x-forwarded-proto", request.url.scheme) == "https",
                         httponly=True, samesite="lax")
-    return AccountPublic(id=account.id, username=account.username)
+    return _public(account)
 
 
 def get_current_account(request: Request, repo: Repo = Depends(get_repo)) -> Account:
@@ -89,6 +105,11 @@ def get_current_account(request: Request, repo: Repo = Depends(get_repo)) -> Acc
         account = db.get(Account, login.account_id) if login and login.expires_at > int(time()) else None
         if not account:
             raise _error(401, "not_authenticated", "登录已过期，请重新登录")
+        if is_guest_account(account):
+            if account.created_at + GUEST_SECONDS <= int(time()):
+                raise _error(401, "guest_expired", "试用已到期，请重新开始或创建账号")
+            if not _guest_route_allowed(request.url.path):
+                raise _error(403, "guest_limited", "试用仅开放情境演练；创建账号后可用日记、雷达和团队")
         return account
 
 
@@ -115,6 +136,46 @@ def register(body: Credentials, request: Request, response: Response, repo: Repo
     return _issue_session(account, response, request, repo)
 
 
+@router.post("/guest", response_model=AccountPublic)
+def guest(request: Request, response: Response, repo: Repo = Depends(get_repo)):
+    existing = maybe_current_account(request, repo)
+    if existing:
+        return _public(existing)
+    _rate_limit(request, "guest", "all", 8, 3600)
+    account = Account(id=f"usr_{uuid4().hex}", username=f"guest_{uuid4().hex[:16]}",
+                      password_hash=GUEST_PASSWORD_MARKER)
+    with DBSession(repo.engine, expire_on_commit=False) as db:
+        db.add(account)
+        db.commit()
+    return _issue_session(account, response, request, repo, GUEST_SECONDS)
+
+
+@router.post("/upgrade", response_model=AccountPublic)
+def upgrade(body: Credentials, request: Request, response: Response,
+            repo: Repo = Depends(get_repo), account: Account = Depends(get_current_account)):
+    if not is_guest_account(account):
+        raise _error(409, "already_registered", "当前已是正式账号")
+    _rate_limit(request, "upgrade", account.id, 5, 3600)
+    try:
+        with DBSession(repo.engine, expire_on_commit=False) as db:
+            saved = db.get(Account, account.id)
+            if not saved or not is_guest_account(saved):
+                raise _error(409, "already_registered", "当前已是正式账号")
+            saved.username = body.username
+            saved.password_hash = _password_hash(body.password)
+            db.add(saved)
+            old_token = request.cookies.get(COOKIE)
+            old_session = db.get(LoginSession, _token_hash(old_token)) if old_token else None
+            if old_session:
+                db.delete(old_session)
+            db.commit()
+    except IntegrityError as exc:
+        raise _error(409, "username_taken", "这个账号已被使用") from exc
+    account.username = body.username
+    account.password_hash = saved.password_hash
+    return _issue_session(account, response, request, repo)
+
+
 @router.post("/login", response_model=AccountPublic)
 def login(body: Credentials, request: Request, response: Response, repo: Repo = Depends(get_repo)):
     _rate_limit(request, "login", "all", 100, 900)
@@ -128,7 +189,7 @@ def login(body: Credentials, request: Request, response: Response, repo: Repo = 
 
 @router.get("/me", response_model=AccountPublic)
 def me(account: Account = Depends(get_current_account)):
-    return AccountPublic(id=account.id, username=account.username)
+    return _public(account)
 
 
 @router.get("/check", status_code=204)

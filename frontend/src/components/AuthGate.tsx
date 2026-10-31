@@ -1,9 +1,14 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { currentAccount, loginAccount, registerAccount, type Account } from "../auth";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { currentAccount, loginAccount, registerAccount, startGuestTrial, type Account } from "../auth";
 
 type Status = "checking" | "login" | "register" | "ready";
+const guestPageAllowed = (path: string) => ["/", "/home", "/progress"].includes(path)
+  || /^\/(scenarios|session|review|report)\//.test(path);
 
 export default function AuthGate({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const initialMode = new URLSearchParams(window.location.search).get("auth") === "register" ? "register" : "login";
   const [status, setStatus] = useState<Status>("checking");
   const [account, setAccount] = useState<Account | null>(null);
@@ -13,6 +18,26 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const guestRequest = useRef(false);
+
+  async function beginGuest() {
+    if (guestRequest.current) return;
+    guestRequest.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const found = await startGuestTrial();
+      setAccount(found);
+      setStatus("ready");
+      if (!guestPageAllowed(location.pathname)) {
+        navigate("/home", { replace: true });
+      }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "试用暂不可用，请稍后重试。");
+      guestRequest.current = false;
+      setStatus(mode);
+    } finally { setBusy(false); }
+  }
 
   useEffect(() => {
     let active = true;
@@ -20,6 +45,8 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       if (!active) return;
       setAccount(found);
       setStatus(found ? "ready" : mode);
+      if (found?.is_guest && !guestPageAllowed(location.pathname)) navigate("/home", { replace: true });
+      if (!found && new URLSearchParams(window.location.search).get("auth") === "guest") void beginGuest();
     }).catch(() => {
       if (active) { setError("连接训练服务器失败，请稍后重试。"); setStatus(mode); }
     });
@@ -86,6 +113,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
           {error && <div className="game-alert" role="alert">{error}</div>}
           <button className="game-btn mt-2 w-full" type="submit" disabled={busy}>{busy ? "正在处理…" : mode === "register" ? "创建账号 →" : "登录 →"}</button>
         </form>}
+      {status !== "checking" && <div className="game-guest-entry"><div><strong>先试一次，再决定是否注册</strong><p>无需账号 · 可练 2 个情境，每次最多回答 6 句</p></div><button type="button" onClick={() => void beginGuest()} disabled={busy}>{busy ? "正在进入…" : "免登录试用 →"}</button></div>}
       <a className="game-link mt-7 inline-block" href={import.meta.env.BASE_URL}>← 返回训练首页</a>
       <p className="mt-8 border-t border-[#2d4e61] pt-5 text-[11px] leading-5 text-[#819eaf]">独立培训演示原型，非信达生物官方系统。请勿使用真实患者信息；模拟内容不可作为医学或合规依据。</p>
     </div>

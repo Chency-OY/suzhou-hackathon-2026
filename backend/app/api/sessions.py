@@ -16,11 +16,13 @@ from ..models.diary import FieldDiary
 from ..models.team import TeamMembership
 from ..scoring import score_session
 from ..sessions import SessionEngine
-from .auth import get_current_account
+from .auth import get_current_account, is_guest_account
 
 router = APIRouter(prefix="/api")
 _locks: dict[str, threading.Lock] = {}
 _guard = threading.Lock()
+GUEST_MAX_SESSIONS = 2
+GUEST_MAX_TURNS = 6
 
 
 def _lock(sid: str) -> threading.Lock:
@@ -163,10 +165,15 @@ def create_session(body: CreateSessionIn, repo: Repo = Depends(get_repo),
         member = repo.get(TeamMembership, account.id)
         if not member or member.team_id != sc.team_id:
             raise _err(404, "not_found", "场景不存在")
+    if is_guest_account(account) and body.diary_id:
+        raise _err(403, "guest_limited", "试用模式不能使用私人日记")
     if body.diary_id and not _own_rehearsal(repo, body.diary_id, account):
         raise _err(422, "no_rehearsal_cues", "这篇日记没有可用于沟通练习的观察")
-    session = engine.start(sc, p, account.id, diary_id=body.diary_id)
-    repo.save(session)
+    with _lock(f"account:{account.id}"):
+        if is_guest_account(account) and sum(item.rep_id == account.id for item in repo.list(Session)) >= GUEST_MAX_SESSIONS:
+            raise _err(429, "guest_limit", "试用次数已用完；创建账号可继续练习并保留已有记录")
+        session = engine.start(sc, p, account.id, diary_id=body.diary_id)
+        repo.save(session)
     return CreateSessionOut(session_id=session.id, opening_line=sc.opening_line,
                             doctor_state=session.turns[0].state_after)
 
@@ -179,6 +186,8 @@ def post_turn(session_id: str, body: TurnIn, repo: Repo = Depends(get_repo),
         session, sc, p = _load(repo, session_id, account)
         if session.ended_at:
             raise _err(409, "session_ended", "演练已结束")
+        if is_guest_account(account) and sum(turn.speaker == "rep" for turn in session.turns) >= GUEST_MAX_TURNS:
+            raise _err(429, "guest_limit", "本次试用回答已达上限；创建账号可继续练习并保留记录")
         note = _own_rehearsal(repo, session.diary_id, account, allow_missing=True)
         res = engine.step(session, sc, p, body.text, rehearsal_note=note)
         repo.save(session)

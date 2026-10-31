@@ -1,11 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { currentAccount, logoutAccount } from "../auth";
+import { currentAccount, logoutAccount, upgradeGuestAccount, type Account } from "../auth";
 
 export default function Layout() {
-  const [username, setUsername] = useState("");
+  const [account, setAccount] = useState<Account | null>(null);
   const [logoutError, setLogoutError] = useState("");
-  useEffect(() => { void currentAccount().then((account) => setUsername(account?.username ?? "")).catch(() => {}); }, []);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeName, setUpgradeName] = useState("");
+  const [upgradePassword, setUpgradePassword] = useState("");
+  const [upgradeConfirm, setUpgradeConfirm] = useState("");
+  const [upgradeBusy, setUpgradeBusy] = useState(false);
+  const [upgradeError, setUpgradeError] = useState("");
+  useEffect(() => { void currentAccount().then(setAccount).catch(() => {}); }, []);
+
+  async function upgrade(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (upgradeBusy) return;
+    if (upgradePassword !== upgradeConfirm) { setUpgradeError("两次输入的密码不一致。"); return; }
+    setUpgradeBusy(true);
+    setUpgradeError("");
+    try {
+      setAccount(await upgradeGuestAccount(upgradeName.trim(), upgradePassword));
+      setUpgradeOpen(false);
+      setUpgradePassword("");
+      setUpgradeConfirm("");
+    } catch (cause) { setUpgradeError(cause instanceof Error ? cause.message : "保存失败，请重试。"); }
+    finally { setUpgradeBusy(false); }
+  }
 
   return (
     <div className="game-shell">
@@ -25,7 +46,7 @@ export default function Layout() {
           <NavLink to="/progress" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">02</b><span>练习档案</span>
           </NavLink>
-          <NavLink to="/diary" className={({ isActive }) => isActive ? "active" : ""}>
+          {account && !account.is_guest && <><NavLink to="/diary" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">03</b><span>前线日记</span>
           </NavLink>
           <NavLink to="/radar" className={({ isActive }) => isActive ? "active" : ""}>
@@ -33,7 +54,7 @@ export default function Layout() {
           </NavLink>
           <NavLink to="/team" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">05</b><span>团队学习</span>
-          </NavLink>
+          </NavLink></>}
         </nav>
 
         <div className="mt-auto hidden border-t border-[#254154] px-3 pt-5 lg:block">
@@ -45,12 +66,14 @@ export default function Layout() {
       <div className="game-main">
         <header className="game-topbar">
           <span>医学沟通模拟训练 / COMMAND CENTER</span>
-          <span className="flex items-center gap-3"><span className="hidden items-center gap-2 sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-[#72d9bd]" />DEMO BUILD 01</span><span className="max-w-24 truncate text-[#c9e9f2]" title={username}>{username}</span><button type="button" className="game-link" onClick={() => { void logoutAccount().then(() => window.location.assign(`${import.meta.env.BASE_URL}home?auth=login`)).catch(() => setLogoutError("退出失败，请重试")); }}>退出登录</button></span>
+          <span className="flex items-center gap-3"><span className="hidden items-center gap-2 sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-[#72d9bd]" />DEMO BUILD 01</span><span className="max-w-24 truncate text-[#c9e9f2]" title={account?.is_guest ? "免登录试用" : account?.username}>{account?.is_guest ? "试用访客" : account?.username}</span><button type="button" className="game-link" onClick={() => { void logoutAccount().then(() => window.location.assign(`${import.meta.env.BASE_URL}home?auth=login`)).catch(() => setLogoutError("退出失败，请重试")); }}>{account?.is_guest ? "退出试用" : "退出登录"}</button></span>
         </header>
         {logoutError && <div className="game-alert mx-5 mt-3" role="alert">{logoutError}</div>}
         <div className="game-notice">独立培训演示原型，非信达生物官方系统。请以获批资料和正式审核意见为准。</div>
+        {account?.is_guest && <div className="game-guest-banner"><span>试用模式 · 24 小时有效 · 可练 2 个情境</span><button type="button" onClick={() => setUpgradeOpen(true)}>创建账号，保留本次演练 →</button></div>}
         <main className="game-content"><Outlet /></main>
       </div>
+      {upgradeOpen && <div className="game-upgrade-backdrop"><div className="game-upgrade-panel" role="dialog" aria-modal="true" aria-labelledby="upgrade-title"><button className="game-upgrade-close" type="button" onClick={() => setUpgradeOpen(false)} aria-label="关闭">×</button><p className="game-kicker">SAVE YOUR PROGRESS</p><h2 id="upgrade-title">保留这次试用的演练</h2><p>设置账号和密码后，刚才的对话与复盘会保留在你的账号中。</p><form onSubmit={(event) => void upgrade(event)}><label>账号<input className="game-field" autoFocus minLength={3} maxLength={24} pattern="[A-Za-z0-9_]{3,24}" required value={upgradeName} onChange={(event) => setUpgradeName(event.target.value)} /></label><label>密码<input className="game-field" type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={upgradePassword} onChange={(event) => setUpgradePassword(event.target.value)} /></label><label>确认密码<input className="game-field" type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={upgradeConfirm} onChange={(event) => setUpgradeConfirm(event.target.value)} /></label>{upgradeError && <div className="game-alert" role="alert">{upgradeError}</div>}<button className="game-btn" type="submit" disabled={upgradeBusy}>{upgradeBusy ? "正在保存…" : "保存为正式账号 →"}</button></form></div></div>}
     </div>
   );
 }

@@ -233,12 +233,16 @@ class PlaybookCard(BaseModel):
 |---|---|---|---|
 | POST | `/auth/register` | `{username,password}` | `{id,username}` + 登录 Cookie；重复账号为 409 |
 | POST | `/auth/login` | `{username,password}` | `{id,username}` + 登录 Cookie；凭据错误为 401 |
+| POST | `/auth/guest` | – | `{id,username,is_guest:true}` + 24 小时试用 Cookie；无需账号密码，按来源限速 |
+| POST | `/auth/upgrade` | `{username,password}` | 把当前试用身份转为正式账号并保留其演练；需试用 Cookie，重复账号为 409 |
 | POST | `/auth/logout` | – | `{ok:true}`，撤销当前令牌并清 Cookie |
-| GET | `/auth/me` | – | 当前账号 `{id,username}`，未登录为 401 |
+| GET | `/auth/me` | – | 当前身份 `{id,username,is_guest}`，未登录为 401 |
 | GET | `/auth/check` | – | Nginx 内部鉴权：登录为 204，否则 401 |
 | GET | `/sessions` | – | 当前账号的练习列表，按开始时间倒序，最多 100 条 |
 
 `POST /sessions` 只接受 `scenario_id`，`rep_id` 由登录账号确定；`GET/POST /sessions/{id}` 只能访问同一账号的练习。旧演示会话保留在数据库，但不自动归属新账号，也不跨账号展示。
+
+免登录试用创建随机访客身份，仍经 HttpOnly Cookie 和同样的会话归属检查访问。每个访客最多建立 2 次演练，每次最多提交 6 句；访客可查看自己的情境、演练和复盘，不能使用私人日记、学术雷达、团队和打法卡片接口。试用 Cookie 24 小时后失效，不能用访客用户名密码重新登录。访客可在有效期内设置账号密码升级，身份 ID 不变，已有演练随之保留。模型密钥始终仅位于服务端环境配置，不进入浏览器资源或接口响应。
 
 ### 6.2 前线日记的资料对照（公网演示扩展）
 
@@ -394,6 +398,7 @@ ignored_doctor_question: {trust: -8, patience: -8}
 6. 语音：自由练习与日记支持语音输入；训练页提供手动朗读和用户主动开启的模拟医生自动朗读。浏览器使用 Web Speech，安卓包装器调用系统语音识别和 TTS；语音不可用时保留文字操作。
 7. 应用图标：使用蓝底白色对话气泡和三段语音线；在 48 px 手机桌面尺寸仍能看清主形。网页 favicon 和安卓启动图标保持同一轮廓。
 8. 安卓安装包：登录后的任务大厅首屏展示可直接下载的安卓 App 入口，链接到同源 `/rep-trainer/rep-trainer.apk`；公网入口页也保留下载入口。桌面和手机宽度均可找到下载操作。
+9. 免登录试用：公网入口和账号页都提供一键试用；进入任务大厅后直接选情境、文字或语音回答并查看逐轮判断。页面标明试用范围、24 小时有效期，并提供把试用演练保存为正式账号的操作。
 
 ## 9. 五天计划与里程碑
 
