@@ -6,6 +6,7 @@ from .api.diary import router as diary_router
 from .api.radar import router as radar_router
 from .api.scenarios import router as scenarios_router
 from .api.sessions import router as sessions_router
+from .api.team import router as team_router
 from .config import settings
 from .static import mount_frontend
 
@@ -17,6 +18,7 @@ app.include_router(sessions_router)
 app.include_router(auth_router)
 app.include_router(diary_router)
 app.include_router(radar_router)
+app.include_router(team_router)
 
 
 @app.get("/api/health")

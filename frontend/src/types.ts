@@ -126,6 +126,21 @@ export interface ReportView {
   turns: TurnView[];
 }
 
+export interface TeamInfo {
+  id: string;
+  name: string;
+  role: "owner" | "member";
+  member_count: number;
+  invite_code: string;
+}
+export interface TeamInsights {
+  team_id: string;
+  completed_sessions: number;
+  scored_sessions: number;
+  average_score: number | null;
+  signal_counts: Record<string, number>;
+}
+
 export interface DiaryDigest {
   summary: string;
   first_impressions: string[];

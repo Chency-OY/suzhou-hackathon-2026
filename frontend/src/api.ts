@@ -1,5 +1,5 @@
 import type {
-  AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
+  AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TeamInfo, TeamInsights, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -57,4 +57,10 @@ export const api = {
   listRadar: () => get<AcademicRadar[]>("/radar"),
   searchRadar: (doctorName: string, hospital: string, refresh = false) =>
     post<AcademicRadar>("/radar/search", { doctor_name: doctorName, hospital, refresh }),
+  getTeam: () => get<TeamInfo>("/team"),
+  createTeam: (name: string) => post<TeamInfo>("/team", { name }),
+  joinTeam: (inviteCode: string) => post<TeamInfo>("/team/join", { invite_code: inviteCode }),
+  rotateTeamInvite: () => post<TeamInfo>("/team/invite"),
+  leaveTeam: () => post<{ ok: boolean }>("/team/leave"),
+  getTeamInsights: () => get<TeamInsights>("/team/insights"),
 };

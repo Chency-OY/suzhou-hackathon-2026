@@ -31,6 +31,9 @@ export default function Layout() {
           <NavLink to="/radar" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">04</b><span>学术雷达</span>
           </NavLink>
+          <NavLink to="/team" className={({ isActive }) => isActive ? "active" : ""}>
+            <b aria-hidden="true">05</b><span>团队学习</span>
+          </NavLink>
         </nav>
 
         <div className="mt-auto hidden border-t border-[#254154] px-3 pt-5 lg:block">

@@ -8,6 +8,7 @@ import SessionPage from "./pages/SessionPage";
 import SessionReviewPage from "./pages/SessionReviewPage";
 import DiaryPage from "./pages/DiaryPage";
 import RadarPage from "./pages/RadarPage";
+import TeamPage from "./pages/TeamPage";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="progress" element={<SessionHistoryPage />} />
         <Route path="diary" element={<DiaryPage />} />
         <Route path="radar" element={<RadarPage />} />
+        <Route path="team" element={<TeamPage />} />
         <Route path="*" element={<ComingSoonPage title="页面不存在" />} />
       </Route>
     </Routes>
