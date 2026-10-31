@@ -17,6 +17,7 @@ import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.WindowManager;
 
 import org.json.JSONObject;
 
@@ -137,6 +138,7 @@ public class MainActivity extends Activity {
             endVoiceInput("手机未安装可用的语音识别服务，请用键盘输入。");
             return;
         }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (recognizer == null) {
             final int generation = voiceGeneration;
             recognizer = SpeechRecognizer.createSpeechRecognizer(this);
@@ -208,6 +210,7 @@ public class MainActivity extends Activity {
         voiceStopping = false;
         voiceGeneration++;
         if (recognizer != null) { recognizer.cancel(); recognizer.destroy(); recognizer = null; }
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         sendVoiceResult("", error, true);
     }
 
@@ -241,6 +244,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (recognizer != null) { recognizer.cancel(); recognizer.destroy(); recognizer = null; }
         if (speech != null) { speech.stop(); speech.shutdown(); }
         webView.destroy();
