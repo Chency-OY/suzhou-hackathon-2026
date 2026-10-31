@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { radarRefreshDue } from "../radarLocal";
 import type { AcademicRadar } from "../types";
 
 const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
 const kindLabel = { paper: "论文", conference: "会议", talk: "演讲" };
 
-function RadarCard({ result }: { result: AcademicRadar }) {
+function RadarCard({ result, onToggle, switching }: { result: AcademicRadar; onToggle: (item: AcademicRadar) => void; switching: boolean }) {
   const sources = result.web_sources || [];
   const points = result.answer_points || [];
   const sourceById = new Map(sources.map((source) => [source.id, source]));
@@ -16,6 +17,12 @@ function RadarCard({ result }: { result: AcademicRadar }) {
         <p className="game-muted mt-1 text-xs">检索姓名：{result.search_name} · {new Date(result.searched_at).toLocaleString("zh-CN")}</p></div>
       <span className="rounded-full border border-[#b9d5e3] px-3 py-1 text-xs text-[#176b91]">{sources.length} 条网页候选 · {result.works.length} 条论文索引</span>
     </div>
+    <div className="mt-4 flex flex-wrap items-center gap-3 border-b border-[#d5e4ed] pb-4 text-xs">
+      <span className={result.auto_refresh ? "font-bold text-[#176b91]" : "game-muted"}>{result.auto_refresh ? "打开页面时自动更新 · 已开启" : "打开页面时自动更新 · 已关闭"}</span>
+      <button className="game-link border-0 bg-transparent" type="button" disabled={switching} onClick={() => onToggle(result)}>{switching ? "正在保存…" : result.auto_refresh ? "关闭自动更新" : "开启自动更新"}</button>
+      {result.last_auto_checked_at && <span className="game-muted">最近自动检查：{new Date(result.last_auto_checked_at).toLocaleString("zh-CN")}</span>}
+    </div>
+    {result.refresh_error && <div className="game-alert mt-4" role="status">{result.refresh_error}</div>}
     {result.institution_name && <p className="game-muted mt-4 text-xs">索引中的医院：<a className="game-link" href={result.institution_url} target="_blank" rel="noreferrer">{result.institution_name} ↗</a></p>}
     <p className="game-alert mt-4" role="status">{result.note}</p>
     {points.length > 0 && <section className="mt-5 rounded-lg border border-[#c8dfe9] bg-[#f2f9fc] p-4">
@@ -51,15 +58,47 @@ export default function RadarPage() {
   const [hospital, setHospital] = useState(() => new URLSearchParams(window.location.search).get("hospital") || "");
   const [results, setResults] = useState<AcademicRadar[]>([]);
   const [busy, setBusy] = useState(false);
+  const [autoBusy, setAutoBusy] = useState(false);
+  const [switchingId, setSwitchingId] = useState("");
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => { void api.listRadar().then(setResults).catch((cause) => setError(errorText(cause))); }, []);
+  useEffect(() => {
+    let active = true;
+    void api.listRadar().then(async (items) => {
+      if (!active) return;
+      setResults(items);
+      if (!items.some((item) => radarRefreshDue(item))) return;
+      setAutoBusy(true);
+      try {
+        const updated = await api.refreshDueRadar();
+        if (active) setResults((current) => mergeRadar(current, updated));
+      } catch (cause) { if (active) setError(`自动更新暂不可用：${errorText(cause)}`); }
+      finally { if (active) setAutoBusy(false); }
+    }).catch((cause) => { if (active) setError(errorText(cause)); });
+    return () => { active = false; };
+  }, []);
+
+  async function toggleAutoRefresh(item: AcademicRadar) {
+    if (switchingId || autoBusy) return;
+    setSwitchingId(item.id); setError("");
+    try {
+      const updated = await api.setRadarAutoRefresh(item.id, !item.auto_refresh);
+      setResults((current) => mergeRadar(current, [updated]));
+      if (updated.auto_refresh && radarRefreshDue(updated)) {
+        setAutoBusy(true);
+        const refreshed = await api.refreshDueRadar();
+        setResults((current) => mergeRadar(current, refreshed));
+      }
+    } catch (cause) { setError(errorText(cause)); }
+    finally { setSwitchingId(""); setAutoBusy(false); }
+  }
 
   async function search() {
     if (busy || doctorName.trim().length < 2 || hospital.trim().length < 4) return;
     setBusy(true); setError("");
     try {
-      const result = await api.searchRadar(doctorName.trim(), hospital.trim());
-      setResults((current) => [result, ...current.filter((item) => item.id !== result.id)]);
+      const result = await api.searchRadar(doctorName.trim(), hospital.trim(), false, autoRefresh ? true : undefined);
+      setResults((current) => mergeRadar(current, [result]));
     } catch (cause) { setError(errorText(cause)); }
     finally { setBusy(false); }
   }
@@ -73,9 +112,17 @@ export default function RadarPage() {
         <label className="text-xs font-bold">医生姓名<input className="game-field mt-2" value={doctorName} maxLength={80} onChange={(event) => setDoctorName(event.target.value)} placeholder="例如：张伟" /></label>
         <label className="text-xs font-bold">医院正式名称<input className="game-field mt-2" value={hospital} maxLength={120} onChange={(event) => setHospital(event.target.value)} placeholder="例如：苏州大学附属第一医院" /></label>
       </div>
+      <label className="mt-4 flex items-start gap-2 text-xs leading-6"><input className="mt-1" type="checkbox" checked={autoRefresh} onChange={(event) => setAutoRefresh(event.target.checked)} /><span>以后打开雷达页时自动更新这组检索词。每次间隔至少 24 小时；开启后，姓名和医院会再次发送给 DeepSeek Search 与 OpenAlex。随时可在结果卡片关闭。</span></label>
       <button className="game-btn mt-5" type="button" disabled={busy || doctorName.trim().length < 2 || hospital.trim().length < 4} onClick={() => void search()}>{busy ? "正在检索…" : "查询公开资料 →"}</button>
       {error && <div className="game-alert mt-4" role="alert">{error}</div>}
     </section>
-    <div className="mt-8 space-y-4">{results.map((result) => <RadarCard key={result.id} result={result} />)}</div>
+    {autoBusy && <p className="game-muted mt-5 text-xs" role="status">正在更新已开启的学术雷达…</p>}
+    <div className="mt-8 space-y-4">{results.map((result) => <RadarCard key={result.id} result={result} switching={!!switchingId || autoBusy} onToggle={(item) => void toggleAutoRefresh(item)} />)}</div>
   </div>;
+}
+
+function mergeRadar(current: AcademicRadar[], incoming: AcademicRadar[]): AcademicRadar[] {
+  const merged = new Map(current.map((item) => [item.id, item]));
+  for (const item of incoming) merged.set(item.id, item);
+  return [...merged.values()].sort((a, b) => Date.parse(b.searched_at) - Date.parse(a.searched_at));
 }

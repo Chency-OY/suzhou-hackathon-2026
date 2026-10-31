@@ -255,6 +255,9 @@ export interface AcademicRadar {
   web_status: "ok" | "unavailable" | "not_configured";
   radar_version: string;
   note: string;
+  auto_refresh: boolean;
+  last_auto_checked_at: string | null;
+  refresh_error: string;
 }
 
 export interface RadarWebSource {

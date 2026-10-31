@@ -57,8 +57,13 @@ export const api = {
     method: "DELETE", credentials: "same-origin",
   }).then((response) => parse<{ ok: boolean }>(response)),
   listRadar: () => get<AcademicRadar[]>("/radar"),
-  searchRadar: (doctorName: string, hospital: string, refresh = false) =>
-    post<AcademicRadar>("/radar/search", { doctor_name: doctorName, hospital, refresh }),
+  searchRadar: (doctorName: string, hospital: string, refresh = false, autoRefresh?: boolean) =>
+    post<AcademicRadar>("/radar/search", { doctor_name: doctorName, hospital, refresh, auto_refresh: autoRefresh }),
+  refreshDueRadar: () => post<AcademicRadar[]>("/radar/refresh-due"),
+  setRadarAutoRefresh: (id: string, enabled: boolean) => fetch(apiUrl(`/radar/${encodeURIComponent(id)}/auto-refresh`), {
+    method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  }).then((response) => parse<AcademicRadar>(response)),
   getTeam: () => get<TeamInfo>("/team"),
   createTeam: (name: string) => post<TeamInfo>("/team", { name }),
   joinTeam: (inviteCode: string) => post<TeamInfo>("/team/join", { invite_code: inviteCode }),

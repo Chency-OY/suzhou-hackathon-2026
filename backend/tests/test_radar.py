@@ -77,7 +77,9 @@ def test_radar_cache_and_account_isolation(tmp_path, monkeypatch):
         assert first.post("/api/auth/register", json={"username": "radarone", "password": "long-password-123"}).status_code == 200
         assert second.post("/api/auth/register", json={"username": "radartwo", "password": "long-password-456"}).status_code == 200
         body = {"doctor_name": "张伟", "hospital": "苏州大学附属第一医院"}
-        assert first.post("/api/radar/search", json=body).status_code == 200
+        first_result = first.post("/api/radar/search", json=body)
+        assert first_result.status_code == 200
+        assert first_result.json()["auto_refresh"] is False
         assert first.post("/api/radar/search", json=body).status_code == 200
         assert len(calls) == 1
         assert len(first.get("/api/radar").json()) == 1

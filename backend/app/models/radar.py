@@ -42,6 +42,10 @@ class RadarAnswerDraft(BaseModel):
     points: list[RadarAnswerPoint] = Field(default_factory=list, max_length=8)
 
 
+class AutoRefreshChoice(BaseModel):
+    enabled: bool
+
+
 class AcademicRadar(BaseModel):
     id: str
     owner_id: str
@@ -58,3 +62,6 @@ class AcademicRadar(BaseModel):
     web_status: Literal["ok", "unavailable", "not_configured"] = "not_configured"
     radar_version: str = ""
     note: str = ""
+    auto_refresh: bool = False
+    last_auto_checked_at: datetime | None = None
+    refresh_error: str = ""
