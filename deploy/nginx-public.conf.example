@@ -26,6 +26,12 @@ location = /rep-trainer/innovent-logo.png {
     add_header Cache-Control "public, max-age=86400" always;
 }
 
+location = /rep-trainer/app-icon.svg {
+    alias /path/to/checkout/frontend/public/app-icon.svg;
+    default_type image/svg+xml;
+    add_header Cache-Control "public, max-age=86400" always;
+}
+
 # Public account endpoints issue HttpOnly login cookies.
 location ^~ /rep-trainer/api/auth/ {
     proxy_pass http://127.0.0.1:APP_PORT/api/auth/;
