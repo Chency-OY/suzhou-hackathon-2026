@@ -50,6 +50,7 @@ function DiaryCard({ item, onDelete }: { item: FieldDiary; onDelete: (id: string
           <section key={`${index}-${finding.claim}`} className="rounded-lg border border-[#d5e4ed] bg-[#f7fafc] p-4">
             <p className="text-sm font-semibold leading-6">{finding.claim}</p>
             <p className="mt-2 text-xs font-bold text-[#176b91]">{statusLabel[finding.status]}</p>
+            {finding.note && <p className="game-muted mt-2 text-xs leading-6">{finding.note}</p>}
             {finding.evidence_quote && <p className="mt-2 border-l-2 border-[#83bad1] pl-3 text-xs leading-6">资料库条目引用：“{finding.evidence_quote}”</p>}
             {finding.candidates.length > 0 && <details className="mt-3 text-xs"><summary className="game-link cursor-pointer">查看候选资料</summary><ul className="mt-2 space-y-2">{finding.candidates.map((source) => <li key={source.id}><a className="game-link" href={source.url} target="_blank" rel="noreferrer">官方说明书 ↗</a><span className="game-muted ml-2">{source.id}</span><p className="game-muted mt-1 leading-5">{source.excerpt}</p></li>)}</ul></details>}
           </section>)}
@@ -126,7 +127,7 @@ export default function DiaryPage() {
         {voiceInputAvailable() && <button className="game-btn game-btn-outline" type="button" onClick={toggleVoice} disabled={saving}>{listening ? "正在听，请说话…" : "🎙 语音输入"}</button>}
         <button className="game-btn" type="button" onClick={() => void save()} disabled={saving || rawText.trim().length < 8}>{saving ? "正在整理…" : "保存并整理日记 →"}</button>
       </div>
-      <p className="game-muted mt-3 text-[11px] leading-5">先确认识别出的文字再保存。请勿录入真实患者身份、电话或病历信息。</p>
+      <p className="game-muted mt-3 text-[11px] leading-5">先确认识别出的文字再保存。请勿录入患者姓名、手机号、身份证号或病历信息；系统会拦截明显的联系方式和身份证号。</p>
       {error && <div className="game-alert mt-4" role="alert">{error}</div>}
     </section>
 

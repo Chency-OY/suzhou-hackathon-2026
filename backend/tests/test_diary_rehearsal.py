@@ -42,6 +42,19 @@ def test_only_communication_cues_enter_rehearsal_prompt():
     assert "主观回忆" in prompt and "性价比" in prompt and "三代药" not in prompt
 
 
+def test_rehearsal_ignores_ungrounded_feedback_and_redacts_identity():
+    item = _diary("owner")
+    item.doctor_name = "甲某主任"
+    item.hospital = "某某医院"
+    item.raw_text = "今天我很紧张。甲某主任说别用性价比。某某医院门口很吵。"
+    item.digest.first_impressions = ["我很紧张", "我觉得这款产品适合所有人"]
+    item.digest.doctor_feedback = ["甲某主任说别用性价比", "甲某主任从此都讨厌性价比"]
+    note = rehearsal_note(item)
+    assert "我很紧张" in note and "医生说别用性价比" in note
+    assert "甲某主任" not in note and "某某医院" not in note
+    assert "适合所有人" not in note and "从此都讨厌" not in note
+
+
 def test_diary_rehearsal_is_account_scoped(tmp_path):
     repo = Repo(f"sqlite:///{tmp_path}/rehearsal.db")
     persona = build_demo_personas()[1]

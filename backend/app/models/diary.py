@@ -37,6 +37,8 @@ class ReviewEvidence(BaseModel):
 class ClaimFinding(BaseModel):
     claim: str
     status: Literal["possible_conflict", "possible_support", "insufficient", "out_of_scope"]
+    grounded_in_raw: bool = True
+    note: str = ""
     evidence_id: str = ""
     evidence_quote: str = ""
     candidates: list[ReviewEvidence] = Field(default_factory=list, max_length=3)
@@ -47,6 +49,7 @@ class DiaryReview(BaseModel):
     diary_id: str
     owner_id: str
     reviewed_at: datetime
+    policy_version: str = ""
     findings: list[ClaimFinding] = Field(default_factory=list, max_length=6)
     academic_candidate_count: int = 0
     academic_identity_confirmed: bool = False

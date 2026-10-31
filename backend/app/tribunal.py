@@ -32,8 +32,7 @@ def label_facts() -> tuple[Fact, ...]:
     facts, errors = load_facts(FACTS_PATH)
     if errors:
         return ()
-    return tuple(fact for fact in facts if fact.verified and
-                 (fact.source.startswith("label.md") or "[E1_LABEL]" in fact.source))
+    return tuple(fact for fact in facts if fact.verified and fact.source.startswith("label.md#"))
 
 
 def extract_claims(item: FieldDiary) -> list[str]:
@@ -91,7 +90,11 @@ def _evidence(fact: Fact) -> ReviewEvidence:
     return ReviewEvidence(id=fact.id, excerpt=fact.statement[:260], source=fact.source, url=LABEL_URL)
 
 
-def assess_claim(claim: str, provider: LLMProvider, facts: list[Fact] | None = None) -> ClaimFinding:
+def assess_claim(claim: str, provider: LLMProvider, facts: list[Fact] | None = None,
+                 raw_text: str | None = None) -> ClaimFinding:
+    if raw_text is not None and claim not in raw_text:
+        return ClaimFinding(claim=claim, status="insufficient", grounded_in_raw=False,
+                            note="这句话无法逐字定位到保存的原话，未进行医学资料判断。")
     if not _PRODUCT.search(claim) or _COMPARISON.search(claim):
         return ClaimFinding(claim=claim, status="out_of_scope")
     facts = candidate_facts(claim) if facts is None else facts

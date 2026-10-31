@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -19,6 +20,8 @@ from .auth import _rate_limit, get_current_account
 
 router = APIRouter(prefix="/api/diary")
 log = logging.getLogger(__name__)
+REVIEW_POLICY_VERSION = "2026-10-31-grounded-label"
+_OBVIOUS_IDENTIFIER = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)|(?<!\d)\d{17}[\dXx](?!\w)|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 
 class NewDiary(BaseModel):
@@ -29,7 +32,10 @@ class NewDiary(BaseModel):
     @field_validator("hospital", "doctor_name", "raw_text")
     @classmethod
     def trim(cls, value: str) -> str:
-        return value.strip()
+        value = value.strip()
+        if _OBVIOUS_IDENTIFIER.search(value):
+            raise ValueError("请删除手机号、身份证号或邮箱后再保存日记")
+        return value
 
 
 def _not_found() -> HTTPException:
@@ -88,7 +94,8 @@ def get_diary(diary_id: str, repo: Repo = Depends(get_repo), account: Account = 
 def get_review(diary_id: str, repo: Repo = Depends(get_repo), account: Account = Depends(get_current_account)):
     _own_diary(repo, diary_id, account)
     review = repo.get(DiaryReview, f"review_{diary_id}")
-    if not review or review.owner_id != account.id:
+    if (not review or review.owner_id != account.id or review.policy_version != REVIEW_POLICY_VERSION
+            or datetime.now(UTC) - review.reviewed_at >= timedelta(hours=24)):
         raise _not_found()
     return review
 
@@ -99,15 +106,20 @@ def review_diary(diary_id: str, request: Request, refresh: bool = False, repo: R
     item = _own_diary(repo, diary_id, account)
     key = f"review_{diary_id}"
     cached = repo.get(DiaryReview, key)
-    if cached and not refresh and datetime.now(UTC) - cached.reviewed_at < timedelta(hours=24):
+    if (cached and cached.owner_id == account.id and cached.policy_version == REVIEW_POLICY_VERSION
+            and not refresh and datetime.now(UTC) - cached.reviewed_at < timedelta(hours=24)):
         return cached
     _rate_limit(request, "diary_review", account.id, 20, 3600)
     radar = repo.get(AcademicRadar, radar_id(account.id, item.doctor_name, item.hospital)) if (
         item.doctor_name and item.hospital) else None
     review = DiaryReview(id=key, diary_id=diary_id, owner_id=account.id, reviewed_at=datetime.now(UTC),
-                         findings=[assess_claim(claim, provider) for claim in extract_claims(item)],
+                         policy_version=REVIEW_POLICY_VERSION,
+                         findings=[assess_claim(claim, provider, raw_text=item.raw_text)
+                                   for claim in extract_claims(item)],
                          academic_candidate_count=len(radar.works) if radar else 0)
     repo.save(review)
+    item.review_status = "reviewed"
+    repo.save(item)
     return review
 
 

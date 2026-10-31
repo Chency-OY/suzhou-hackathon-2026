@@ -17,6 +17,8 @@ def test_claims_are_separate_from_communication_observations():
     assert candidate_facts("信尔美比三代药更好") == []
     safety = candidate_facts("信尔美没有副作用")
     assert safety and all(fact.category == "safety" for fact in safety)
+    assert all(fact.source.startswith("label.md#") for fact in safety)
+    assert candidate_facts("信尔美每周给药一次") == []  # 上游条目没有逐条定位到说明书章节
 
 
 def test_verdict_needs_exact_quote_from_approved_source():
@@ -50,4 +52,12 @@ def test_question_is_not_treated_as_an_assertion():
     finding = assess_claim("医生问：信尔美有没有副作用？", mock)
     assert finding.status == "insufficient"
     assert finding.candidates
+    assert mock.calls == []
+
+
+def test_paraphrase_not_found_in_raw_words_cannot_get_a_verdict():
+    mock = MockLLM({"diary_tribunal": "{}"})
+    finding = assess_claim("信尔美没有副作用", mock, raw_text="主任问这个药有没有风险。")
+    assert finding.status == "insufficient" and not finding.grounded_in_raw
+    assert "原话" in finding.note
     assert mock.calls == []

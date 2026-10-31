@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -6,6 +7,7 @@ from app.db import Repo
 from app.deps import get_provider, get_repo
 from app.llm import MockLLM
 from app.main import app
+from app.models.diary import DiaryReview
 from fastapi.testclient import TestClient
 
 
@@ -56,6 +58,15 @@ def test_diary_preserves_note_when_model_output_is_invalid(clients):
     assert item["digest"]["summary"] == item["raw_text"]
 
 
+@pytest.mark.parametrize("raw", ["患者手机号是13800000000，请记录。", "患者身份证号110101199001011234，请记录。",
+                                     "请联系patient@example.com获取信息。"])
+def test_obvious_identifiers_are_rejected_before_diary_storage(clients, raw):
+    first, _, mock = clients
+    assert first.post("/api/diary", json={"raw_text": raw}).status_code == 422
+    assert first.get("/api/diary").json() == []
+    assert mock.calls == []
+
+
 def test_review_is_private_cached_and_deleted_with_diary(clients):
     first, second, mock = clients
     digest = {"summary": "拜访后回忆", "first_impressions": ["我很紧张"],
@@ -78,3 +89,36 @@ def test_review_is_private_cached_and_deleted_with_diary(clients):
     assert first.get(path).json()["id"] == review["id"]
     assert first.delete(f"/api/diary/{item['id']}").status_code == 200
     assert first.get(path).status_code == 404
+
+
+def test_review_does_not_judge_hallucinated_digest_claim(clients):
+    first, _, mock = clients
+    digest = {"summary": "拜访后回忆", "first_impressions": [], "doctor_feedback": [],
+              "what_to_improve": [], "next_visit": [], "uncertain_claims": ["信尔美没有副作用"]}
+    mock.set("field_diary", json.dumps(digest, ensure_ascii=False))
+    item = first.post("/api/diary", json={"raw_text": "今天主任问我能否提供正式说明书，暂时没有谈具体药物。"}).json()
+    review = first.post(f"/api/diary/{item['id']}/review").json()
+    finding = review["findings"][0]
+    assert finding["status"] == "insufficient" and finding["grounded_in_raw"] is False
+    assert not [call for call in mock.calls if call["prompt_name"] == "diary_tribunal"]
+
+
+def test_old_or_expired_review_must_be_recomputed(clients):
+    first, _, _ = clients
+    item = first.post("/api/diary", json={"raw_text": "今天主任让我先把正式资料留下，改天再谈。"}).json()
+    path = f"/api/diary/{item['id']}/review"
+    first.post(path)
+    repo = app.dependency_overrides[get_repo]()
+    stored = repo.get(DiaryReview, f"review_{item['id']}")
+    assert stored is not None
+    stored.policy_version = "older-policy"
+    repo.save(stored)
+    assert first.get(path).status_code == 404
+    current = first.post(path).json()
+    assert current["policy_version"] != "older-policy"
+    stored = repo.get(DiaryReview, current["id"])
+    assert stored is not None
+    stored.reviewed_at = datetime.now(UTC) - timedelta(hours=25)
+    repo.save(stored)
+    assert first.get(path).status_code == 404
+    assert first.post(path).json()["reviewed_at"] != stored.reviewed_at.isoformat()

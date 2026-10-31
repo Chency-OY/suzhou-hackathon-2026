@@ -127,6 +127,8 @@ export interface ReviewEvidence { id: string; excerpt: string; source: string; u
 export interface ClaimFinding {
   claim: string;
   status: "possible_conflict" | "possible_support" | "insufficient" | "out_of_scope";
+  grounded_in_raw: boolean;
+  note: string;
   evidence_id: string;
   evidence_quote: string;
   candidates: ReviewEvidence[];
@@ -136,6 +138,7 @@ export interface DiaryReview {
   diary_id: string;
   owner_id: string;
   reviewed_at: string;
+  policy_version: string;
   findings: ClaimFinding[];
   academic_candidate_count: number;
   academic_identity_confirmed: boolean;
