@@ -99,7 +99,7 @@ export default function DiaryPage() {
   }, []);
 
   function toggleVoice() {
-    if (listening) { stopVoice.current?.(); setListening(false); return; }
+    if (listening) { stopVoice.current?.(); return; }
     setError("");
     stopVoice.current?.();
     stopVoice.current = startVoiceInput(
@@ -110,7 +110,7 @@ export default function DiaryPage() {
   }
 
   async function save() {
-    if (saving || rawText.trim().length < 8) return;
+    if (saving || listening || rawText.trim().length < 8) return;
     stopVoice.current?.();
     setListening(false);
     setSaving(true);
@@ -134,7 +134,7 @@ export default function DiaryPage() {
   return <div className="mx-auto max-w-4xl">
     <p className="game-kicker">FRONTLINE DIARY / 前线日记本</p>
     <h1 className="game-title mt-2">趁第一感受还清楚，马上说下来</h1>
-    <p className="game-muted mt-3 text-sm leading-7">拜访结束后可以分段口述，文字会接在一起。确认原话后，DeepSeek 帮你整理成几条回忆和下次准备；同一账号下次还能回看。</p>
+    <p className="game-muted mt-3 text-sm leading-7">点语音输入后可以一直口述，直到你点停止；系统会把每段识别文字接在一起。确认原话后，DeepSeek 帮你整理成几条回忆和下次准备；同一账号下次还能回看。</p>
 
     <section className="game-panel mt-6 p-5 sm:p-7">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -144,8 +144,8 @@ export default function DiaryPage() {
       <label className="mt-5 block text-xs font-bold" htmlFor="diary-raw">我刚才想到的事</label>
       <textarea id="diary-raw" className="game-field mt-2 min-h-[180px] resize-y text-sm leading-7" maxLength={4000} value={rawText} onChange={(event) => setRawText(event.target.value)} placeholder="比如：今天主任明显很赶时间，我一提性价比就被打断了。我应该先问他最担心什么……" />
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        {voiceInputAvailable() && <button className="game-btn game-btn-outline" type="button" onClick={toggleVoice} disabled={saving}>{listening ? "正在听，请说话…" : "🎙 语音输入"}</button>}
-        <button className="game-btn" type="button" onClick={() => void save()} disabled={saving || rawText.trim().length < 8}>{saving ? "正在整理…" : "保存并整理日记 →"}</button>
+        {voiceInputAvailable() && <button className="game-btn game-btn-outline" type="button" onClick={toggleVoice} disabled={saving} aria-label={listening ? "停止语音输入" : "开始语音输入"}>{listening ? "■ 停止录音" : "🎙 开始语音输入"}</button>}
+        <button className="game-btn" type="button" onClick={() => void save()} disabled={saving || listening || rawText.trim().length < 8}>{saving ? "正在整理…" : "保存并整理日记 →"}</button>
       </div>
       <p className="game-muted mt-3 text-[11px] leading-5">先确认识别出的文字再保存。请勿录入患者姓名、手机号、身份证号或病历信息；系统会拦截明显的联系方式和身份证号。</p>
       {error && <div className="game-alert mt-4" role="alert">{error}</div>}

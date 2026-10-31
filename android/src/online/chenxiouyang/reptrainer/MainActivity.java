@@ -3,9 +3,15 @@ package online.chenxiouyang.reptrainer;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
@@ -18,11 +24,18 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class MainActivity extends Activity {
-    private static final int VOICE_REQUEST = 1001;
+    private static final int MICROPHONE_REQUEST = 1001;
     private static final String HOME = "https://chenxi-ouyang.online/rep-trainer/diary";
     private WebView webView;
     private TextToSpeech speech;
     private boolean speechReady = false;
+    private SpeechRecognizer recognizer;
+    private final Handler voiceHandler = new Handler(Looper.getMainLooper());
+    private boolean voiceActive = false;
+    private boolean voiceStopping = false;
+    private String voiceId = "";
+    private int consecutiveVoiceErrors = 0;
+    private int voiceGeneration = 0;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -67,7 +80,11 @@ public class MainActivity extends Activity {
     private boolean handleUrl(String url) {
         Uri uri = Uri.parse(url);
         if ("reptrainer".equals(uri.getScheme()) && "voice".equals(uri.getHost())) {
-            startVoiceInput();
+            startVoiceInput(uri.getQueryParameter("id"));
+            return true;
+        }
+        if ("reptrainer".equals(uri.getScheme()) && "voice-stop".equals(uri.getHost())) {
+            if (voiceId.equals(uri.getQueryParameter("id"))) stopVoiceInput();
             return true;
         }
         if ("reptrainer".equals(uri.getScheme()) && "speak".equals(uri.getHost())) {
@@ -91,35 +108,113 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    private void startVoiceInput() {
+    private void startVoiceInput(String id) {
+        if (id == null || id.isEmpty()) return;
+        if (voiceActive) endVoiceInput("");
+        voiceGeneration++;
+        voiceId = id;
+        voiceActive = true;
+        voiceStopping = false;
+        consecutiveVoiceErrors = 0;
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, MICROPHONE_REQUEST);
+            return;
+        }
+        beginVoiceSegment();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grants) {
+        super.onRequestPermissionsResult(requestCode, permissions, grants);
+        if (requestCode != MICROPHONE_REQUEST || !voiceActive) return;
+        if (grants.length > 0 && grants[0] == PackageManager.PERMISSION_GRANTED) beginVoiceSegment();
+        else endVoiceInput("麦克风权限未开启，请在手机设置中允许录音。");
+    }
+
+    private void beginVoiceSegment() {
+        if (!voiceActive || voiceStopping) return;
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            endVoiceInput("手机未安装可用的语音识别服务，请用键盘输入。");
+            return;
+        }
+        if (recognizer == null) {
+            final int generation = voiceGeneration;
+            recognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            recognizer.setRecognitionListener(new RecognitionListener() {
+                @Override public void onReadyForSpeech(Bundle params) { }
+                @Override public void onBeginningOfSpeech() { }
+                @Override public void onRmsChanged(float rmsdB) { }
+                @Override public void onBufferReceived(byte[] buffer) { }
+                @Override public void onEndOfSpeech() { }
+                @Override public void onEvent(int eventType, Bundle params) { }
+                @Override public void onPartialResults(Bundle partialResults) { }
+                @Override public void onResults(Bundle results) {
+                    if (generation != voiceGeneration || !voiceActive) return;
+                    ArrayList<String> words = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (words != null && !words.isEmpty()) sendVoiceResult(words.get(0), "", false);
+                    consecutiveVoiceErrors = 0;
+                    if (voiceStopping) endVoiceInput("");
+                    else scheduleNextSegment(250);
+                }
+                @Override public void onError(int error) {
+                    if (generation != voiceGeneration || !voiceActive) return;
+                    if (voiceStopping) { endVoiceInput(""); return; }
+                    if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) {
+                        endVoiceInput("麦克风权限未开启，请在手机设置中允许录音。");
+                        return;
+                    }
+                    if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                        scheduleNextSegment(250);
+                        return;
+                    }
+                    if (++consecutiveVoiceErrors >= 3) {
+                        endVoiceInput("语音服务连续中断，请检查网络或改用键盘输入。");
+                        return;
+                    }
+                    scheduleNextSegment(700);
+                }
+            });
+        }
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN");
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "请说出刚才的想法");
-        try { startActivityForResult(intent, VOICE_REQUEST); }
-        catch (ActivityNotFoundException ignored) {
-            sendVoiceResult("", "手机未安装可用的语音识别服务，请用键盘输入。");
-        }
+        try { recognizer.startListening(intent); }
+        catch (RuntimeException ignored) { endVoiceInput("无法启动语音识别，请检查麦克风权限。"); }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != VOICE_REQUEST) return;
-        if (resultCode == RESULT_OK && data != null) {
-            ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (results != null && !results.isEmpty()) {
-                sendVoiceResult(results.get(0), "");
-                return;
-            }
-        }
-        sendVoiceResult("", "语音输入已取消，可以继续口述或手动输入。");
+    private void scheduleNextSegment(long delay) {
+        if (!voiceActive || voiceStopping) return;
+        final int generation = voiceGeneration;
+        voiceHandler.postDelayed(new Runnable() {
+            @Override public void run() { if (generation == voiceGeneration) beginVoiceSegment(); }
+        }, delay);
     }
 
-    private void sendVoiceResult(String text, String error) {
-        String script = "window.dispatchEvent(new CustomEvent('rep-trainer-voice-result',{detail:{text:"
-                + JSONObject.quote(text) + ",error:" + JSONObject.quote(error) + "}}))";
+    private void stopVoiceInput() {
+        if (!voiceActive) return;
+        voiceStopping = true;
+        if (recognizer == null) { endVoiceInput(""); return; }
+        recognizer.stopListening();
+        final int generation = voiceGeneration;
+        voiceHandler.postDelayed(new Runnable() {
+            @Override public void run() { if (generation == voiceGeneration && voiceStopping) endVoiceInput(""); }
+        }, 1800);
+    }
+
+    private void endVoiceInput(String error) {
+        if (!voiceActive) return;
+        voiceActive = false;
+        voiceStopping = false;
+        voiceGeneration++;
+        if (recognizer != null) { recognizer.cancel(); recognizer.destroy(); recognizer = null; }
+        sendVoiceResult("", error, true);
+    }
+
+    private void sendVoiceResult(String text, String error, boolean ended) {
+        String script = "window.dispatchEvent(new CustomEvent('rep-trainer-voice-result',{detail:{id:"
+                + JSONObject.quote(voiceId) + ",text:" + JSONObject.quote(text) + ",error:"
+                + JSONObject.quote(error) + ",ended:" + ended + "}}))";
         webView.evaluateJavascript(script, null);
     }
 
@@ -146,6 +241,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (recognizer != null) { recognizer.cancel(); recognizer.destroy(); recognizer = null; }
         if (speech != null) { speech.stop(); speech.shutdown(); }
         webView.destroy();
         super.onDestroy();
