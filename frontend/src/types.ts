@@ -49,6 +49,17 @@ export interface TrainingProgram {
   scope: "general" | "product";
 }
 
+export interface ProductPortfolioItem {
+  id: string;
+  name: string;
+  generic_name: string;
+  stage: "marketed" | "nda_review" | "pivotal";
+  note: string;
+  source_url: string;
+  checked_on: string;
+  verified: boolean;
+}
+
 export const SIGNALS = [
   "relevant_to_concern", "asked_open_question", "cited_evidence", "empathy_shown", "addressed_objection",
   "vague_or_generic", "pushy", "exaggeration", "off_label_claim", "competitor_bashing",

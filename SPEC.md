@@ -207,10 +207,13 @@ class PlaybookCard(BaseModel):
 
 基础路径 `/api`，JSON；时间 ISO8601。
 
+产品目录项 `ProductPortfolioItem` 包含 `id`、`name`、`generic_name`、`stage`（`marketed`、`nda_review` 或 `pivotal`）、`note`、`source_url`、`checked_on`、`verified`。`marketed` 指商业化组合已获批产品，含合作商业化产品；`nda_review` 和 `pivotal` 均为未获批的研发项目。目录只介绍状态，不输出适应症、疗效、用法和竞品比较。只有经官方说明书核实的产品资料包才能提供产品专项训练；其余产品可从通用沟通课程练习，不将目录状态作为医学事实评分依据。
+
 | 方法 | 路径 | 请求 | 响应 |
 |---|---|---|---|
 | GET | `/scenarios?program=&dept=&difficulty=&type=` | – | `Scenario[]`（不含 hidden_objection） |
 | GET | `/programs` | – | 可选培训课程（通用沟通/已核实产品资料包） |
+| GET | `/products` | – | `ProductPortfolioItem[]`：信达已商业化产品及接近上市的在研项目、状态、核对日期和官方来源 |
 | GET | `/scenarios/{id}` | – | `Scenario` + `persona_public`（脱敏后的画像：职称、医院级别、风格提示） |
 | POST | `/sessions` | `{scenario_id, rep_id}` | `{session_id, opening_line, doctor_state}` |
 | POST | `/sessions/{id}/turns` | `{text}` | `{doctor_reply, doctor_state, signals, judge_note, judge_degraded, ended, end_reason, degraded, report_id}` |

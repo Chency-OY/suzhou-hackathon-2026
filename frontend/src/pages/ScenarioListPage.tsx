@@ -72,7 +72,7 @@ export default function ScenarioListPage() {
       </div>
 
       <section className="mt-8">
-        <div className="mb-3 flex items-end justify-between gap-3"><div><p className="game-kicker">TRAINING PROGRAMS</p><h2 className="mt-1.5 text-lg font-bold">选择训练课程</h2></div><span className="text-xs text-[#8eacbc]">AI 模拟演练</span></div>
+        <div className="mb-3 flex items-end justify-between gap-3"><div><p className="game-kicker">TRAINING PROGRAMS</p><h2 className="mt-1.5 text-lg font-bold">选择训练课程</h2></div><Link className="game-link text-xs" to="/products">查看信达产品目录 →</Link></div>
         <div className="grid gap-3 md:grid-cols-2" aria-label="选择训练课程">
           {programs.data?.map((program, index) => (
             <button type="button" key={program.id} aria-pressed={filters.program === program.id}

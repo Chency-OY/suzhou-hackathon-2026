@@ -46,14 +46,17 @@ export default function Layout() {
           <NavLink to="/progress" className={({ isActive }) => isActive ? "active" : ""}>
             <b aria-hidden="true">02</b><span>练习档案</span>
           </NavLink>
+          <NavLink to="/products" className={({ isActive }) => isActive ? "active" : ""}>
+            <b aria-hidden="true">03</b><span>信达产品目录</span>
+          </NavLink>
           {account && !account.is_guest && <><NavLink to="/diary" className={({ isActive }) => isActive ? "active" : ""}>
-            <b aria-hidden="true">03</b><span>前线日记</span>
+            <b aria-hidden="true">04</b><span>前线日记</span>
           </NavLink>
           <NavLink to="/radar" className={({ isActive }) => isActive ? "active" : ""}>
-            <b aria-hidden="true">04</b><span>学术雷达</span>
+            <b aria-hidden="true">05</b><span>学术雷达</span>
           </NavLink>
           <NavLink to="/team" className={({ isActive }) => isActive ? "active" : ""}>
-            <b aria-hidden="true">05</b><span>团队学习</span>
+            <b aria-hidden="true">06</b><span>团队学习</span>
           </NavLink></>}
         </nav>
 
