@@ -22,13 +22,15 @@ from .auth import _rate_limit, get_current_account
 router = APIRouter(prefix="/api/diary")
 log = logging.getLogger(__name__)
 REVIEW_POLICY_VERSION = "2026-10-31-grounded-label"
+MAX_DIARY_CHARS = 16000
+DIARY_CHUNK_CHARS = 4200
 _OBVIOUS_IDENTIFIER = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)|(?<!\d)\d{17}[\dXx](?!\w)|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 
 class NewDiary(BaseModel):
     hospital: str = Field(default="", max_length=120)
     doctor_name: str = Field(default="", max_length=80)
-    raw_text: str = Field(min_length=8, max_length=4000)
+    raw_text: str = Field(min_length=8, max_length=MAX_DIARY_CHARS)
 
     @field_validator("hospital", "doctor_name", "raw_text")
     @classmethod
@@ -74,19 +76,59 @@ def _fallback(raw_text: str) -> DiaryDigest:
     return DiaryDigest(summary=raw_text[:160], uncertain_claims=["AI 暂不可用；请按原话自行核对。"])
 
 
-def _digest(raw_text: str, provider: LLMProvider) -> tuple[DiaryDigest, bool]:
-    if provider.name == "mock" and not provider.responses:
-        return _fallback(raw_text), True
+def _diary_chunks(raw_text: str) -> list[str]:
+    chunks = []
+    start = 0
+    while start < len(raw_text):
+        end = min(start + DIARY_CHUNK_CHARS, len(raw_text))
+        if end < len(raw_text):
+            boundary = max(raw_text.rfind(mark, start + 2800, end) for mark in "。！？\n")
+            if boundary > start:
+                end = boundary + 1
+        chunks.append(raw_text[start:end])
+        start = end
+    return chunks
+
+
+def _merge_digests(parts: list[DiaryDigest]) -> DiaryDigest:
+    per_part = max(40, 480 // len(parts) - 1)
+    summary = "；".join(part.summary[:per_part] for part in parts)[:500]
+    fields = {}
+    for name in ("first_impressions", "doctor_feedback", "what_to_improve", "next_visit", "uncertain_claims"):
+        selected = []
+        for index in range(6):
+            for part in parts:
+                values = getattr(part, name)
+                if index < len(values) and values[index] not in selected:
+                    selected.append(values[index])
+                    if len(selected) == 6:
+                        break
+            if len(selected) == 6:
+                break
+        fields[name] = selected
+    return DiaryDigest(summary=summary, **fields)
+
+
+def _digest_chunk(raw_text: str, provider: LLMProvider) -> tuple[DiaryDigest, bool]:
     prompt = load_prompt("field_diary").render(raw_text=raw_text)
     try:
         return structured_call(
             provider, prompt_name="field_diary", system="你只输出符合要求的 JSON 日记，不编造事实。",
             messages=[{"role": "user", "content": prompt}], model_cls=DiaryDigest,
-            fallback=lambda: _fallback(raw_text), max_retries=1, temperature=0.2, max_tokens=850,
+            fallback=lambda: _fallback(raw_text), max_retries=1, temperature=0.2, max_tokens=1100,
         )
     except RuntimeError as exc:
         log.warning("前线日记整理暂不可用，保留原话：%s", exc)
         return _fallback(raw_text), True
+
+
+def _digest(raw_text: str, provider: LLMProvider) -> tuple[DiaryDigest, bool]:
+    if provider.name == "mock" and not provider.responses:
+        return _fallback(raw_text), True
+    parts = [_digest_chunk(chunk, provider) for chunk in _diary_chunks(raw_text)]
+    if len(parts) == 1:
+        return parts[0]
+    return _merge_digests([part for part, _ in parts]), any(degraded for _, degraded in parts)
 
 
 @router.post("", response_model=FieldDiary)

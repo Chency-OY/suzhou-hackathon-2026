@@ -58,6 +58,34 @@ def test_diary_preserves_note_when_model_output_is_invalid(clients):
     assert item["digest"]["summary"] == item["raw_text"]
 
 
+def test_long_diary_preserves_full_transcript_and_summarizes_the_end(clients):
+    first, _, mock = clients
+    raw = "拜访后我想记录今天沟通的细节。" * 420 + "最后我决定下次先倾听问题，再准备正式资料。"
+
+    def digest_segment(messages):
+        content = messages[-1]["content"]
+        last = "最后我决定" in content
+        return json.dumps({"summary": "最后要先倾听并准备资料" if last else "拜访中的沟通记录",
+                           "first_impressions": [], "doctor_feedback": [],
+                           "what_to_improve": [], "next_visit": [], "uncertain_claims": []}, ensure_ascii=False)
+
+    mock.set("field_diary", digest_segment)
+    response = first.post("/api/diary", json={"raw_text": raw})
+    assert response.status_code == 200
+    item = response.json()
+    assert item["raw_text"] == raw
+    assert "最后要先倾听" in item["digest"]["summary"]
+    assert len([call for call in mock.calls if call["prompt_name"] == "field_diary"]) >= 2
+    assert first.get(f"/api/diary/{item['id']}").json()["raw_text"].endswith("正式资料。")
+
+
+def test_diary_rejects_text_beyond_long_form_limit(clients):
+    first, _, mock = clients
+    assert first.post("/api/diary", json={"raw_text": "记" * 16001}).status_code == 422
+    assert first.get("/api/diary").json() == []
+    assert mock.calls == []
+
+
 @pytest.mark.parametrize("raw", ["患者手机号是13800000000，请记录。", "患者身份证号110101199001011234，请记录。",
                                      "请联系patient@example.com获取信息。"])
 def test_obvious_identifiers_are_rejected_before_diary_storage(clients, raw):

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { currentAccount } from "../auth";
+import { groupDiariesByDay, MAX_DIARY_CHARS, readDiaryDraft, saveDiaryDraft } from "../diaryLocal";
 import type { AcademicCrosscheck, DiaryReview, FieldDiary } from "../types";
 import { startVoiceInput, voiceInputAvailable } from "../voice";
 
@@ -55,7 +57,7 @@ function DiaryCard({ item, onDelete }: { item: FieldDiary; onDelete: (id: string
       <p className="game-muted mt-3 text-[11px] leading-5">仅核对学术活动原话；同名身份未确认，不会把网页线索自动写入模拟医生画像。</p>
     </div>
     {item.degraded && <div className="game-alert mt-4">AI 整理暂不可用，已保存原话，可稍后回看。</div>}
-    <p className="mt-5 rounded-lg border border-[#d5e4ed] bg-[#f5f9fc] p-4 text-sm leading-7">{item.digest.summary}</p>
+    <div className="mt-5 rounded-lg border border-[#d5e4ed] bg-[#f5f9fc] p-4"><p className="game-kicker">AI 整理要点</p><p className="mt-2 text-sm leading-7">{item.digest.summary}</p></div>
     <DigestList title="当时的第一感受" items={item.digest.first_impressions} />
     <DigestList title="医生明确表达的反馈" items={item.digest.doctor_feedback} />
     <DigestList title="我可以改进的地方" items={item.digest.what_to_improve} />
@@ -76,7 +78,7 @@ function DiaryCard({ item, onDelete }: { item: FieldDiary; onDelete: (id: string
           </section>)}
       </div>}
     </div>
-    <details className="mt-5 border-t border-[#d5e4ed] pt-4"><summary className="game-link cursor-pointer">查看我的原话</summary><p className="mt-3 whitespace-pre-wrap text-sm leading-7">{item.raw_text}</p></details>
+    <details className="mt-5 border-t border-[#d5e4ed] pt-4"><summary className="game-link cursor-pointer">查看完整识别原文 · {item.raw_text.length} 字</summary><p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7">{item.raw_text}</p></details>
     <p className="game-muted mt-4 text-[11px] leading-5">AI 只帮助整理回忆，尚未核实医生观点或医学事实；原话始终保留。</p>
   </article>;
 }
@@ -90,6 +92,7 @@ export default function DiaryPage() {
   const [saving, setSaving] = useState(false);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState("");
+  const [draftAccountId, setDraftAccountId] = useState<string | null>(null);
   const stopVoice = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -97,6 +100,25 @@ export default function DiaryPage() {
     void api.listDiary().then((data) => { if (active) setItems(data); }).catch((cause) => { if (active) setError(message(cause)); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; stopVoice.current?.(); };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    void currentAccount().then((account) => {
+      if (!active || !account || account.is_guest) return;
+      const draft = readDiaryDraft(account.id);
+      if (draft) {
+        setHospital(draft.hospital);
+        setDoctorName(draft.doctorName);
+        setRawText(draft.rawText);
+      }
+      setDraftAccountId(account.id);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (draftAccountId) saveDiaryDraft(draftAccountId, { hospital, doctorName, rawText });
+  }, [draftAccountId, hospital, doctorName, rawText]);
 
   function toggleVoice() {
     if (listening) { stopVoice.current?.(); return; }
@@ -110,7 +132,7 @@ export default function DiaryPage() {
   }
 
   async function save() {
-    if (saving || listening || rawText.trim().length < 8) return;
+    if (saving || listening || rawText.trim().length < 8 || rawText.length > MAX_DIARY_CHARS) return;
     stopVoice.current?.();
     setListening(false);
     setSaving(true);
@@ -134,7 +156,7 @@ export default function DiaryPage() {
   return <div className="mx-auto max-w-4xl">
     <p className="game-kicker">FRONTLINE DIARY / 前线日记本</p>
     <h1 className="game-title mt-2">趁第一感受还清楚，马上说下来</h1>
-    <p className="game-muted mt-3 text-sm leading-7">点语音输入后可以一直口述，直到你点停止；系统会把每段识别文字接在一起。确认原话后，DeepSeek 帮你整理成几条回忆和下次准备；同一账号下次还能回看。</p>
+    <p className="game-muted mt-3 text-sm leading-7">点语音输入后可以连续口述十到二十分钟，直到你点停止；系统会把识别文字接在一起。确认原话后，DeepSeek 整理重点，完整原文也会保留。</p>
 
     <section className="game-panel mt-6 p-5 sm:p-7">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -142,16 +164,18 @@ export default function DiaryPage() {
         <label className="text-xs font-bold">医生称呼（可选）<input className="game-field mt-2" maxLength={80} value={doctorName} onChange={(event) => setDoctorName(event.target.value)} placeholder="例如：某主任" /></label>
       </div>
       <label className="mt-5 block text-xs font-bold" htmlFor="diary-raw">我刚才想到的事</label>
-      <textarea id="diary-raw" className="game-field mt-2 min-h-[180px] resize-y text-sm leading-7" maxLength={4000} value={rawText} onChange={(event) => setRawText(event.target.value)} placeholder="比如：今天主任明显很赶时间，我一提性价比就被打断了。我应该先问他最担心什么……" />
+      <textarea id="diary-raw" className="game-field mt-2 min-h-[180px] resize-y text-sm leading-7" maxLength={MAX_DIARY_CHARS} disabled={saving} value={rawText} onChange={(event) => setRawText(event.target.value)} placeholder="比如：今天主任明显很赶时间，我一提性价比就被打断了。我应该先问他最担心什么……" />
+      <p className="game-muted mt-2 text-[11px]">{rawText.length.toLocaleString("zh-CN")} / {MAX_DIARY_CHARS.toLocaleString("zh-CN")} 字 · 未提交草稿保存在这台设备</p>
+      {rawText.length > MAX_DIARY_CHARS && <div className="game-alert mt-2" role="alert">已超过单篇上限，请将后续内容另存为下一篇日记。</div>}
       <div className="mt-3 flex flex-wrap items-center gap-3">
         {voiceInputAvailable() && <button className="game-btn game-btn-outline" type="button" onClick={toggleVoice} disabled={saving} aria-label={listening ? "停止语音输入" : "开始语音输入"}>{listening ? "■ 停止录音" : "🎙 开始语音输入"}</button>}
-        <button className="game-btn" type="button" onClick={() => void save()} disabled={saving || listening || rawText.trim().length < 8}>{saving ? "正在整理…" : "保存并整理日记 →"}</button>
+        <button className="game-btn" type="button" onClick={() => void save()} disabled={saving || listening || rawText.trim().length < 8 || rawText.length > MAX_DIARY_CHARS}>{saving ? "正在整理长口述…" : "保存并整理日记 →"}</button>
       </div>
       <p className="game-muted mt-3 text-[11px] leading-5">先确认识别出的文字再保存。请勿录入患者姓名、手机号、身份证号或病历信息；系统会拦截明显的联系方式和身份证号。</p>
       {error && <div className="game-alert mt-4" role="alert">{error}</div>}
     </section>
 
-    <div className="mb-3 mt-9 flex items-end justify-between"><h2 className="text-lg font-bold">我的拜访回忆</h2><span className="game-muted text-xs">{items.length} 篇</span></div>
-    {loading ? <div className="game-panel p-6 text-sm">正在读取日记…</div> : items.length === 0 ? <div className="game-panel p-6 text-sm">还没有日记。下一次拜访结束，先把第一感受记下来。</div> : <div className="space-y-4">{items.map((item) => <DiaryCard key={item.id} item={item} onDelete={(id) => void remove(id)} />)}</div>}
+    <div className="mb-3 mt-9 flex items-end justify-between"><h2 className="text-lg font-bold">每天的拜访回忆</h2><span className="game-muted text-xs">{items.length} 篇</span></div>
+    {loading ? <div className="game-panel p-6 text-sm">正在读取日记…</div> : items.length === 0 ? <div className="game-panel p-6 text-sm">还没有日记。下一次拜访结束，先把第一感受记下来。</div> : <div className="space-y-8">{groupDiariesByDay(items).map((day) => <section key={day.key} aria-label={day.label}><div className="mb-3 flex items-center justify-between border-b border-[#d5e4ed] pb-2"><h3 className="text-sm font-bold">{day.label}</h3><span className="game-muted text-xs">{day.items.length} 篇</span></div><div className="space-y-4">{day.items.map((item) => <DiaryCard key={item.id} item={item} onDelete={(id) => void remove(id)} />)}</div></section>)}</div>}
   </div>;
 }
