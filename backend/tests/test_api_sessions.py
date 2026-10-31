@@ -48,7 +48,10 @@ def test_full_flow(ctx):
     assert g.json()["turns"][1]["text"] == "张主任您好"
 
     f = c.post(f"/api/sessions/{sid}/finish")
-    assert f.json() == {"session_id": sid, "ended": True, "end_reason": "rep_ended", "report_id": None}
+    assert f.json() == {"session_id": sid, "ended": True, "end_reason": "rep_ended", "report_id": f"report_{sid}"}
+    report = c.get(f"/api/reports/report_{sid}")
+    assert report.status_code == 200 and report.json()["scoring_mode"] == "unavailable"
+    assert report.json()["turns"][1]["text"] == "张主任您好"
     assert c.post(f"/api/sessions/{sid}/turns", json={"text": "还有吗"}).status_code == 409
 
 
@@ -71,6 +74,21 @@ def test_no_secrets_in_any_response(ctx):
             assert secret not in t
 
 
+def test_natural_end_creates_one_report(ctx):
+    c, _ = ctx
+    sid = c.post("/api/sessions", json={"scenario_id": "scn_001"}).json()["session_id"]
+    for _ in range(12):
+        response = c.post(f"/api/sessions/{sid}/turns", json={"text": "请您谈谈关注点。"})
+        assert response.status_code == 200
+        if response.json()["ended"]:
+            assert response.json()["report_id"] == f"report_{sid}"
+            break
+    else:
+        pytest.fail("会话未按轮数自然结束")
+    assert c.get(f"/api/reports/report_{sid}").status_code == 200
+    assert c.post(f"/api/sessions/{sid}/finish").json()["report_id"] == f"report_{sid}"
+
+
 def test_other_account_cannot_read_or_change_session(ctx):
     c, _ = ctx
     sid = c.post("/api/sessions", json={"scenario_id": "scn_001", "rep_id": "forged"}).json()["session_id"]
@@ -82,3 +100,5 @@ def test_other_account_cannot_read_or_change_session(ctx):
     assert other.get(f"/api/sessions/{sid}").status_code == 404
     assert other.post(f"/api/sessions/{sid}/turns", json={"text": "你好"}).status_code == 404
     assert other.post(f"/api/sessions/{sid}/finish").status_code == 404
+    c.post(f"/api/sessions/{sid}/finish")
+    assert other.get(f"/api/reports/report_{sid}").status_code == 404

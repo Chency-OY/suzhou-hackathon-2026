@@ -7,11 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from ..db import Repo
-from ..deps import get_engine, get_repo
+from ..deps import get_engine, get_provider, get_repo
 from ..diary_rehearsal import rehearsal_note
-from ..models import DoctorPersona, DoctorState, Scenario, Session
+from ..llm import LLMProvider
+from ..models import DoctorPersona, DoctorState, Report, Scenario, Session
 from ..models.auth import Account, SessionSummary
 from ..models.diary import FieldDiary
+from ..scoring import score_session
 from ..sessions import SessionEngine
 from .auth import get_current_account
 
@@ -59,6 +61,7 @@ class TurnOut(BaseModel):
     ended: bool
     end_reason: str | None
     degraded: bool
+    report_id: str | None = None
 
 
 class FinishOut(BaseModel):
@@ -86,6 +89,25 @@ class SessionOut(BaseModel):
     diary_id: str | None = None
     rehearsal_note: str = ""
     turns: list[TurnView]
+
+
+class ReportOut(Report):
+    turns: list[TurnView]
+
+
+def _turn_views(session: Session) -> list[TurnView]:
+    return [TurnView(idx=t.idx, speaker=t.speaker, text=t.text, signals=list(t.signals),
+                     state_after=t.state_after) for t in session.turns]
+
+
+def _ensure_report(repo: Repo, session: Session, scenario: Scenario, provider: LLMProvider) -> Report:
+    key = f"report_{session.id}"
+    existing = repo.get(Report, key)
+    if existing:
+        return existing
+    report = score_session(session, scenario, provider)
+    repo.save(report)
+    return report
 
 
 def _own_rehearsal(repo: Repo, diary_id: str | None, account: Account, allow_missing: bool = False) -> str:
@@ -140,7 +162,7 @@ def create_session(body: CreateSessionIn, repo: Repo = Depends(get_repo),
 @router.post("/sessions/{session_id}/turns", response_model=TurnOut)
 def post_turn(session_id: str, body: TurnIn, repo: Repo = Depends(get_repo),
               account: Account = Depends(get_current_account),
-              engine: SessionEngine = Depends(get_engine)):
+              engine: SessionEngine = Depends(get_engine), provider: LLMProvider = Depends(get_provider)):
     with _lock(session_id):
         session, sc, p = _load(repo, session_id, account)
         if session.ended_at:
@@ -148,20 +170,22 @@ def post_turn(session_id: str, body: TurnIn, repo: Repo = Depends(get_repo),
         note = _own_rehearsal(repo, session.diary_id, account, allow_missing=True)
         res = engine.step(session, sc, p, body.text, rehearsal_note=note)
         repo.save(session)
+        report_id = _ensure_report(repo, session, sc, provider).id if session.ended_at else None
     return TurnOut(doctor_reply=res.doctor_reply, doctor_state=res.state, signals=res.signals, ended=res.ended,
-                   end_reason=res.end_reason, degraded=res.degraded)
+                   end_reason=res.end_reason, degraded=res.degraded, report_id=report_id)
 
 
 @router.post("/sessions/{session_id}/finish", response_model=FinishOut)
 def finish_session(session_id: str, repo: Repo = Depends(get_repo),
-                   account: Account = Depends(get_current_account)):
+                   account: Account = Depends(get_current_account), provider: LLMProvider = Depends(get_provider)):
     with _lock(session_id):
-        session, _, _ = _load(repo, session_id, account)
+        session, scenario, _ = _load(repo, session_id, account)
         if not session.ended_at:
             session.ended_at = datetime.now(UTC)
             session.end_reason = "rep_ended"
             repo.save(session)
-    return FinishOut(session_id=session.id, ended=True, end_reason=session.end_reason, report_id=None)
+        report_id = _ensure_report(repo, session, scenario, provider).id
+    return FinishOut(session_id=session.id, ended=True, end_reason=session.end_reason, report_id=report_id)
 
 
 @router.get("/sessions/{session_id}", response_model=SessionOut)
@@ -172,5 +196,14 @@ def get_session(session_id: str, repo: Repo = Depends(get_repo),
     return SessionOut(
         id=s.id, scenario_id=s.scenario_id, rep_id=s.rep_id, started_at=s.started_at, ended_at=s.ended_at,
         end_reason=s.end_reason, diary_id=s.diary_id, rehearsal_note=note,
-        turns=[TurnView(idx=t.idx, speaker=t.speaker, text=t.text, signals=list(t.signals),
-                        state_after=t.state_after) for t in s.turns])
+        turns=_turn_views(s))
+
+
+@router.get("/reports/{report_id}", response_model=ReportOut)
+def get_report(report_id: str, repo: Repo = Depends(get_repo),
+               account: Account = Depends(get_current_account)):
+    report = repo.get(Report, report_id)
+    session = repo.get(Session, report.session_id) if report else None
+    if not session or session.rep_id != account.id:
+        raise _err(404, "not_found", "报告不存在")
+    return ReportOut(**report.model_dump(), turns=_turn_views(session))

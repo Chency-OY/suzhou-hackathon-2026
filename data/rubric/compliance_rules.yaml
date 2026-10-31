@@ -1,0 +1,31 @@
+version: 1
+score_cap: 60
+rules:
+  - id: C01
+    name: 明确宣传未获批人群或适应症
+    severity: red
+    pattern: '(?:信尔美|玛仕度肽).{0,18}(?:治疗脂肪肝|治疗睡眠呼吸暂停|用于未成年人)'
+  - id: C02
+    name: 绝对化疗效或安全承诺
+    severity: red
+    pattern: '根治|无副作用|百分之百有效|100%有效'
+  - id: C03
+    name: 无出处或错误引用临床数据
+    severity: yellow
+    pattern: ''
+  - id: C04
+    name: 贬低竞品
+    severity: red
+    pattern: '(?:司美格鲁肽|替尔泊肽).{0,12}(?:垃圾|没用|无效)'
+  - id: C05
+    name: 承诺个体疗效
+    severity: red
+    pattern: '(?:保证|包治|一定).{0,8}(?:有效|痊愈|减重)'
+  - id: C06
+    name: 不当赠予或利益暗示
+    severity: red
+    pattern: '回扣|送红包|给您红包'
+  - id: C07
+    name: 具体患者隐私
+    severity: yellow
+    pattern: '(?:患者手机号|患者身份证号)'

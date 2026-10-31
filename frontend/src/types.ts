@@ -98,9 +98,33 @@ export interface SessionSummary {
 export interface CreateSessionOut { session_id: string; opening_line: string; doctor_state: DoctorState }
 export interface TurnOut {
   doctor_reply: string; doctor_state: DoctorState; signals: Signal[]; ended: boolean;
-  end_reason: EndReason | null; degraded: boolean;
+  end_reason: EndReason | null; degraded: boolean; report_id?: string | null;
 }
 export interface FinishOut { session_id: string; ended: boolean; end_reason: EndReason | null; report_id: string | null }
+
+export type ScoreDimension = "opening" | "discovery" | "product_evidence" | "objection_handling" | "closing" | "communication";
+export interface ReportFinding {
+  turn_idx: number;
+  kind: "strength" | "issue" | "missed_opportunity" | "compliance_violation";
+  dimension: ScoreDimension;
+  quote: string;
+  explanation: string;
+  better_version: string | null;
+}
+export interface ReportView {
+  id: string;
+  session_id: string;
+  dimension_scores: Record<ScoreDimension, number>;
+  total_score: number;
+  raw_total: number;
+  capped_by_compliance: boolean;
+  findings: ReportFinding[];
+  summary: string;
+  next_practice_tips: string[];
+  scoring_mode: "model" | "unavailable";
+  review_note: string;
+  turns: TurnView[];
+}
 
 export interface DiaryDigest {
   summary: string;

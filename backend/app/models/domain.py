@@ -133,6 +133,8 @@ class Report(BaseModel):
     findings: list[Finding] = Field(default_factory=list)
     summary: str = ""
     next_practice_tips: list[str] = Field(default_factory=list)
+    scoring_mode: Literal["model", "unavailable"] = "unavailable"
+    review_note: str = ""
 
     @model_validator(mode="after")
     def _check_scores(self):
@@ -148,6 +150,20 @@ class Report(BaseModel):
         by_idx = {t.idx: t.text for t in turns}
         kept = [f for f in self.findings if f.turn_idx in by_idx and f.quote in by_idx[f.turn_idx]]
         return self.model_copy(update={"findings": kept}), len(self.findings) - len(kept)
+
+
+class ComplianceFlag(BaseModel):
+    rule_id: str
+    turn_idx: int = Field(ge=0)
+    quote: str = Field(min_length=1, max_length=300)
+
+
+class ScorerDraft(BaseModel):
+    dimension_scores: dict[str, int] = Field(default_factory=dict)
+    findings: list[Finding] = Field(default_factory=list, max_length=12)
+    compliance_flags: list[ComplianceFlag] = Field(default_factory=list, max_length=12)
+    summary: str = Field(default="", max_length=500)
+    next_practice_tips: list[str] = Field(default_factory=list, max_length=3)
 
 
 class PlaybookCard(BaseModel):

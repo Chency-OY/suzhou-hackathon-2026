@@ -1,5 +1,5 @@
 import type {
-  AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
+  AcademicRadar, CreateSessionOut, DiaryReview, FieldDiary, FinishOut, ReportView, ScenarioDetail, ScenarioFilters, ScenarioItem, SessionSummary, SessionView, TrainingProgram, TurnOut,
 } from "./types";
 
 export function buildQuery(params: Record<string, string | undefined>): string {
@@ -45,6 +45,7 @@ export const api = {
     post<CreateSessionOut>("/sessions", { scenario_id: scenarioId, diary_id: diaryId || null }),
   listSessions: () => get<SessionSummary[]>("/sessions"),
   getSession: (id: string) => get<SessionView>(`/sessions/${encodeURIComponent(id)}`),
+  getReport: (id: string) => get<ReportView>(`/reports/${encodeURIComponent(id)}`),
   sendTurn: (id: string, text: string) => post<TurnOut>(`/sessions/${encodeURIComponent(id)}/turns`, { text }),
   finishSession: (id: string) => post<FinishOut>(`/sessions/${encodeURIComponent(id)}/finish`),
   listDiary: () => get<FieldDiary[]>("/diary"),
