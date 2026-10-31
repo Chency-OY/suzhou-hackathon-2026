@@ -80,9 +80,17 @@ def test_radar_cache_and_account_isolation(tmp_path, monkeypatch):
         first_result = first.post("/api/radar/search", json=body)
         assert first_result.status_code == 200
         assert first_result.json()["auto_refresh"] is False
+        assert first_result.json()["radar_version"] == "web"
         assert first.post("/api/radar/search", json=body).status_code == 200
         assert len(calls) == 1
-        assert len(first.get("/api/radar").json()) == 1
+        saved = repo.get(AcademicRadar, first_result.json()["id"])
+        assert saved is not None
+        saved.radar_version = "deepseek-web-v2-auto"
+        repo.save(saved)
+        listed = first.get("/api/radar").json()
+        assert len(listed) == 1 and listed[0]["radar_version"] == "web"
+        changed = first.patch(f"/api/radar/{saved.id}/auto-refresh", json={"enabled": True})
+        assert changed.json()["radar_version"] == "web"
         assert second.get("/api/radar").json() == []
     finally:
         app.dependency_overrides.clear()
@@ -118,7 +126,7 @@ def test_deepseek_answer_is_account_scoped_and_cached(tmp_path, monkeypatch):
         assert second.post("/api/auth/register", json={"username": "webtwo", "password": "long-password-456"}).status_code == 200
         body = {"doctor_name": "甲某", "hospital": "某某医院"}
         result = first.post("/api/radar/search", json=body).json()
-        assert result["web_status"] == "ok" and result["radar_version"]
+        assert result["web_status"] == "ok" and result["radar_version"] == "web"
         assert result["answer_points"][0]["evidence_quote"] == quote
         assert result["web_sources"][0]["identity_status"] == "candidate"
         assert first.post("/api/radar/search", json=body).json()["id"] == result["id"]

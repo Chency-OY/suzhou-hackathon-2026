@@ -48,6 +48,7 @@ REACTION = {
     "off_label_claim": "指出这可能超出说明书适应症，质疑其合规", "competitor_bashing": "对贬低竞品明显反感",
     "ignored_doctor_question": "重复你的问题并要求直接回答", "proposed_next_step": "按你当前的信任度决定是否接受，不要轻易答应",
 }
+COMPLIANCE_RISK_SIGNALS = {"accepted_benefit", "disclosed_stat", "promised_outcome", "evaded_boundary"}
 BAIT_DIRECTIVE = {
     "off_label_bait": "这一轮请自然地试探：问代表这个药能不能用于脂肪肝或其他尚未确认的适应症或人群（用你自己的话，不要点破你在测试）。",
     "competitor_bash_bait": "这一轮请抛出一个竞品话题，引导代表评价或比较竞品（看他是否会贬低对方）。",
@@ -162,7 +163,9 @@ class SessionEngine:
         wording = triggered_wording(rehearsal_note, rep_text) if not (reveal or bait or end) else ""
         mood = rehearsal_mood(rehearsal_note)
         cue_already_used = any(turn.meta.get("radar_cue_used") for turn in session.turns if turn.speaker == "doctor")
-        radar_cue = session.radar_cues[0] if session.radar_cues and not cue_already_used else None
+        high_risk_signal = bool(set(signals) & (set(self.rules.negative_signals) | COMPLIANCE_RISK_SIGNALS))
+        radar_cue = (session.radar_cues[0] if session.radar_cues and not cue_already_used
+                     and not (reveal or bait or end or wording or high_risk_signal) else None)
 
         reply, r_deg = self._reply(scenario, persona, state, signals, history, rep_text, facts, reveal, bait, end,
                                   rehearsal_note, wording, mood, radar_cue)
@@ -173,8 +176,7 @@ class SessionEngine:
                                   meta={"rep_turn_no": rep_turn_no, "bait": bait, "revealed": reveal,
                                         "end_hint": end, "degraded": j_deg or r_deg,
                                         "diary_wording_triggered": bool(wording),
-                                        "diary_mood": mood or "", "radar_cue_used": bool(radar_cue and not
-                                                                                           (reveal or bait or end or wording))}))
+                                        "diary_mood": mood or "", "radar_cue_used": bool(radar_cue)}))
         if end:
             session.ended_at = datetime.now(UTC)
             session.end_reason = end
@@ -266,6 +268,7 @@ class SessionEngine:
                rehearsal_note: str = "", wording: str = "", mood: str | None = None,
                radar_cue: RadarPracticeCue | None = None) -> tuple[str, bool]:
         academic_active = radar_cue is not None and not (reveal or bait or end or wording)
+        high_risk_signal = bool(set(signals) & (set(self.rules.negative_signals) | COMPLIANCE_RISK_SIGNALS))
         fallback = (f"‘{wording}’这说法我不太喜欢，换个角度讲。" if wording else
                     self._fallback(persona, end) if end else
                     "这条公开资料的出处和适用范围，你能说清吗？" if academic_active else
@@ -280,6 +283,14 @@ class SessionEngine:
                 return "这个说法有依据吗？我们还是按说明书和公开研究讨论。", True
             if "pushy" in signals:
                 return "请不要替我做决定，先把资料说明白。", True
+            if "off_label_claim" in signals:
+                return "说明书有这个适应症吗？请先把依据说清楚。", True
+            if "competitor_bashing" in signals:
+                return "不要贬低别的药，请说清楚你们自己的资料。", True
+            if set(signals) & COMPLIANCE_RISK_SIGNALS:
+                return "这些内容不合适，我们按公开资料和规定来。", True
+            if academic_active or mood:
+                return fallback, True
             if "asked_open_question" in signals:
                 return "我更关心适用人群和安全性，您能先说明资料出处吗？", True
             if "proposed_next_step" in signals:
@@ -300,14 +311,14 @@ class SessionEngine:
             intent_cn = "指出代表这轮重复使用的表达方式"
         elif academic_active:
             intent_cn = "就一条公开学术候选资料追问证据出处"
-        elif mood == "irritable":
+        elif mood == "irritable" and not high_risk_signal:
             intent_cn = "简短催促代表，并追问一个重点"
-        elif mood == "rushed":
+        elif mood == "rushed" and not high_risk_signal:
             intent_cn = "提醒时间很紧，并追问一个重点"
         directive = (f"代表这轮再次用了‘{wording}’。按主观日记中的沟通观察，"
                      "你可以对这个说法提出异议并请他换个角度讲；不要声称这是现实医生的真实偏好。"
                      if wording else self._directive(reveal, bait, end))
-        if mood and not (reveal or bait or end or wording):
+        if mood and not (reveal or bait or end or wording or high_risk_signal):
             directive = ("先用一句短促的话催代表讲重点，再只追问一个具体问题。"
                          if mood == "irritable" else "先表示时间很紧、请代表直说重点，再只追问一个具体问题。")
         if academic_active:

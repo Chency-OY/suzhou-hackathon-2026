@@ -113,3 +113,17 @@ def test_academic_question_waits_until_a_normal_turn_and_only_fires_once():
     assert session.turns[-1].meta["radar_cue_used"] is True
     engine.step(session, scenario, persona, "还有什么问题？")
     assert session.turns[-1].meta["radar_cue_used"] is False
+
+
+def test_risk_response_precedes_academic_question_even_without_model():
+    persona = build_demo_personas()[1]
+    scenario = make_scenario(persona_id=persona.id)
+    cue = practice_cue(_radar("synthetic"))
+    engine = SessionEngine(MockLLM(), kb=None, rules=StateRules())
+    session = engine.start(scenario, persona, "synthetic", radar_cues=[cue])
+    first = engine.step(session, scenario, persona, "您必须马上用这个药。")
+    assert "不要替我做决定" in first.doctor_reply
+    assert session.turns[-1].meta["radar_cue_used"] is False
+    second = engine.step(session, scenario, persona, "您关心哪些证据？")
+    assert "公开资料的出处" in second.doctor_reply
+    assert session.turns[-1].meta["radar_cue_used"] is True

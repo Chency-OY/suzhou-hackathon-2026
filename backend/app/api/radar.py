@@ -18,7 +18,12 @@ from .auth import _rate_limit, get_current_account
 
 router = APIRouter(prefix="/api/radar")
 log = logging.getLogger(__name__)
-RADAR_VERSION = "deepseek-web-v2-auto"
+RADAR_VERSION = "web-v3-auto"
+
+
+def _public_radar(item: AcademicRadar) -> AcademicRadar:
+    """Keep the cache marker private, including on records saved by older versions."""
+    return item.model_copy(update={"radar_version": "web"})
 
 
 class RadarSearch(BaseModel):
@@ -40,7 +45,7 @@ class RadarSearch(BaseModel):
 @router.get("", response_model=list[AcademicRadar])
 def list_radar(repo: Repo = Depends(get_repo), account: Account = Depends(get_current_account)):
     own = (item for item in repo.list(AcademicRadar) if item.owner_id == account.id)
-    return sorted(own, key=lambda item: item.searched_at, reverse=True)[:30]
+    return [_public_radar(item) for item in sorted(own, key=lambda item: item.searched_at, reverse=True)[:30]]
 
 
 @router.patch("/{radar_id}/auto-refresh", response_model=AcademicRadar)
@@ -52,7 +57,7 @@ def set_auto_refresh(radar_id: str, body: AutoRefreshChoice, repo: Repo = Depend
     item.auto_refresh = body.enabled
     item.refresh_error = ""
     repo.save(item)
-    return item
+    return _public_radar(item)
 
 
 def collect_radar(repo: Repo, owner_id: str, doctor_name: str, hospital: str,
@@ -115,13 +120,13 @@ def run_radar(body: RadarSearch, request: Request, repo: Repo = Depends(get_repo
         if body.auto_refresh is not None and cached.auto_refresh != body.auto_refresh:
             cached.auto_refresh = body.auto_refresh
             repo.save(cached)
-        return cached
+        return _public_radar(cached)
     _rate_limit(request, "radar", account.id, 20, 3600)
     result = collect_radar(repo, account.id, body.doctor_name, body.hospital, provider, cached)
     if body.auto_refresh is not None and result.auto_refresh != body.auto_refresh:
         result.auto_refresh = body.auto_refresh
         repo.save(result)
-    return result
+    return _public_radar(result)
 
 
 @router.post("/refresh-due", response_model=list[AcademicRadar])
@@ -130,4 +135,4 @@ def refresh_due(request: Request, repo: Repo = Depends(get_repo),
     from ..radar.auto_refresh import refresh_due_radars
 
     _rate_limit(request, "radar_refresh_due", account.id, 3, 3600)
-    return refresh_due_radars(repo, account.id, provider)
+    return [_public_radar(item) for item in refresh_due_radars(repo, account.id, provider)]

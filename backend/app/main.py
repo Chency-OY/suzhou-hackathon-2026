@@ -23,7 +23,7 @@ app.include_router(products_router)
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "llm_provider": settings.llm_provider}
+    return {"status": "ok"}
 
 
 # SPA 静态托管必须在所有 API 路由（含 health）注册之后，否则兜底路由会吞掉 /api/*
