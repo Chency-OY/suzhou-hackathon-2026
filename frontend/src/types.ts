@@ -113,6 +113,7 @@ export interface SessionView {
   end_reason: EndReason | null;
   diary_id: string | null;
   rehearsal_note: string;
+  rehearsal_mood: "" | "rushed" | "irritable";
   turns: TurnView[];
 }
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 from .models.diary import FieldDiary
 
@@ -17,6 +18,9 @@ _AVOID_WORDING = re.compile(
     r"[‘’“”\"']?([\u3400-\u9fffA-Za-z]{2,12})"
 )
 _INTERRUPTED_WORDING = re.compile(r"一提([\u3400-\u9fffA-Za-z]{2,12})就(?:被打断|打断|皱眉|不耐烦)")
+_MOOD_SUBJECT = re.compile(r"医生|主任|教授|院长")
+_IRRITABLE = re.compile(r"心情.{0,3}(?:很差|极差|不好|糟)|不耐烦|急躁|烦躁|语气很冲|态度冷淡")
+_RUSHED = re.compile(r"很忙|特别忙|赶时间|没时间|时间很紧|催我快点|没空")
 
 
 def _safe_observation(text: str, item: FieldDiary) -> str:
@@ -32,11 +36,32 @@ def _safe_observation(text: str, item: FieldDiary) -> str:
 def rehearsal_note(item: FieldDiary) -> str:
     if item.degraded:
         return ""
-    impressions = [_safe_observation(text, item) for text in item.digest.first_impressions[:2]]
+    impressions = [_safe_observation(text, item) for text in item.digest.first_impressions]
+    impressions.sort(key=lambda text: bool(rehearsal_mood(f"代表当时的感受：{text}")), reverse=True)
+    impressions = impressions[:2]
     feedback = [_safe_observation(text, item) for text in item.digest.doctor_feedback[:2]]
     parts = [f"代表当时的感受：{text}" for text in impressions if text]
     parts.extend(f"据代表回忆的医生表达：{text}" for text in feedback if text)
     return "；".join(parts)[:300]
+
+
+def rehearsal_mood(note: str) -> Literal["irritable", "rushed"] | None:
+    """只把有医生主语的主观现场观察用于本场虚构演练的语速与口吻。"""
+    for part in note.split("；"):
+        if not part.startswith(("代表当时的感受：", "据代表回忆的医生表达：")):
+            continue
+        content = part.split("：", 1)[1]
+        if re.search(r"我(?:对|向)(?:那位)?(?:医生|主任|教授|院长)", content):
+            continue
+        subject = _MOOD_SUBJECT.search(content)
+        if not subject:
+            continue
+        observation = content[subject.end():subject.end() + 16]
+        if _IRRITABLE.search(observation):
+            return "irritable"
+        if _RUSHED.search(observation):
+            return "rushed"
+    return None
 
 
 def triggered_wording(note: str, rep_text: str) -> str:

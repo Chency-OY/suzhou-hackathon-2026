@@ -14,7 +14,7 @@ def vars_of(name: str) -> set[str]:
 
 
 def test_doctor_reply_variables_and_version():
-    assert load_prompt("doctor_reply").version.startswith("0.3")
+    assert load_prompt("doctor_reply").version.startswith("0.4")
     assert vars_of("doctor_reply") == DOCTOR_VARS
 
 

@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from app.db import Repo
 from app.deps import get_engine, get_repo
-from app.diary_rehearsal import rehearsal_note, triggered_wording
+from app.diary_rehearsal import rehearsal_mood, rehearsal_note, triggered_wording
 from app.llm import MockLLM
 from app.main import app
 from app.models.diary import DiaryDigest, FieldDiary
@@ -106,6 +106,57 @@ def test_model_prompt_responds_to_repeated_wording_without_identity():
     assert "甲某主任" not in prompt and "某某医院" not in prompt
 
 
+def test_spoken_visit_mood_changes_only_current_fictional_reply():
+    item = _diary("owner")
+    item.raw_text = "今天主任心情极差，我一开始很紧张。"
+    item.digest.first_impressions = ["今天主任心情极差", "我一开始很紧张"]
+    item.digest.doctor_feedback = []
+    note = rehearsal_note(item)
+    assert rehearsal_mood(note) == "irritable"
+    assert rehearsal_mood("代表当时的感受：我很不耐烦") is None
+    assert rehearsal_mood("代表当时的感受：我对医生很不耐烦") is None
+    assert rehearsal_mood("代表当时的感受：我很不耐烦，医生只是听着") is None
+    item.raw_text = "我开场很紧张。后来又有些着急。今天主任心情极差。"
+    item.digest.first_impressions = ["我开场很紧张", "后来又有些着急", "今天主任心情极差"]
+    assert rehearsal_mood(rehearsal_note(item)) == "irritable"
+    item.raw_text = "医生说这款药疗效好，但心情极差。"
+    item.digest.first_impressions = ["医生说这款药疗效好，但心情极差"]
+    assert rehearsal_mood(rehearsal_note(item)) is None
+
+    persona = build_demo_personas()[1]
+    scenario = make_scenario(persona_id=persona.id)
+    engine = SessionEngine(MockLLM(), kb=None, rules=StateRules())
+    with_mood = engine.start(scenario, persona, "owner", diary_id=item.id)
+    baseline = engine.start(scenario, persona, "owner")
+    mood_reply = engine.step(with_mood, scenario, persona, "您好", rehearsal_note=note)
+    baseline_reply = engine.step(baseline, scenario, persona, "您好")
+    assert mood_reply.doctor_reply == "你先说重点，别绕。"
+    assert baseline_reply.doctor_reply != mood_reply.doctor_reply
+    assert mood_reply.state == baseline_reply.state
+    assert with_mood.turns[-1].meta["diary_mood"] == "irritable"
+    assert baseline.turns[-1].meta["diary_mood"] == ""
+
+
+def test_rushed_mood_is_clearly_scenario_only_in_model_prompt():
+    item = _diary("owner")
+    item.raw_text = "医生今天特别忙，只给我几分钟。"
+    item.digest.first_impressions = ["医生今天特别忙"]
+    item.digest.doctor_feedback = []
+    note = rehearsal_note(item)
+    assert rehearsal_mood(note) == "rushed"
+    mock = MockLLM({"signal_judge": json.dumps({"signals": []}),
+                    "doctor_reply": json.dumps({"reply": "我只有几分钟，你先说重点。"}, ensure_ascii=False)})
+    persona = build_demo_personas()[1]
+    scenario = make_scenario(persona_id=persona.id)
+    engine = SessionEngine(mock, kb=None, rules=StateRules())
+    session = engine.start(scenario, persona, "owner")
+    engine.step(session, scenario, persona, "您好", rehearsal_note=note)
+    prompt = next(call for call in mock.calls if call["prompt_name"] == "doctor_reply")["messages"][0]["content"]
+    assert "这场虚构练习时间紧" in prompt
+    assert "先表示时间很紧" in prompt
+    assert "不改变医生的真实身份" in prompt
+
+
 def test_diary_rehearsal_is_account_scoped(tmp_path):
     repo = Repo(f"sqlite:///{tmp_path}/rehearsal.db")
     persona = build_demo_personas()[1]
@@ -131,5 +182,6 @@ def test_diary_rehearsal_is_account_scoped(tmp_path):
         assert first.post(f"/api/sessions/{session_id}/turns", json={"text": "您好"}).status_code == 200
         repo.delete(FieldDiary, "diary_test")
         assert first.get(f"/api/sessions/{session_id}").json()["rehearsal_note"] == ""
+        assert first.get(f"/api/sessions/{session_id}").json()["rehearsal_mood"] == ""
     finally:
         app.dependency_overrides.clear()

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..db import Repo
 from ..deps import get_engine, get_provider, get_repo
-from ..diary_rehearsal import rehearsal_note
+from ..diary_rehearsal import rehearsal_mood, rehearsal_note
 from ..llm import LLMProvider
 from ..models import DoctorPersona, DoctorState, Report, Scenario, Session
 from ..models.auth import Account, SessionSummary
@@ -94,6 +94,7 @@ class SessionOut(BaseModel):
     end_reason: str | None
     diary_id: str | None = None
     rehearsal_note: str = ""
+    rehearsal_mood: str = ""
     turns: list[TurnView]
 
 
@@ -215,6 +216,7 @@ def get_session(session_id: str, repo: Repo = Depends(get_repo),
     return SessionOut(
         id=s.id, scenario_id=s.scenario_id, rep_id=s.rep_id, started_at=s.started_at, ended_at=s.ended_at,
         end_reason=s.end_reason, diary_id=s.diary_id, rehearsal_note=note,
+        rehearsal_mood=rehearsal_mood(note) or "",
         turns=_turn_views(s))
 
 

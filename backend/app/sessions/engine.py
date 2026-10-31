@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
-from ..diary_rehearsal import triggered_wording
+from ..diary_rehearsal import rehearsal_mood, triggered_wording
 from ..llm import LLMProvider, load_prompt, structured_call
 from ..models import DoctorPersona, DoctorState, Scenario, Session, Turn
 from ..models.constants import SIGNALS
@@ -157,16 +157,18 @@ class SessionEngine:
         metas = [t.meta for t in session.turns if t.speaker == "doctor"]
         bait = None if (reveal or end) else next_bait(persona, metas, rep_turn_no, self.rules)
         wording = triggered_wording(rehearsal_note, rep_text) if not (reveal or bait or end) else ""
+        mood = rehearsal_mood(rehearsal_note)
 
         reply, r_deg = self._reply(scenario, persona, state, signals, history, rep_text, facts, reveal, bait, end,
-                                  rehearsal_note, wording)
+                                  rehearsal_note, wording, mood)
 
         session.turns.append(Turn(idx=len(session.turns), speaker="rep", text=rep_text, signals=signals,
                                   state_after=state, meta={"judge_note": judge_note, "judge_degraded": j_deg}))
         session.turns.append(Turn(idx=len(session.turns), speaker="doctor", text=reply, state_after=state,
                                   meta={"rep_turn_no": rep_turn_no, "bait": bait, "revealed": reveal,
                                         "end_hint": end, "degraded": j_deg or r_deg,
-                                        "diary_wording_triggered": bool(wording)}))
+                                        "diary_wording_triggered": bool(wording),
+                                        "diary_mood": mood or ""}))
         if end:
             session.ended_at = datetime.now(UTC)
             session.end_reason = end
@@ -255,8 +257,11 @@ class SessionEngine:
         return None
 
     def _reply(self, scenario, persona, state, signals, history, rep_text, facts, reveal, bait, end,
-               rehearsal_note: str = "", wording: str = "") -> tuple[str, bool]:
-        fallback = f"‘{wording}’这说法我不太喜欢，换个角度讲。" if wording else self._fallback(persona, end)
+               rehearsal_note: str = "", wording: str = "", mood: str | None = None) -> tuple[str, bool]:
+        fallback = (f"‘{wording}’这说法我不太喜欢，换个角度讲。" if wording else
+                    self._fallback(persona, end) if end else
+                    "我只有几分钟，你先说重点。" if mood == "rushed" else
+                    "你先说重点，别绕。" if mood == "irritable" else self._fallback(persona, None))
         if self.provider.name == "mock" and not self.provider.responses:
             if end:
                 return fallback, True
@@ -270,7 +275,7 @@ class SessionEngine:
                 return "我更关心适用人群和安全性，您能先说明资料出处吗？", True
             if "proposed_next_step" in signals:
                 return "先把资料留下，我看完再决定要不要继续交流。", True
-            return self._fallback(persona, None), True
+            return fallback, True
         prompt = load_prompt("doctor_reply")
         corpus = rep_text + format_facts(facts) + history
         sig_cn = "；".join(SIGNAL_CN[s] for s in signals) or "无明显信号，按人设自然回应"
@@ -284,9 +289,16 @@ class SessionEngine:
             intent_cn = "提出一个需要判断的问题"
         elif wording:
             intent_cn = "指出代表这轮重复使用的表达方式"
+        elif mood == "irritable":
+            intent_cn = "简短催促代表，并追问一个重点"
+        elif mood == "rushed":
+            intent_cn = "提醒时间很紧，并追问一个重点"
         directive = (f"代表这轮再次用了‘{wording}’。按主观日记中的沟通观察，"
                      "你可以对这个说法提出异议并请他换个角度讲；不要声称这是现实医生的真实偏好。"
                      if wording else self._directive(reveal, bait, end))
+        if mood and not (reveal or bait or end or wording):
+            directive = ("先用一句短促的话催代表讲重点，再只追问一个具体问题。"
+                         if mood == "irritable" else "先表示时间很紧、请代表直说重点，再只追问一个具体问题。")
         note = ""
         for _ in range(2):
             user = prompt.render(
@@ -294,7 +306,10 @@ class SessionEngine:
                 style_desc=STYLE_DESC[persona.style], concerns="、".join(CONCERN_CN[c] for c in persona.concerns),
                 current_habit=persona.current_habit, backstory=persona.backstory,
                 speech_habits=persona.speech_habits, hidden_objection=persona.hidden_objection,
-                tone_hint=tone_hint(state), signals_cn=sig_cn, reaction_hint=reaction, facts=format_facts(facts),
+                tone_hint=(tone_hint(state) + ("；这场虚构练习可表现出不耐烦，回答更短，必要时打断空泛表达" if mood == "irritable"
+                                              else "；这场虚构练习时间紧，说话更短，催代表先讲重点" if mood == "rushed"
+                                              else "")),
+                signals_cn=sig_cn, reaction_hint=reaction, facts=format_facts(facts),
                 history=history, rep_text=safe_text(rep_text), directive=self._directive(reveal, bait, end),
                 setting_cn=setting_cn, intent_cn=intent_cn,
                 intent_directive=directive,
