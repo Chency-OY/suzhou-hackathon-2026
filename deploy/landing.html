@@ -83,6 +83,29 @@
     .steps li { color: #2d4a5d; }
     .steps b { border-color: #add3e2; color: #176b91; }
     .course:hover { border-color: #7dbbd2; background: #f2f9fc; }
+    .hero { position: relative; overflow: hidden; padding: clamp(28px, 4vw, 52px); border: 1px solid #7197ed; border-radius: 24px; background: radial-gradient(circle at 70% 5%, #83afff 0, transparent 38%), linear-gradient(120deg, #173db6, #507de8); box-shadow: 0 24px 58px #2e58bf30; }
+    .hero:before { position: absolute; inset: 0; background-image: radial-gradient(#ffffff49 .8px, transparent .8px); background-size: 18px 18px; mask-image: linear-gradient(90deg, transparent, #000); content: ""; pointer-events: none; }
+    .hero > * { position: relative; }
+    .hero h1 { color: #fff; }
+    .hero .kicker { color: #c6dcff; }
+    .hero .accent { color: #d4e5ff; }
+    .hero .lead { color: #e3edff; }
+    .hero .hint { color: #dbe7ff; }
+    .hero .button { border-color: #fff; background: #fff; color: #254fc4; box-shadow: 0 8px 20px #1c42ad42; }
+    .hero .button:hover { background: #e8f1ff; }
+    .hero .button.secondary { border-color: #ffffff8a; background: #ffffff21; color: #fff; box-shadow: none; }
+    .hero .button.secondary:hover { background: #ffffff36; }
+    .hero .terminal { border-color: #e1e9fb; border-radius: 18px; background: #fff; box-shadow: 0 18px 45px #13359477; transform: rotate(2deg); }
+    .hero .terminal h2 { color: #17396d; }
+    .hero .terminal p { color: #526d91; }
+    .hero .terminal-head { color: #6d83a6; }
+    .preview-bubble { margin-top: 14px; padding: 11px 13px; border-radius: 12px 12px 12px 3px; background: #edf3ff; color: #25436d; font-size: 12px; line-height: 1.7; }
+    .preview-bubble.rep { width: 90%; margin-left: auto; border-radius: 12px 12px 3px 12px; background: #deebff; }
+    .preview-bubble small { display: block; margin-bottom: 4px; color: #5d78a9; font-size: 10px; font-weight: 800; }
+    .preview-judge { display: flex; justify-content: space-between; gap: 8px; margin-top: 16px; padding: 11px; border: 1px solid #d5e1f9; border-radius: 10px; background: #f9fbff; font-size: 11px; }
+    .preview-judge strong { color: #315dc8; }
+    .preview-judge span { color: #386b88; }
+    @media (max-width: 600px) { .hero { padding: 26px 22px; border-radius: 18px; }.hero .terminal { transform: none; }.hero h1 { font-size: 36px; } }
   </style>
 </head>
 <body>
@@ -90,14 +113,14 @@
   <main class="wrap">
     <div class="hero">
       <section>
-        <div class="kicker">TRAINING SYSTEM / 医学沟通模拟训练</div>
-        <h1>每一次拜访，<br><span class="accent">都是一次判断。</span></h1>
-        <p class="lead">在虚构医生情境中练习真实会遇到的问题。把证据说准确，把风险讲完整，面对不确定性知道何时停下核实。</p>
+        <div class="kicker">FRONTLINE LAB / 医学沟通模拟训练</div>
+        <h1>把每一次拜访，<br><span class="accent">先练到心里有数。</span></h1>
+        <p class="lead">选择情境，直接说出或输入自己的回答。DeepSeek 模拟医生继续追问，并给出每一轮的沟通判断。</p>
         <div class="action"><a class="button" href="/rep-trainer/home?auth=login">登录训练 <span aria-hidden="true">→</span></a><a class="button secondary" href="/rep-trainer/home?auth=register">注册新账号</a><a class="button secondary" href="/rep-trainer/rep-trainer.apk" download><img src="/rep-trainer/app-icon.svg?v=3" width="28" height="28" alt="" aria-hidden="true">下载安卓 App</a><span class="hint">安卓 App 打开前线日记，可口述拜访后的第一感受。注册后可在不同设备回看。</span></div>
       </section>
       <section class="terminal" aria-label="训练流程预览">
-        <div class="terminal-head"><span>MISSION PREVIEW</span><span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
-        <div class="terminal-body"><span class="terminal-no">TRAINING LOOP / 01</span><h2>从任务到复盘</h2><p>每一次练习都有具体目标和可回看的对话。</p><ol class="steps"><li><b>01</b>选择科室与拜访情境</li><li><b>02</b>与 AI 模拟医生对话</li><li><b>03</b>逐句检查沟通与表达</li></ol><div class="terminal-foot"><span>16 个合成情境</span><span>AI 对话演练</span></div></div>
+        <div class="terminal-head"><span>LIVE SESSION PREVIEW</span><span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+        <div class="terminal-body"><span class="terminal-no">AI DIALOGUE / 01</span><h2>直接说，马上练</h2><p>语音转文字后可修改，每句话都能回看。</p><div class="preview-bubble"><small>模拟医生</small>你说这个方案更合适，依据是什么？</div><div class="preview-bubble rep"><small>你的回答</small>我先说明适用人群和证据边界，再回答您最关心的问题。</div><div class="preview-judge"><strong>✦ AI 沟通判断</strong><span>回应关注点 · 说明边界</span></div><div class="terminal-foot"><span>虚构情境</span><span>逐轮反馈</span></div></div>
       </section>
     </div>
     <div class="section-head"><h2>可选训练课程</h2><span>先练沟通判断，再练具体产品资料</span></div>

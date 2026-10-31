@@ -55,13 +55,9 @@ export default function ScenarioListPage() {
     <div>
       {diaryId && <div className="game-alert mb-5" role="status">这次会把你日记中的沟通感受作为虚构演练线索。医学说法不会进入角色设定。<Link className="game-link ml-2" to="/diary">返回日记</Link></div>}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
-        <section className="game-hero px-6 py-8 sm:px-9 sm:py-10">
-          <p className="game-kicker">MISSION CONTROL / 任务大厅</p>
-          <h1 className="game-title mt-3">选择你的下一次拜访</h1>
-          <p className="game-muted mt-4 max-w-[590px] text-sm leading-7">进入虚构医生情境，练习提问、回应和证据表达。完成对话后，回看每一句话如何影响了沟通。</p>
-          <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-[#a1d9e9]">
-            <span>01 选择任务</span><span>02 模拟对话</span><span>03 逐句复盘</span>
-          </div>
+        <section className="sim-home-hero">
+          <div className="sim-home-copy"><p className="sim-eyebrow">FRONTLINE LAB <span>·</span> AI 沟通训练</p><h1>把每一次拜访，<br /><em>先练到心里有数。</em></h1><p>走进虚构医生的诊室，直接说出你的回答。DeepSeek 接住每一句话，模拟追问，并给出逐轮沟通判断。</p><div className="sim-home-steps"><span>01 选情境</span><b>→</b><span>02 说出来</span><b>→</b><span>03 看判断</span></div></div>
+          <div className="sim-home-preview" aria-hidden="true"><div className="sim-preview-top"><i /> LIVE SESSION <span>● AI ONLINE</span></div><div className="sim-preview-doctor"><small>模拟医生</small><p>你说这个方案更合适，依据是什么？</p></div><div className="sim-preview-rep"><small>你的回答</small><p>我先说明适用人群和证据边界，再回答您最关心的问题。</p></div><div className="sim-preview-result"><strong>✦ AI 沟通判断</strong><span>回应关注点 · 说明边界</span></div></div>
         </section>
         <section className="game-panel p-5 sm:p-6" aria-label="训练核心能力">
           <div className="flex items-center justify-between border-b border-[#2e4e61] pb-4"><h2 className="text-sm font-bold">核心能力</h2><span className="game-kicker !text-[9px]">OBJECTIVES</span></div>

@@ -118,6 +118,8 @@ class StepResult:
     ended: bool
     end_reason: str | None
     degraded: bool
+    judge_note: str = ""
+    judge_degraded: bool = False
 
 
 class SessionEngine:
@@ -146,7 +148,7 @@ class SessionEngine:
         facts = self._retrieve(rep_text, persona) if scenario.program_id == "xinermei" else []
 
         indication_facts = self._indication_facts() if scenario.program_id == "xinermei" else []
-        signals, j_deg = self._judge(scenario, persona, history, rep_text, facts + indication_facts)
+        signals, judge_note, j_deg = self._judge(scenario, persona, history, rep_text, facts + indication_facts)
         state = apply_signals(prev_state, signals, self.rules, natural_decay(persona))
         end = decide_end(state, signals, rep_turn_no, persona.time_budget_turns, self.rules)
         reveal = end is None and should_reveal(state, signals, self.rules)
@@ -160,7 +162,7 @@ class SessionEngine:
                                   rehearsal_note, wording)
 
         session.turns.append(Turn(idx=len(session.turns), speaker="rep", text=rep_text, signals=signals,
-                                  state_after=state))
+                                  state_after=state, meta={"judge_note": judge_note, "judge_degraded": j_deg}))
         session.turns.append(Turn(idx=len(session.turns), speaker="doctor", text=reply, state_after=state,
                                   meta={"rep_turn_no": rep_turn_no, "bait": bait, "revealed": reveal,
                                         "end_hint": end, "degraded": j_deg or r_deg,
@@ -168,7 +170,7 @@ class SessionEngine:
         if end:
             session.ended_at = datetime.now(UTC)
             session.end_reason = end
-        return StepResult(reply, state, signals, end is not None, end, j_deg or r_deg)
+        return StepResult(reply, state, signals, end is not None, end, j_deg or r_deg, judge_note, j_deg)
 
     # ---- 内部 ----
     def _retrieve(self, rep_text: str, persona: DoctorPersona) -> list:
@@ -196,9 +198,9 @@ class SessionEngine:
         except Exception:  # noqa: BLE001
             return []
 
-    def _judge(self, scenario, persona, history, rep_text, facts) -> tuple[list[str], bool]:
+    def _judge(self, scenario, persona, history, rep_text, facts) -> tuple[list[str], str, bool]:
         if self.provider.name == "mock" and not self.provider.responses:
-            return self._demo_signals(rep_text), True
+            return self._demo_signals(rep_text), "", True
         user = load_prompt("signal_judge").render(
             scenario_type=scenario.type, concerns="、".join(CONCERN_CN[c] for c in persona.concerns),
             style=persona.style, hidden_objection=persona.hidden_objection, facts=format_facts(facts),
@@ -210,8 +212,11 @@ class SessionEngine:
                 max_retries=1, temperature=0.2, max_tokens=256)
         except RuntimeError as exc:
             log.warning("信号判断暂不可用，使用备用规则：%s", exc)
-            return self._demo_signals(rep_text), True
-        return [s for s in dict.fromkeys(out.signals) if s in SIGNALS][:6], degraded
+            return self._demo_signals(rep_text), "", True
+        note = out.note.strip()[:30] if not degraded else ""
+        if note and leaks_hidden(persona.hidden_objection, note):
+            note = ""
+        return [s for s in dict.fromkeys(out.signals) if s in SIGNALS][:6], note, degraded
 
     @staticmethod
     def _demo_signals(rep_text: str) -> list[str]:

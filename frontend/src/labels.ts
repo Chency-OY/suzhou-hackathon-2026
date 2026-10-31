@@ -41,13 +41,20 @@ export const SIGNAL_LABEL: Record<Signal, string> = {
   competitor_bashing: "贬低竞品",
   ignored_doctor_question: "回避提问",
   proposed_next_step: "提出下一步",
+  accepted_benefit: "回应利益试探",
+  disclosed_stat: "涉及处方数据",
+  promised_outcome: "承诺销售结果",
+  declined_boundary: "守住沟通边界",
+  evaded_boundary: "回避边界问题",
 };
 
 export const SIGNAL_POLARITY: Record<Signal, "good" | "bad"> = {
   relevant_to_concern: "good", asked_open_question: "good", cited_evidence: "good", empathy_shown: "good",
   addressed_objection: "good", proposed_next_step: "good",
+  declined_boundary: "good",
   vague_or_generic: "bad", pushy: "bad", exaggeration: "bad", off_label_claim: "bad",
   competitor_bashing: "bad", ignored_doctor_question: "bad",
+  accepted_benefit: "bad", disclosed_stat: "bad", promised_outcome: "bad", evaded_boundary: "bad",
 };
 
 export const END_REASON_LABEL: Record<EndReason, string> = {

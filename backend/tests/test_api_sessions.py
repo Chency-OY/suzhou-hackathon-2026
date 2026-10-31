@@ -20,7 +20,7 @@ def ctx(tmp_path):
     for p in DEMO:
         repo.save(p)
     repo.save(make_scenario(id="scn_001", persona_id=DEMO[1].id, opening_line="我只有几分钟，你说吧。"))
-    mock = MockLLM({"signal_judge": json.dumps({"signals": ["relevant_to_concern"], "note": ""}),
+    mock = MockLLM({"signal_judge": json.dumps({"signals": ["relevant_to_concern"], "note": "先回应对方的时间限制"}, ensure_ascii=False),
                     "doctor_reply": json.dumps({"reply": "嗯，继续说。"}, ensure_ascii=False)})
     engine = SessionEngine(mock, kb=None, rules=StateRules())
     app.dependency_overrides[get_repo] = lambda: repo
@@ -42,16 +42,21 @@ def test_full_flow(ctx):
     t = c.post(f"/api/sessions/{sid}/turns", json={"text": "  张主任您好  "})
     assert t.status_code == 200 and t.json()["doctor_reply"] == "嗯，继续说。" and t.json()["ended"] is False
     assert t.json()["signals"] == ["relevant_to_concern"]
+    assert t.json()["judge_note"] == "先回应对方的时间限制"
+    assert t.json()["judge_degraded"] is False
 
     g = c.get(f"/api/sessions/{sid}")
     assert [x["speaker"] for x in g.json()["turns"]] == ["doctor", "rep", "doctor"]
     assert g.json()["turns"][1]["text"] == "张主任您好"
+    assert g.json()["turns"][1]["judge_note"] == "先回应对方的时间限制"
+    assert g.json()["turns"][0]["judge_note"] == ""
 
     f = c.post(f"/api/sessions/{sid}/finish")
     assert f.json() == {"session_id": sid, "ended": True, "end_reason": "rep_ended", "report_id": f"report_{sid}"}
     report = c.get(f"/api/reports/report_{sid}")
     assert report.status_code == 200 and report.json()["scoring_mode"] == "unavailable"
     assert report.json()["turns"][1]["text"] == "张主任您好"
+    assert report.json()["turns"][1]["judge_note"] == "先回应对方的时间限制"
     assert c.post(f"/api/sessions/{sid}/turns", json={"text": "还有吗"}).status_code == 409
 
 

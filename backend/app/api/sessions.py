@@ -62,6 +62,8 @@ class TurnOut(BaseModel):
     ended: bool
     end_reason: str | None
     degraded: bool
+    judge_note: str = ""
+    judge_degraded: bool = False
     report_id: str | None = None
 
 
@@ -78,6 +80,8 @@ class TurnView(BaseModel):
     text: str
     signals: list[str]
     state_after: DoctorState | None
+    judge_note: str = ""
+    judge_degraded: bool = False
 
 
 class SessionOut(BaseModel):
@@ -98,7 +102,10 @@ class ReportOut(Report):
 
 def _turn_views(session: Session) -> list[TurnView]:
     return [TurnView(idx=t.idx, speaker=t.speaker, text=t.text, signals=list(t.signals),
-                     state_after=t.state_after) for t in session.turns]
+                     state_after=t.state_after,
+                     judge_note=str(t.meta.get("judge_note", "")) if t.speaker == "rep" else "",
+                     judge_degraded=bool(t.meta.get("judge_degraded", False)) if t.speaker == "rep" else False)
+            for t in session.turns]
 
 
 def _ensure_report(repo: Repo, session: Session, scenario: Scenario, provider: LLMProvider) -> Report:
@@ -177,7 +184,8 @@ def post_turn(session_id: str, body: TurnIn, repo: Repo = Depends(get_repo),
         repo.save(session)
         report_id = _ensure_report(repo, session, sc, provider).id if session.ended_at else None
     return TurnOut(doctor_reply=res.doctor_reply, doctor_state=res.state, signals=res.signals, ended=res.ended,
-                   end_reason=res.end_reason, degraded=res.degraded, report_id=report_id)
+                   end_reason=res.end_reason, degraded=res.degraded, report_id=report_id,
+                   judge_note=res.judge_note, judge_degraded=res.judge_degraded)
 
 
 @router.post("/sessions/{session_id}/finish", response_model=FinishOut)

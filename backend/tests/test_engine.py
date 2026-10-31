@@ -72,6 +72,15 @@ def test_judge_failure_degrades_gracefully():
     engine, _, persona, scenario, sess = setup(judge="garbage")
     res = engine.step(sess, scenario, persona, "你好")
     assert res.signals == [] and res.degraded is True and res.doctor_reply
+    assert res.judge_note == "" and res.judge_degraded is True
+
+
+def test_judge_note_cannot_reveal_hidden_objection():
+    persona = DEMO[1]
+    engine, _, persona, scenario, sess = setup(
+        judge=json.dumps({"signals": [], "note": persona.hidden_objection}, ensure_ascii=False))
+    res = engine.step(sess, scenario, persona, "您好。")
+    assert res.judge_note == "" and sess.turns[1].meta["judge_note"] == ""
 
 
 def test_reply_leak_triggers_regeneration():

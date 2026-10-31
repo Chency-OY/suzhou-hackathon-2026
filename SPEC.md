@@ -213,7 +213,7 @@ class PlaybookCard(BaseModel):
 | GET | `/programs` | – | 可选培训课程（通用沟通/已核实产品资料包） |
 | GET | `/scenarios/{id}` | – | `Scenario` + `persona_public`（脱敏后的画像：职称、医院级别、风格提示） |
 | POST | `/sessions` | `{scenario_id, rep_id}` | `{session_id, opening_line, doctor_state}` |
-| POST | `/sessions/{id}/turns` | `{text}` | `{doctor_reply, doctor_state, signals, ended, end_reason}` |
+| POST | `/sessions/{id}/turns` | `{text}` | `{doctor_reply, doctor_state, signals, judge_note, judge_degraded, ended, end_reason, degraded, report_id}` |
 | POST | `/sessions/{id}/finish` | – | `{report_id}`（同步或轮询均可，MVP 同步） |
 | GET | `/reports/{id}` | – | `Report` + 对应 `turns` |
 | GET | `/reps/{rep_id}/progress?scenario_id=` | – | `[{session_id, started_at, total_score, dimension_scores}]` |
@@ -275,6 +275,8 @@ class PlaybookCard(BaseModel):
 | GET | `/reports/{id}` | – | `Report` 与逐句对话，跨账号为 404 |
 
 `POST /sessions/{id}/finish` 及自然结束的回合返回 `report_id`；重复结束复用同一报告，不重复请求模型。
+
+每轮自由回答由 DeepSeek 分别判断沟通行为信号、生成虚构医生回复。`judge_note` 是不超过 30 字的沟通动作理由，只在模型成功判断时展示；模型不可用时为空，`judge_degraded=true`。会话和报告的代表发言 `TurnView` 同样返回这两个字段，刷新页面后仍可回看。理由不能泄露画像隐藏异议，也不能当作医学或合规裁定。
 
 ### 6.5 团队共性复盘（公网演示扩展）
 
@@ -385,7 +387,7 @@ ignored_doctor_question: {trust: -8, patience: -8}
 
 ## 8. 前端页面（MVP）
 1. **场景选择页**：按科室/难度筛选，卡片展示"背景简介、目标、难度"，不展示隐藏异议。
-2. **演练页**：默认三步选择式引导教学（理解医生、回应问题、约定下一步），每步三项回应并在选择后解释理由，学员确认后再进入下一步；可切换自由文字练习。两种模式共用聊天记录与模拟医生回应；侧边实时显示医生"信任度/耐心"条与简短提示（可开关，训练新人时开、考核时关）；结束按钮。引导反馈仅为模拟教学，不替代正式医学或合规审核。
+2. **演练页**：默认自由练习，文字与语音输入并列可见，语音识别结果可修改后发送；每轮直接显示 DeepSeek 的沟通行为判断及虚构医生回应。可切换三步选择式引导教学（理解医生、回应问题、约定下一步），每步三项回应并在选择后解释理由。两种模式共用聊天记录与模拟医生回应；侧边实时显示医生"信任度/耐心"条与简短提示（可开关，训练新人时开、考核时关）；结束按钮。引导反馈仅为模拟教学，不替代正式医学或合规审核。
 3. **复盘页**：总分与封顶提示、维度雷达图、逐句时间轴（点击 Finding 跳转到对话原句并高亮 quote）、"更好的说法"对照、下一步练习建议。
 4. **成长页**：同一场景多次练习的得分折线。
 5. **管理者看板**：团队维度均分、高频失分、高频异议、打法卡片审核（approve）。

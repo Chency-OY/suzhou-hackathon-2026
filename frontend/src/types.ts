@@ -53,6 +53,7 @@ export const SIGNALS = [
   "relevant_to_concern", "asked_open_question", "cited_evidence", "empathy_shown", "addressed_objection",
   "vague_or_generic", "pushy", "exaggeration", "off_label_claim", "competitor_bashing",
   "ignored_doctor_question", "proposed_next_step",
+  "accepted_benefit", "disclosed_stat", "promised_outcome", "declined_boundary", "evaded_boundary",
 ] as const;
 export type Signal = (typeof SIGNALS)[number];
 
@@ -72,6 +73,8 @@ export interface TurnView {
   text: string;
   signals: Signal[];
   state_after: DoctorState | null;
+  judge_note: string;
+  judge_degraded: boolean;
 }
 
 export interface SessionView {
@@ -99,6 +102,7 @@ export interface CreateSessionOut { session_id: string; opening_line: string; do
 export interface TurnOut {
   doctor_reply: string; doctor_state: DoctorState; signals: Signal[]; ended: boolean;
   end_reason: EndReason | null; degraded: boolean; report_id?: string | null;
+  judge_note: string; judge_degraded: boolean;
 }
 export interface FinishOut { session_id: string; ended: boolean; end_reason: EndReason | null; report_id: string | null }
 
