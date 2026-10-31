@@ -140,7 +140,7 @@ export default function SessionPage() {
 
   async function again() {
     if (!session) return;
-    try { const out = await api.createSession(session.scenario_id, session.rehearsal_note ? session.diary_id : null); nav(`/session/${out.session_id}`); }
+    try { const out = await api.createSession(session.scenario_id, session.rehearsal_note ? session.diary_id : null, session.radar_id); nav(`/session/${out.session_id}`); }
     catch (e) { setError(msg(e)); }
   }
 
@@ -149,6 +149,7 @@ export default function SessionPage() {
 
   return <div>
     {session.rehearsal_note && <div className="game-alert mb-4" role="status"><strong>本轮日记线索：</strong>{session.rehearsal_note}{session.rehearsal_mood && <p className="mt-2 text-xs font-bold">本场模拟节奏：{session.rehearsal_mood === "rushed" ? "医生较忙，回答会更简短" : "医生显得不耐烦，可能打断空泛表达"}</p>}<p className="mt-2 text-xs">这是你的主观回忆，只用于虚构演练的沟通风格。若再次使用日记中被指出的表达，模拟医生可能提出异议；这不代表真实医生的观点。</p></div>}
+    {session.radar_cues.length > 0 && <div className="game-alert mb-4" role="status"><strong>本轮公开资料题材：</strong>{session.radar_cues[0].title}<p className="mt-2 text-xs">来源摘录：“{session.radar_cues[0].evidence_quote}”</p><p className="mt-2 text-xs">同名来源身份未确认，仅用于练习追问证据出处和适用范围；模拟医生并非检索对象。{session.radar_searched_at && `资料检索于 ${new Date(session.radar_searched_at).toLocaleString("zh-CN")}。`}</p><a className="game-link mt-2 inline-block text-xs" href={session.radar_cues[0].source_url} target="_blank" rel="noreferrer">核对候选来源 ↗</a></div>}
     <header className="sim-header"><div className="sim-header-copy"><p className="sim-eyebrow">LIVE SIMULATION <span>·</span> AI 拜访演练</p><h1>{scenario?.rep_goal ?? "正在加载任务目标"}</h1><p>你来回答，模拟医生继续追问。每一句都有沟通判断。</p><div className="sim-header-meta"><span>● {ended ? "演练已结束" : "演练进行中"}</span><span>第 {repTurns.length + 1} 轮</span><span>实时互动</span></div></div><div className="sim-orbit" aria-hidden="true"><span className="sim-orbit-center">AI</span><i /><i /><i /></div></header>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
       <section className={`game-panel game-chat ${guided ? "guided" : ""}`}>

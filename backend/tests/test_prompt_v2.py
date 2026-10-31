@@ -4,7 +4,7 @@ from app.llm import load_prompt
 
 DOCTOR_VARS = {"department_cn", "title", "hospital_tier", "style_desc", "speech_habits", "current_habit",
                "hidden_objection", "setting_cn", "history", "rep_text", "intent_cn", "intent_directive",
-               "tone_hint", "examples", "facts", "rehearsal_note", "retry_note"}
+               "tone_hint", "examples", "facts", "rehearsal_note", "academic_context", "retry_note"}
 FILL_VARS = {"skeleton_title", "rep_goal", "rep_pre_info", "setting", "department_cn", "title", "hospital_tier",
              "style", "hidden_objection", "retry_note"}
 
@@ -14,7 +14,7 @@ def vars_of(name: str) -> set[str]:
 
 
 def test_doctor_reply_variables_and_version():
-    assert load_prompt("doctor_reply").version.startswith("0.4")
+    assert load_prompt("doctor_reply").version.startswith("0.5")
     assert vars_of("doctor_reply") == DOCTOR_VARS
 
 

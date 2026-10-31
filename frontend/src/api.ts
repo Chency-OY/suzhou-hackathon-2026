@@ -44,8 +44,8 @@ export const api = {
   listScenarios: (f: ScenarioFilters) =>
     get<ScenarioItem[]>(`/scenarios${buildQuery({ program: f.program, dept: f.dept, difficulty: f.difficulty, type: f.type })}`),
   getScenario: (id: string) => get<ScenarioDetail>(`/scenarios/${encodeURIComponent(id)}`),
-  createSession: (scenarioId: string, diaryId?: string | null) =>
-    post<CreateSessionOut>("/sessions", { scenario_id: scenarioId, diary_id: diaryId || null }),
+  createSession: (scenarioId: string, diaryId?: string | null, radarId?: string | null) =>
+    post<CreateSessionOut>("/sessions", { scenario_id: scenarioId, diary_id: diaryId || null, radar_id: radarId || null }),
   listSessions: () => get<SessionSummary[]>("/sessions"),
   getSession: (id: string) => get<SessionView>(`/sessions/${encodeURIComponent(id)}`),
   getReport: (id: string) => get<ReportView>(`/reports/${encodeURIComponent(id)}`),

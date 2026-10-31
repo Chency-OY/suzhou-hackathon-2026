@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api";
 import { radarRefreshDue } from "../radarLocal";
 import type { AcademicRadar } from "../types";
@@ -6,9 +7,10 @@ import type { AcademicRadar } from "../types";
 const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
 const kindLabel = { paper: "论文", conference: "会议", talk: "演讲" };
 
-function RadarCard({ result, onToggle, switching }: { result: AcademicRadar; onToggle: (item: AcademicRadar) => void; switching: boolean }) {
+function RadarCard({ result, onToggle, onRefresh, switching, refreshing }: { result: AcademicRadar; onToggle: (item: AcademicRadar) => void; onRefresh: (item: AcademicRadar) => void; switching: boolean; refreshing: boolean }) {
   const sources = result.web_sources || [];
   const points = result.answer_points || [];
+  const recent = Date.now() - Date.parse(result.searched_at) < 24 * 60 * 60 * 1000;
   const sourceById = new Map(sources.map((source) => [source.id, source]));
   return <article className="game-panel p-5 sm:p-6">
     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -23,6 +25,10 @@ function RadarCard({ result, onToggle, switching }: { result: AcademicRadar; onT
       {result.last_auto_checked_at && <span className="game-muted">最近自动检查：{new Date(result.last_auto_checked_at).toLocaleString("zh-CN")}</span>}
     </div>
     {result.refresh_error && <div className="game-alert mt-4" role="status">{result.refresh_error}</div>}
+    {points.length > 0 && <div className="mt-4 flex flex-wrap items-center gap-3">{recent
+      ? <Link className="game-btn" to={`/home?radar=${encodeURIComponent(result.id)}`}>用公开学术线索练一次 →</Link>
+      : <button className="game-btn" type="button" disabled={switching || refreshing} onClick={() => onRefresh(result)}>{refreshing ? "正在更新…" : "更新资料后再练 →"}</button>}
+      <span className="game-muted text-xs">只练证据表达，不扮演真实医生</span></div>}
     {result.institution_name && <p className="game-muted mt-4 text-xs">索引中的医院：<a className="game-link" href={result.institution_url} target="_blank" rel="noreferrer">{result.institution_name} ↗</a></p>}
     <p className="game-alert mt-4" role="status">{result.note}</p>
     {points.length > 0 && <section className="mt-5 rounded-lg border border-[#c8dfe9] bg-[#f2f9fc] p-4">
@@ -60,6 +66,7 @@ export default function RadarPage() {
   const [busy, setBusy] = useState(false);
   const [autoBusy, setAutoBusy] = useState(false);
   const [switchingId, setSwitchingId] = useState("");
+  const [refreshingId, setRefreshingId] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -93,6 +100,14 @@ export default function RadarPage() {
     finally { setSwitchingId(""); setAutoBusy(false); }
   }
 
+  async function refreshForPractice(item: AcademicRadar) {
+    if (refreshingId || autoBusy) return;
+    setRefreshingId(item.id); setError("");
+    try { const updated = await api.searchRadar(item.doctor_name, item.hospital, true); setResults((current) => mergeRadar(current, [updated])); }
+    catch (cause) { setError(errorText(cause)); }
+    finally { setRefreshingId(""); }
+  }
+
   async function search() {
     if (busy || doctorName.trim().length < 2 || hospital.trim().length < 4) return;
     setBusy(true); setError("");
@@ -117,7 +132,7 @@ export default function RadarPage() {
       {error && <div className="game-alert mt-4" role="alert">{error}</div>}
     </section>
     {autoBusy && <p className="game-muted mt-5 text-xs" role="status">正在更新已开启的学术雷达…</p>}
-    <div className="mt-8 space-y-4">{results.map((result) => <RadarCard key={result.id} result={result} switching={!!switchingId || autoBusy} onToggle={(item) => void toggleAutoRefresh(item)} />)}</div>
+    <div className="mt-8 space-y-4">{results.map((result) => <RadarCard key={result.id} result={result} switching={!!switchingId || autoBusy} refreshing={refreshingId === result.id} onToggle={(item) => void toggleAutoRefresh(item)} onRefresh={(item) => void refreshForPractice(item)} />)}</div>
   </div>;
 }
 

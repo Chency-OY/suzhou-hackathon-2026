@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import threading
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
@@ -10,9 +10,11 @@ from ..db import Repo
 from ..deps import get_engine, get_provider, get_repo
 from ..diary_rehearsal import rehearsal_mood, rehearsal_note
 from ..llm import LLMProvider
-from ..models import DoctorPersona, DoctorState, Report, Scenario, Session
+from ..models import DoctorPersona, DoctorState, RadarPracticeCue, Report, Scenario, Session
 from ..models.auth import Account, SessionSummary
 from ..models.diary import FieldDiary
+from ..models.radar import AcademicRadar
+from ..radar.practice import practice_cue
 from ..scoring import score_session
 from ..sessions import SessionEngine
 from .auth import get_current_account, is_guest_account
@@ -36,6 +38,7 @@ def _err(status: int, code: str, msg: str) -> HTTPException:
 class CreateSessionIn(BaseModel):
     scenario_id: str = Field(min_length=1, max_length=64)
     diary_id: str | None = Field(default=None, max_length=80)
+    radar_id: str | None = Field(default=None, max_length=80)
 
 
 class CreateSessionOut(BaseModel):
@@ -95,6 +98,9 @@ class SessionOut(BaseModel):
     diary_id: str | None = None
     rehearsal_note: str = ""
     rehearsal_mood: str = ""
+    radar_id: str | None = None
+    radar_searched_at: datetime | None = None
+    radar_cues: list[RadarPracticeCue] = Field(default_factory=list)
     turns: list[TurnView]
 
 
@@ -163,14 +169,25 @@ def create_session(body: CreateSessionIn, repo: Repo = Depends(get_repo),
         raise _err(404, "not_found", "场景不存在")
     if sc.team_id:
         raise _err(404, "not_found", "场景不存在")
-    if is_guest_account(account) and body.diary_id:
-        raise _err(403, "guest_limited", "试用模式不能使用私人日记")
+    if is_guest_account(account) and (body.diary_id or body.radar_id):
+        raise _err(403, "guest_limited", "试用模式不能使用私人日记或学术雷达")
     if body.diary_id and not _own_rehearsal(repo, body.diary_id, account):
         raise _err(422, "no_rehearsal_cues", "这篇日记没有可用于沟通练习的观察")
+    radar = repo.get(AcademicRadar, body.radar_id) if body.radar_id else None
+    if body.radar_id and (not radar or radar.owner_id != account.id):
+        raise _err(404, "not_found", "学术雷达记录不存在")
+    cue = practice_cue(radar) if radar else None
+    if radar and datetime.now(UTC) - radar.searched_at >= timedelta(hours=24):
+        raise _err(422, "radar_stale", "这组学术资料已超过 24 小时，请先在雷达页更新")
+    if radar and not cue:
+        raise _err(422, "no_radar_cues", "没有可逐字核对的学术资料线索，暂不能用于演练")
     with _lock(f"account:{account.id}"):
         if is_guest_account(account) and sum(item.rep_id == account.id for item in repo.list(Session)) >= GUEST_MAX_SESSIONS:
             raise _err(429, "guest_limit", "试用次数已用完；创建账号可继续练习并保留已有记录")
-        session = engine.start(sc, p, account.id, diary_id=body.diary_id)
+        session = engine.start(sc, p, account.id, diary_id=body.diary_id,
+                               radar_id=radar.id if radar else None,
+                               radar_searched_at=radar.searched_at if radar else None,
+                               radar_cues=[cue] if cue else [])
         repo.save(session)
     return CreateSessionOut(session_id=session.id, opening_line=sc.opening_line,
                             doctor_state=session.turns[0].state_after)
@@ -217,6 +234,7 @@ def get_session(session_id: str, repo: Repo = Depends(get_repo),
         id=s.id, scenario_id=s.scenario_id, rep_id=s.rep_id, started_at=s.started_at, ended_at=s.ended_at,
         end_reason=s.end_reason, diary_id=s.diary_id, rehearsal_note=note,
         rehearsal_mood=rehearsal_mood(note) or "",
+        radar_id=s.radar_id, radar_searched_at=s.radar_searched_at, radar_cues=s.radar_cues,
         turns=_turn_views(s))
 
 

@@ -102,6 +102,13 @@ class Turn(BaseModel):
     meta: dict[str, Any] = Field(default_factory=dict)
 
 
+class RadarPracticeCue(BaseModel):
+    title: str = Field(min_length=4, max_length=240)
+    topic: str = Field(min_length=4, max_length=180)
+    source_url: str = Field(pattern=r"^https://")
+    evidence_quote: str = Field(min_length=8, max_length=240)
+
+
 class Session(BaseModel):
     id: str
     scenario_id: str
@@ -112,6 +119,9 @@ class Session(BaseModel):
     pre_goal: str | None = None
     visit_note: str | None = None
     diary_id: str | None = None
+    radar_id: str | None = None
+    radar_searched_at: datetime | None = None
+    radar_cues: list[RadarPracticeCue] = Field(default_factory=list, max_length=2)
     turns: list[Turn] = Field(default_factory=list)
 
 

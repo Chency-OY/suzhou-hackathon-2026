@@ -216,7 +216,7 @@ class PlaybookCard(BaseModel):
 | GET | `/products` | – | `ProductPortfolioItem[]`：信达已商业化产品及接近上市的在研项目、状态、核对日期和官方来源 |
 | POST | `/products/{id}/check` | `{question_id,answer}`；访客每小时最多 6 次 | 单品资料测试分类、已核对的参考要点和来源；不保存回答 |
 | GET | `/scenarios/{id}` | – | `Scenario` + `persona_public`（脱敏后的画像：职称、医院级别、风格提示） |
-| POST | `/sessions` | `{scenario_id, rep_id}` | `{session_id, opening_line, doctor_state}` |
+| POST | `/sessions` | `{scenario_id, diary_id?, radar_id?}`；身份由登录账号确定 | `{session_id, opening_line, doctor_state}` |
 | POST | `/sessions/{id}/turns` | `{text}` | `{doctor_reply, doctor_state, signals, judge_note, judge_degraded, ended, end_reason, degraded, report_id}` |
 | POST | `/sessions/{id}/finish` | – | `{report_id}`（同步或轮询均可，MVP 同步） |
 | GET | `/reports/{id}` | – | `Report` + 对应 `turns` |
@@ -284,6 +284,8 @@ class PlaybookCard(BaseModel):
 | POST | `/radar/refresh-due` | – | 当前账号主动开启且超过 24 小时未查的至多 3 条更新结果；由雷达页打开时调用 |
 
 雷达输入是用户主动提交给 DeepSeek 的检索词，不从私人日记自动转发。网页候选可供人工核对，未经身份核验不得进入医生画像或作为医学事实裁定。
+
+注册用户可从一条 24 小时内检索、带逐字来源摘录的同名网页候选主动发起演练。服务端验证雷达结果属于当前账号，将一条去掉姓名和医院的题材及来源快照写入本次会话；虚构医生只据此追问证据出处、适用范围或局限，不得声称自己或真实医生发表、参加了候选资料，也不得把题名当作医学结论。若第一轮需要先处理隐藏顾虑、合规试探或日记表达反馈，学术题材延至后续普通回合且最多使用一次。会话中的题材不会随雷达刷新改变，日记、学术候选均不写入长期医生画像或事实评分。
 
 ### 6.4 逐句训练评分（公网演示扩展）
 

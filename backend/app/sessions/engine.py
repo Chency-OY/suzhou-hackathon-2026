@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from ..diary_rehearsal import rehearsal_mood, triggered_wording
 from ..llm import LLMProvider, load_prompt, structured_call
-from ..models import DoctorPersona, DoctorState, Scenario, Session, Turn
+from ..models import DoctorPersona, DoctorState, RadarPracticeCue, Scenario, Session, Turn
 from ..models.constants import SIGNALS
 from ..personas.generate import DEPT_CN
 from ..personas.validate import CONCERN_KEYWORDS
@@ -130,11 +130,14 @@ class SessionEngine:
 
     # ---- 对外接口 ----
     def start(self, scenario: Scenario, persona: DoctorPersona, rep_id: str, session_id: str | None = None,
-              diary_id: str | None = None) -> Session:
+              diary_id: str | None = None, radar_id: str | None = None,
+              radar_searched_at: datetime | None = None,
+              radar_cues: list[RadarPracticeCue] | None = None) -> Session:
         state = initial_state(persona)
         return Session(
             id=session_id or f"sess_{uuid.uuid4().hex[:10]}", scenario_id=scenario.id, rep_id=rep_id,
-            diary_id=diary_id,
+            diary_id=diary_id, radar_id=radar_id, radar_searched_at=radar_searched_at,
+            radar_cues=radar_cues or [],
             started_at=datetime.now(UTC),
             turns=[Turn(idx=0, speaker="doctor", text=scenario.opening_line, state_after=state,
                         meta={"rep_turn_no": 0})])
@@ -158,9 +161,11 @@ class SessionEngine:
         bait = None if (reveal or end) else next_bait(persona, metas, rep_turn_no, self.rules)
         wording = triggered_wording(rehearsal_note, rep_text) if not (reveal or bait or end) else ""
         mood = rehearsal_mood(rehearsal_note)
+        cue_already_used = any(turn.meta.get("radar_cue_used") for turn in session.turns if turn.speaker == "doctor")
+        radar_cue = session.radar_cues[0] if session.radar_cues and not cue_already_used else None
 
         reply, r_deg = self._reply(scenario, persona, state, signals, history, rep_text, facts, reveal, bait, end,
-                                  rehearsal_note, wording, mood)
+                                  rehearsal_note, wording, mood, radar_cue)
 
         session.turns.append(Turn(idx=len(session.turns), speaker="rep", text=rep_text, signals=signals,
                                   state_after=state, meta={"judge_note": judge_note, "judge_degraded": j_deg}))
@@ -168,7 +173,8 @@ class SessionEngine:
                                   meta={"rep_turn_no": rep_turn_no, "bait": bait, "revealed": reveal,
                                         "end_hint": end, "degraded": j_deg or r_deg,
                                         "diary_wording_triggered": bool(wording),
-                                        "diary_mood": mood or ""}))
+                                        "diary_mood": mood or "", "radar_cue_used": bool(radar_cue and not
+                                                                                           (reveal or bait or end or wording))}))
         if end:
             session.ended_at = datetime.now(UTC)
             session.end_reason = end
@@ -257,9 +263,12 @@ class SessionEngine:
         return None
 
     def _reply(self, scenario, persona, state, signals, history, rep_text, facts, reveal, bait, end,
-               rehearsal_note: str = "", wording: str = "", mood: str | None = None) -> tuple[str, bool]:
+               rehearsal_note: str = "", wording: str = "", mood: str | None = None,
+               radar_cue: RadarPracticeCue | None = None) -> tuple[str, bool]:
+        academic_active = radar_cue is not None and not (reveal or bait or end or wording)
         fallback = (f"‘{wording}’这说法我不太喜欢，换个角度讲。" if wording else
                     self._fallback(persona, end) if end else
+                    "这条公开资料的出处和适用范围，你能说清吗？" if academic_active else
                     "我只有几分钟，你先说重点。" if mood == "rushed" else
                     "你先说重点，别绕。" if mood == "irritable" else self._fallback(persona, None))
         if self.provider.name == "mock" and not self.provider.responses:
@@ -289,6 +298,8 @@ class SessionEngine:
             intent_cn = "提出一个需要判断的问题"
         elif wording:
             intent_cn = "指出代表这轮重复使用的表达方式"
+        elif academic_active:
+            intent_cn = "就一条公开学术候选资料追问证据出处"
         elif mood == "irritable":
             intent_cn = "简短催促代表，并追问一个重点"
         elif mood == "rushed":
@@ -299,6 +310,10 @@ class SessionEngine:
         if mood and not (reveal or bait or end or wording):
             directive = ("先用一句短促的话催代表讲重点，再只追问一个具体问题。"
                          if mood == "irritable" else "先表示时间很紧、请代表直说重点，再只追问一个具体问题。")
+        if academic_active:
+            directive = (f"你在这场虚构练习的背景资料里看到一条题为《{safe_text(radar_cue.topic)}》的公开网页候选。"
+                         "请追问代表这类资料的出处、适用范围或证据局限；不要声称你或任何特定医生发表、参加了这项内容，"
+                         "也不要把标题里的医学说法当成已核实结论。")
         note = ""
         for _ in range(2):
             user = prompt.render(
@@ -315,6 +330,8 @@ class SessionEngine:
                 intent_directive=directive,
                 examples=self._fallback(persona, end),
                 rehearsal_note=safe_text(rehearsal_note) if rehearsal_note else "（无）",
+                academic_context=(f"公开网页候选题材：《{safe_text(radar_cue.topic)}》；仅供这场虚构练习提出证据问题。"
+                                  if academic_active else "（无）"),
                 retry_note=note)
             try:
                 out, degraded = structured_call(
@@ -328,6 +345,8 @@ class SessionEngine:
             if degraded:
                 return out.reply, True
             reason = self._check_reply(persona, out.reply, reveal, corpus)
+            if academic_active and re.search(r"(?:我|本人|我们科).{0,10}(?:发表|参加|演讲|主持|写了|做了这项研究)", out.reply):
+                reason = "把同名候选学术活动说成了自己的经历"
             if reason is None:
                 return out.reply, False
             note = f"【上一次不合格：{reason}。请重写并避免该问题。】"

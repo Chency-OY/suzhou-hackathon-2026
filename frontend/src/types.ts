@@ -114,6 +114,9 @@ export interface SessionView {
   diary_id: string | null;
   rehearsal_note: string;
   rehearsal_mood: "" | "rushed" | "irritable";
+  radar_id: string | null;
+  radar_searched_at: string | null;
+  radar_cues: { title: string; topic: string; source_url: string; evidence_quote: string }[];
   turns: TurnView[];
 }
 

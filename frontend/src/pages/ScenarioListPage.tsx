@@ -29,6 +29,8 @@ export default function ScenarioListPage() {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const diaryId = searchParams.get("diary");
+  const radarId = searchParams.get("radar");
+  const selectedContext = new URLSearchParams({ ...(diaryId ? { diary: diaryId } : {}), ...(radarId ? { radar: radarId } : {}) }).toString();
   const [filters, setFilters] = useState<ScenarioFilters>({ program: searchParams.get("program") === "xinermei" ? "xinermei" : "general" });
   const [startingId, setStartingId] = useState<string | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export default function ScenarioListPage() {
     setStartingId(id);
     setStartError(null);
     try {
-      const out = await api.createSession(id, diaryId);
+      const out = await api.createSession(id, diaryId, radarId);
       nav(`/session/${out.session_id}`);
     } catch (e) {
       setStartError(e instanceof Error ? e.message : String(e));
@@ -54,6 +56,7 @@ export default function ScenarioListPage() {
   return (
     <div>
       {diaryId && <div className="game-alert mb-5" role="status">这次会把你日记中的沟通感受作为虚构演练线索。医学说法不会进入角色设定。<Link className="game-link ml-2" to="/diary">返回日记</Link></div>}
+      {radarId && <div className="game-alert mb-5" role="status">这次可把你选中的公开学术候选当作证据追问题材。同名身份尚未确认，模拟医生不会扮演那位真实医生。<Link className="game-link ml-2" to="/radar">返回学术雷达</Link></div>}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
         <section className="sim-home-hero">
           <div className="sim-home-copy"><p className="sim-eyebrow">FRONTLINE LAB <span>·</span> AI 沟通训练</p><h1>把每一次拜访，<br /><em>先练到心里有数。</em></h1><p>走进虚构医生的诊室，直接说出你的回答。AI 接住每一句话，模拟追问，并给出逐轮沟通判断。</p><div className="sim-home-steps"><span>01 选情境</span><b>→</b><span>02 说出来</span><b>→</b><span>03 看判断</span></div><a className="sim-home-download" href={`${import.meta.env.BASE_URL}rep-trainer.apk`} download="rep-trainer.apk"><img src={`${import.meta.env.BASE_URL}app-icon.svg?v=3`} width="26" height="26" alt="" /><span>下载安卓 App</span><b aria-hidden="true">↗</b></a><small className="sim-home-download-hint">安卓手机用浏览器下载后安装 · 当前版本支持语音输入</small></div>
@@ -109,7 +112,7 @@ export default function ScenarioListPage() {
                 <button type="button" className="game-btn" disabled={!SESSION_ENABLED || !!startingId} onClick={() => void start(scenario.id)}>
                   {startingId === scenario.id ? "正在进入…" : "开始任务"}<span aria-hidden="true">→</span>
                 </button>
-                <Link className="game-link" to={`/scenarios/${scenario.id}${diaryId ? `?diary=${encodeURIComponent(diaryId)}` : ""}`}>查看任务简报</Link>
+                <Link className="game-link" to={`/scenarios/${scenario.id}${selectedContext ? `?${selectedContext}` : ""}`}>查看任务简报</Link>
               </div>
             </article>
           ))}
