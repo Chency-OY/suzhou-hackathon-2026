@@ -11,9 +11,48 @@ from .models.diary import AcademicCrosscheck, AcademicCrossDraft, AcademicTensio
 from .models.radar import AcademicRadar, RadarAnswerPoint, RadarWebSource
 
 log = logging.getLogger(__name__)
-POLICY_VERSION = "academic-tension-v1"
+POLICY_VERSION = "academic-tension-v2-explicit"
 _ACADEMIC = re.compile(r"论文|研究|会议|论坛|演讲|报告|讲座|发表|参会|学术")
 _MEDICAL = re.compile(r"药|疗效|副作用|剂量|治疗|处方|患者|适应症|安全性|不良反应")
+_DENIED_ACTIVITY = re.compile(
+    r"(?:从未|没有|未曾|并未|不曾).{0,18}(?:参加|参会|发表|演讲|做过|作过|做了|作了|作报告|做报告|讲过)"
+    r"|未(?:参加|参会|发表|演讲|做报告|作报告)"
+)
+_AFFIRMED_ACTIVITY = re.compile(r"参加|参会|发表|演讲|做过|作过|做了|作了|做报告|作报告|讲过|出席")
+_UNCONFIRMED_ACTIVITY = re.compile(r"计划|拟参加|拟发表|预计|即将|将于|可能|受邀|邀请")
+_YEAR = re.compile(r"(?:19|20)\d{2}")
+_ACTIVITY_ENDINGS = ("论坛", "年会", "大会", "会议", "讲座", "论文", "研究", "报告", "演讲")
+_GENERIC_ACTIVITIES = {"学术论坛", "学术会议", "学术报告", "主题报告", "研究报告", "公开讲座", "医学会议"}
+
+
+def _same_named_activity(diary_quote: str, source_quote: str, title: str) -> bool:
+    """Require an activity name shared by the diary, excerpt and source title."""
+    for start in range(len(title)):
+        for ending in _ACTIVITY_ENDINGS:
+            position = title.find(ending, start)
+            if position < 0:
+                continue
+            end = position + len(ending)
+            if end < start + 4 or end > start + 18:
+                continue
+            name = title[start:end]
+            if name not in _GENERIC_ACTIVITIES and name in diary_quote and name in source_quote:
+                return True
+    return False
+
+
+def _explicit_opposition(diary_quote: str, source_quote: str, title: str) -> bool:
+    if _UNCONFIRMED_ACTIVITY.search(diary_quote + source_quote):
+        return False
+    diary_years = set(_YEAR.findall(diary_quote))
+    source_years = set(_YEAR.findall(source_quote))
+    if diary_years and source_years and not diary_years & source_years:
+        return False
+    diary_denies = bool(_DENIED_ACTIVITY.search(diary_quote))
+    source_denies = bool(_DENIED_ACTIVITY.search(source_quote))
+    affirmative = source_quote if diary_denies else diary_quote
+    return (diary_denies != source_denies and _AFFIRMED_ACTIVITY.search(affirmative) is not None
+            and _same_named_activity(diary_quote, source_quote, title))
 
 
 def _sources(radar: AcademicRadar) -> dict[str, tuple[RadarWebSource, list[RadarAnswerPoint]]]:
@@ -65,7 +104,8 @@ def compare_academic(diary: FieldDiary, radar: AcademicRadar | None,
         if (item.diary_quote not in diary.raw_text or
                 not any(item.source_quote in point.evidence_quote for point in points) or
                 not _ACADEMIC.search(item.diary_quote) or not _ACADEMIC.search(item.source_quote) or
-                _MEDICAL.search(item.diary_quote) or _MEDICAL.search(item.source_quote)):
+                _MEDICAL.search(item.diary_quote) or _MEDICAL.search(item.source_quote) or
+                not _explicit_opposition(item.diary_quote, item.source_quote, source.title)):
             continue
         seen.add((item.diary_quote, item.source_id))
         tensions.append(AcademicTension(diary_quote=item.diary_quote, source_id=item.source_id,

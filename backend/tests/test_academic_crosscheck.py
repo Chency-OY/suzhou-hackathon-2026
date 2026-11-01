@@ -50,6 +50,14 @@ def test_crosscheck_needs_both_exact_quotes_and_keeps_identity_uncertain():
     assert compare_academic(diary, radar, _mock(RAW, "网页中不存在的论断")).tensions == []
 
 
+def test_crosscheck_detects_reverse_explicit_opposition():
+    diary, radar = _diary("synthetic_user"), _radar("synthetic_user")
+    diary.raw_text = "甲医生说他在星河论坛做过学术报告。"
+    radar.answer_points[0].evidence_quote = "甲医生从未在星河论坛做过学术报告。"
+    result = compare_academic(diary, radar, _mock(diary.raw_text, radar.answer_points[0].evidence_quote))
+    assert len(result.tensions) == 1
+
+
 def test_no_radar_or_medical_statement_never_creates_academic_tension():
     diary = _diary("synthetic_user")
     mock = _mock()
@@ -58,6 +66,26 @@ def test_no_radar_or_medical_statement_never_creates_academic_tension():
     result = compare_academic(diary, _radar("synthetic_user"),
                               _mock("甲医生说某药治疗患者有效。", SOURCE))
     assert result.tensions == []
+
+
+@pytest.mark.parametrize(("diary_quote", "source_quote", "title"), [
+    ("甲医生说他在星河论坛做过学术报告。", SOURCE, "星河论坛日程"),
+    ("甲医生说他从未在星海论坛做过学术报告。", SOURCE, "星河论坛日程"),
+    (RAW, "甲医生没有在星河论坛做过学术报告。", "星河论坛日程"),
+    ("甲医生说他从未在2025年星河论坛做过学术报告。",
+     "甲医生在2026年星河论坛做了主题报告。", "星河论坛日程"),
+    (RAW, "甲医生计划在星河论坛做主题报告。", "星河论坛日程"),
+    ("甲医生说没有星河论坛学术报告的证据。", SOURCE, "星河论坛日程"),
+    (RAW, "甲医生与星河论坛无关。", "星河论坛日程"),
+    (RAW, SOURCE, "普通会议日程"),
+])
+def test_crosscheck_rejects_non_opposing_or_unmatched_activity(diary_quote, source_quote, title):
+    diary, radar = _diary("synthetic_user"), _radar("synthetic_user")
+    diary.raw_text = diary_quote
+    radar.web_sources[0].title = title
+    radar.answer_points[0].evidence_quote = source_quote
+    result = compare_academic(diary, radar, _mock(diary_quote, source_quote))
+    assert result.status == "compared" and result.tensions == []
 
 
 @pytest.fixture()
@@ -85,10 +113,16 @@ def test_crosscheck_is_private_cached_and_invalidated_by_radar_refresh(clients):
     assert first.status_code == 200 and len(first.json()["tensions"]) == 1
     assert owner.get(path).status_code == 200
     assert owner.post(path).status_code == 200 and len(mock.calls) == 1
+    old_result = repo.get(AcademicCrosscheck, "academic_diary_synthetic")
+    assert old_result is not None
+    old_result.policy_version = "academic-tension-v1"
+    repo.save(old_result)
+    assert owner.get(path).status_code == 404
+    assert owner.post(path).status_code == 200 and len(mock.calls) == 2
     radar = _radar(owner_id)
     radar.searched_at = datetime.now(UTC)
     repo.save(radar)
     assert owner.get(path).status_code == 404
-    assert owner.post(path).status_code == 200 and len(mock.calls) == 2
+    assert owner.post(path).status_code == 200 and len(mock.calls) == 3
     assert owner.delete("/api/diary/diary_synthetic").status_code == 200
     assert repo.get(AcademicCrosscheck, "academic_diary_synthetic") is None
