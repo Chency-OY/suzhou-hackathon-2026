@@ -20,6 +20,7 @@ _DENIED_ACTIVITY = re.compile(
 )
 _AFFIRMED_ACTIVITY = re.compile(r"参加|参会|发表|演讲|做过|作过|做了|作了|做报告|作报告|讲过|出席")
 _UNCONFIRMED_ACTIVITY = re.compile(r"计划|拟参加|拟发表|预计|即将|将于|可能|受邀|邀请")
+_MISSING_EVIDENCE = re.compile(r"没有.{0,12}(?:证据|发现|查到|检索到|记录)|尚未找到|未检索到|未找到|未见|无法确认|不确定")
 _YEAR = re.compile(r"(?:19|20)\d{2}")
 _ACTIVITY_ENDINGS = ("论坛", "年会", "大会", "会议", "讲座", "论文", "研究", "报告", "演讲")
 _GENERIC_ACTIVITIES = {"学术论坛", "学术会议", "学术报告", "主题报告", "研究报告", "公开讲座", "医学会议"}
@@ -42,7 +43,7 @@ def _same_named_activity(diary_quote: str, source_quote: str, title: str) -> boo
 
 
 def _explicit_opposition(diary_quote: str, source_quote: str, title: str) -> bool:
-    if _UNCONFIRMED_ACTIVITY.search(diary_quote + source_quote):
+    if _UNCONFIRMED_ACTIVITY.search(diary_quote + source_quote) or _MISSING_EVIDENCE.search(diary_quote + source_quote):
         return False
     diary_years = set(_YEAR.findall(diary_quote))
     source_years = set(_YEAR.findall(source_quote))
